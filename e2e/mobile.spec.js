@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
+async function openTab(page, name) {
+  const button = page.getByRole("button", { name, exact: true });
+  if (!(await button.isVisible()))
+    await page.getByRole("button", { name: "Más", exact: true }).click();
+  await page.getByRole("button", { name, exact: true }).click();
+}
+
 test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390×844", async ({
   page,
 }) => {
@@ -77,7 +84,7 @@ test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390�
   });
   await page.reload();
   await expect(card.locator(".saved")).toContainText("$1,000.00");
-  await page.getByRole("button", { name: "Respaldo", exact: true }).click();
+  await openTab(page, "Respaldo");
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "↓ Descargar respaldo" }).click();
   const download = await downloadPromise;
@@ -112,7 +119,7 @@ test("simulador sin token muestra configuración pendiente, sin tasas inventadas
     }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "Rendimiento", exact: true }).click();
+  await openTab(page, "Rendimiento");
   await expect(
     page.getByText("Configura el token de Banxico", { exact: false }),
   ).toBeVisible();
@@ -160,7 +167,7 @@ test("Gmail revisa depósitos, recuerda asignación y evita duplicados", async (
   await page.getByLabel("Nombre de tu meta").fill("Mi guardadito");
   await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  await page.getByRole("button", { name: "Conexiones", exact: true }).click();
+  await openTab(page, "Conexiones");
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await page
     .getByRole("combobox", { name: "Cajita", exact: true })
@@ -224,7 +231,7 @@ test("un patrón validado con cajita recordada se registra automáticamente una 
     }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "Conexiones", exact: true }).click();
+  await openTab(page, "Conexiones");
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await expect(
     page.getByText("1 depósitos automáticos.", { exact: false }),

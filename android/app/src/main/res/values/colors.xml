@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#E58C9E</color>
+    <color name="colorPrimaryDark">#865860</color>
+    <color name="colorAccent">#E58C9E</color>
+    <color name="cajitas_background">#FFF7EF</color>
+</resources>

@@ -1,0 +1,18 @@
+{
+  "appId": "mx.cajitas.ahorro",
+  "appName": "Cajitas",
+  "webDir": "dist",
+  "backgroundColor": "#fff7ef",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "LIGHT"
+    }
+  }
+}

@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import Mascot from "./components/Mascot.jsx";
+import Modal from "./components/Modal.jsx";
+import PetRoom from "./components/PetRoom.jsx";
+import Activity from "./components/Activity.jsx";
+import Install from "./components/Install.jsx";
+import {
+  api,
+  connectGmail,
+  haptic,
+  isNative,
+  openExternal,
+  saveFile,
+  persistSavings,
+  configureReminder,
+} from "./platform.js";
 import {
   STORAGE_KEY,
   money,
@@ -14,6 +29,12 @@ import {
   addReceipt,
   estimate,
   unlockTime,
+  PETS,
+  activeGoals,
+  companionship,
+  checkIn,
+  localDate,
+  goalStatus,
 } from "./domain.js";
 
 const destinations = {
@@ -28,143 +49,33 @@ const dateLabel = (date) =>
     month: "short",
     year: "numeric",
   });
-async function api(path, body) {
-  const response = await fetch(
-    `/api/${path}`,
-    body === undefined
-      ? {}
-      : {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-  );
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error ?? "No se pudo completar la consulta.");
-  return data;
-}
-function Mascot({ progress = 0, sad = false, small = false }) {
-  const growth = 0.8 + Math.min(1, progress) * 0.2;
-  return (
-    <svg
-      className={`mascot ${small ? "small" : ""}`}
-      viewBox="0 0 220 200"
-      role="img"
-      aria-label={
-        sad
-          ? "La mascota está triste y te acompaña"
-          : "Caji, tu compañera de ahorro"
-      }
-    >
-      <ellipse cx="111" cy="180" rx="66" ry="10" fill="#366959" opacity=".10" />
-      <g transform={`translate(110 180) scale(${growth}) translate(-110 -180)`}>
-        <path
-          d="M68 146 61 176q9 9 22 0l9-26M132 149l10 27q12 7 23-1l-13-36"
-          fill="#5f9380"
-          stroke="#355c4a"
-          strokeWidth="3"
-        />
-        <path
-          d="M57 101Q28 106 28 126q7 14 16 0l24-5M162 103q33-3 31 24-9 12-15-3l-23-5"
-          fill="#c1e1bc"
-          stroke="#355c4a"
-          strokeWidth="3"
-        />
-        <rect
-          x="47"
-          y="53"
-          width="123"
-          height="110"
-          rx="33"
-          fill="#c8e8bd"
-          stroke="#355c4a"
-          strokeWidth="3"
-        />
-        <path
-          d="M48 83q60 17 122 0"
-          fill="none"
-          stroke="#355c4a"
-          strokeWidth="3"
-        />
-        <rect
-          x="39"
-          y="47"
-          width="139"
-          height="37"
-          rx="13"
-          fill="#dff0c9"
-          stroke="#355c4a"
-          strokeWidth="3"
-        />
-        <path
-          d="M91 56h40"
-          stroke="#355c4a"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M109 46V28m0 8q-27 0-25-19 23-2 25 19m0-5q23 0 26-20-22-1-26 20"
-          fill="#6ba382"
-          stroke="#355c4a"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        <ellipse cx="74" cy="121" rx="10" ry="6" fill="#efada9" />
-        <ellipse cx="146" cy="121" rx="10" ry="6" fill="#efada9" />
-        <circle cx="87" cy="109" r="4" fill="#355c4a" />
-        <circle cx="133" cy="109" r="4" fill="#355c4a" />
-        <path
-          d={sad ? "M100 131q10-10 20 0" : "M100 123q10 12 20 0"}
-          fill="none"
-          stroke="#355c4a"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        {sad && <path d="M137 116q-7 9 0 12 7-3 0-12" fill="#80b7dd" />}
-        <path
-          d="m110 140 3 6 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1Z"
-          fill="#fff4b6"
-        />
-      </g>
-      {!sad && (
-        <>
-          <path d="m183 39 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z" fill="#e9bb61" />
-          <path d="m24 66 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#e9bb61" />
-        </>
-      )}
-    </svg>
-  );
-}
-function Modal({ title, children, onClose }) {
-  const ref = useRef();
-  useEffect(() => {
-    const previous = document.activeElement;
-    ref.current.showModal();
-    return () => previous?.focus();
-  }, []);
-  return (
-    <dialog
-      ref={ref}
-      className="modal"
-      onCancel={onClose}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="modal-head">
-        <h2>{title}</h2>
-        <button className="icon-button" aria-label="Cerrar" onClick={onClose}>
-          ×
-        </button>
-      </div>
-      {children}
-    </dialog>
-  );
-}
-function GoalForm({ onSave, onClose }) {
+function GoalForm({ onSave, onClose, goal = null, onArchive }) {
   const [error, setError] = useState("");
-  const [icon, setIcon] = useState("star");
+  const [icon, setIcon] = useState(goal?.icon ?? "star");
+  const [template, setTemplate] = useState(null);
+  const templates = [
+    {
+      id: "trip",
+      name: "Una escapadita",
+      icon: "cloud",
+      label: "Una escapadita",
+      symbol: "☁",
+    },
+    {
+      id: "safety",
+      name: "Mi colchoncito",
+      icon: "star",
+      label: "Tranquilidad",
+      symbol: "✦",
+    },
+    {
+      id: "treat",
+      name: "Algo para mí",
+      icon: "flower",
+      label: "Algo para mí",
+      symbol: "✿",
+    },
+  ];
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 30);
   function submit(e) {
@@ -177,26 +88,51 @@ function GoalForm({ onSave, onClose }) {
       if (!name || unlockDate < today())
         throw new Error("Elige un nombre y una fecha de hoy en adelante.");
       onSave({
-        id: crypto.randomUUID(),
+        ...goal,
+        id: goal?.id ?? crypto.randomUUID(),
         name,
         targetCents,
         unlockDate,
         provider: form.get("provider"),
         icon,
-        entries: [],
+        entries: goal?.entries ?? [],
+        frequency: Number(form.get("frequency")),
+        archived: goal?.archived ?? false,
       });
     } catch (err) {
       setError(err.message);
     }
   }
   return (
-    <Modal title="Un nuevo sueño" onClose={onClose}>
+    <Modal
+      title={goal ? "Tu sueño, a tu ritmo" : "Un nuevo sueño"}
+      onClose={onClose}
+    >
       <p className="muted">Ponle nombre. Dale tiempo. Tú puedes.</p>
-      <form onSubmit={submit}>
+      {!goal && (
+        <div className="goal-templates" aria-label="Ideas para tu cajita">
+          {templates.map((t) => (
+            <button
+              type="button"
+              key={t.id}
+              aria-pressed={template?.id === t.id}
+              onClick={() => {
+                setTemplate(t);
+                setIcon(t.icon);
+              }}
+            >
+              <span>{t.symbol}</span>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <form key={template?.id ?? goal?.id ?? "custom"} onSubmit={submit}>
         <label>
           Nombre de tu meta
           <input
             name="name"
+            defaultValue={goal?.name ?? template?.name ?? ""}
             placeholder="Mi próxima aventura"
             maxLength={80}
             required
@@ -211,6 +147,7 @@ function GoalForm({ onSave, onClose }) {
             min="0.01"
             step="0.01"
             max="1000000000"
+            defaultValue={goal ? (goal.targetCents / 100).toFixed(2) : ""}
             placeholder="5000"
             required
           />
@@ -222,13 +159,13 @@ function GoalForm({ onSave, onClose }) {
               name="date"
               type="date"
               min={today()}
-              defaultValue={tomorrow.toLocaleDateString("en-CA")}
+              defaultValue={goal?.unlockDate ?? localDate(tomorrow)}
               required
             />
           </label>
           <label>
             ¿Dónde lo guardas?
-            <select name="provider">
+            <select name="provider" defaultValue={goal?.provider ?? "Nu"}>
               <option>Nu</option>
               <option>Mercado Pago</option>
               <option>Bitso</option>
@@ -236,6 +173,14 @@ function GoalForm({ onSave, onClose }) {
             </select>
           </label>
         </div>
+        <label>
+          Mi ritmo de ahorro
+          <select name="frequency" defaultValue={goal?.frequency ?? 7}>
+            <option value={7}>Por semana</option>
+            <option value={15}>Cada 15 días</option>
+            <option value={30}>Cada 30 días</option>
+          </select>
+        </label>
         <fieldset>
           <legend>Elige su amuleto</legend>
           <div className="icon-options">
@@ -262,12 +207,29 @@ function GoalForm({ onSave, onClose }) {
             {error}
           </p>
         )}
-        <button className="primary full">Crear cajita</button>
+        <button className="primary full">
+          {goal ? "Guardar cambios" : "Crear cajita"}
+        </button>
+        {goal && (
+          <button
+            className="text-button full"
+            type="button"
+            onClick={() => onArchive(goal)}
+          >
+            {goal.archived ? "Volver a mis cajitas" : "Archivar cajita"}
+          </button>
+        )}
+        {goal && (
+          <p className="small-text muted">
+            Archivar conserva tus movimientos y el ahorro registrado. Puedes
+            recuperarla cuando quieras.
+          </p>
+        )}
       </form>
     </Modal>
   );
 }
-function MovementForm({ goal, withdraw, onSave, onClose }) {
+function MovementForm({ goal, withdraw, onSave, onClose, preferences }) {
   const [amount, setAmount] = useState(""),
     [confirm, setConfirm] = useState(false),
     [error, setError] = useState("");
@@ -294,7 +256,13 @@ function MovementForm({ goal, withdraw, onSave, onClose }) {
     >
       {confirm ? (
         <>
-          <Mascot sad small />
+          <Mascot
+            sad
+            small
+            pet={preferences.pet}
+            name={preferences.petName}
+            accessory={preferences.accessory}
+          />
           <p>Los planes cambian. Puedes ajustar tu meta y seguir después.</p>
           <p>
             Registrarás un retiro de <strong>{money(cents(amount))}</strong>{" "}
@@ -348,10 +316,11 @@ function MovementForm({ goal, withdraw, onSave, onClose }) {
     </Modal>
   );
 }
-function GoalCard({ goal, onMove, onEdit, now }) {
+function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
   const saved = balance(goal),
     progress = Math.min(1, saved / goal.targetCents);
-  const [frequency, setFrequency] = useState(7);
+  const frequency = goal.frequency;
+  const status = goalStatus(goal, now);
   return (
     <article className={`goal-card ${goal.icon}`}>
       <div className="goal-heading">
@@ -361,7 +330,7 @@ function GoalCard({ goal, onMove, onEdit, now }) {
         </span>
         <button
           className="icon-button"
-          aria-label={`Ajustar fecha de ${goal.name}`}
+          aria-label={`Editar ${goal.name}`}
           onClick={() => onEdit(goal)}
         >
           ⋯
@@ -403,37 +372,59 @@ function GoalCard({ goal, onMove, onEdit, now }) {
           <select
             aria-label={`Frecuencia de ${goal.name}`}
             value={frequency}
-            onChange={(e) => setFrequency(Number(e.target.value))}
+            onChange={(e) => onFrequency(goal.id, Number(e.target.value))}
           >
             <option value={7}>por semana</option>
             <option value={15}>cada 15 días</option>
+            <option value={30}>cada 30 días</option>
           </select>
         </div>
       )}
-      <div className="card-actions">
-        <button className="primary" onClick={() => onMove(goal, false)}>
-          + Registrar ahorro
+      {status.pastDue && (
+        <p className="past-due">
+          Tu fecha ya llegó. Puedes ajustar el plan; tu sueño sigue aquí.
+        </p>
+      )}
+      {goal.archived ? (
+        <button className="secondary full" onClick={() => onEdit(goal)}>
+          Recuperar cajita
         </button>
-        {destinations[goal.provider] ? (
-          <a
-            className="external"
-            href={destinations[goal.provider]}
-            target="_blank"
-            rel="noopener noreferrer"
+      ) : (
+        <>
+          <div className="card-actions">
+            <button className="primary" onClick={() => onMove(goal, false)}>
+              + Registrar ahorro
+            </button>
+            {destinations[goal.provider] ? (
+              <a
+                className="external"
+                href={destinations[goal.provider]}
+                onClick={
+                  isNative
+                    ? (e) => {
+                        e.preventDefault();
+                        openExternal(destinations[goal.provider]);
+                      }
+                    : undefined
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ir a apartar ↗
+              </a>
+            ) : (
+              <span className="muted small-text">Aparta en tu app</span>
+            )}
+          </div>
+          <button
+            className="text-button withdraw"
+            disabled={!saved}
+            onClick={() => onMove(goal, true)}
           >
-            Ir a apartar ↗
-          </a>
-        ) : (
-          <span className="muted small-text">Aparta en tu app</span>
-        )}
-      </div>
-      <button
-        className="text-button withdraw"
-        disabled={!saved}
-        onClick={() => onMove(goal, true)}
-      >
-        Registrar retiro
-      </button>
+            Registrar retiro
+          </button>
+        </>
+      )}
       {goal.entries.length > 0 && (
         <details>
           <summary>Ver movimientos ({goal.entries.length})</summary>
@@ -625,7 +616,8 @@ function Connections({ data, setData, notify, celebrate }) {
     for (const receipt of result.receipts) {
       const goalId = updated.assignments[receipt.patternId],
         goal = updated.goals.find(
-          (g) => g.id === goalId && g.provider === receipt.provider,
+          (g) =>
+            g.id === goalId && g.provider === receipt.provider && !g.archived,
         );
       if (
         receipt.validated &&
@@ -664,7 +656,7 @@ function Connections({ data, setData, notify, celebrate }) {
     const goalId =
       assign[receipt.id] ?? data.assignments[receipt.patternId] ?? "";
     const goal = data.goals.find((g) => g.id === goalId);
-    if (!goal) {
+    if (!goal || goal.archived) {
       notify("Elige una cajita para este depósito.");
       return;
     }
@@ -873,7 +865,7 @@ function Connections({ data, setData, notify, celebrate }) {
                 >
                   <option value="">Selecciona una cajita</option>
                   {data.goals
-                    .filter((g) => g.provider === r.provider)
+                    .filter((g) => g.provider === r.provider && !g.archived)
                     .map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name}
@@ -927,16 +919,13 @@ function Connections({ data, setData, notify, celebrate }) {
 }
 function Backup({ data, onRestore, notify }) {
   const [pending, setPending] = useState(null);
-  function download() {
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cajitas-${today()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    notify("Respaldo descargado. Guárdalo en un lugar privado.");
+  async function download() {
+    try {
+      await saveFile(JSON.stringify(data, null, 2), `cajitas-${today()}.json`);
+      notify("Respaldo listo. Guárdalo en un lugar privado.");
+    } catch (e) {
+      notify(e.message);
+    }
   }
   async function read(e) {
     const file = e.target.files[0];
@@ -967,8 +956,9 @@ function Backup({ data, onRestore, notify }) {
         <span className="backup-art">☁</span>
         <h2>Un lugar seguro para tus sueños</h2>
         <p>
-          Tus metas y movimientos se guardan en este navegador. Descarga un
-          respaldo antes de cambiar de dispositivo o borrar sus datos.
+          Tus metas, compañeros y movimientos se guardan en este dispositivo.
+          Descarga un respaldo antes de cambiar de dispositivo o borrar sus
+          datos.
         </p>
         <div className="button-row">
           <button className="primary" onClick={download}>
@@ -985,9 +975,9 @@ function Backup({ data, onRestore, notify }) {
           </label>
         </div>
         <p className="small-text muted">
-          Incluye metas, movimientos y correos ya revisados. No incluye
-          contraseñas ni conexiones. El archivo contiene información de tu
-          ahorro: guárdalo en privado.
+          Incluye metas, mascota, visitas, movimientos y correos ya revisados.
+          No incluye contraseñas ni conexiones. El archivo contiene información
+          de tu ahorro: guárdalo en privado.
         </p>
       </div>
       {pending && (
@@ -1018,6 +1008,33 @@ function Backup({ data, onRestore, notify }) {
     </section>
   );
 }
+function ServiceWorkerNotices() {
+  const {
+    offlineReady: [ready],
+    needRefresh: [refresh],
+    updateServiceWorker,
+  } = useRegisterSW();
+  return (
+    <>
+      {ready && (
+        <p className="offline" role="status">
+          Cajitas está lista para usarse sin conexión.
+        </p>
+      )}
+      {refresh && (
+        <p className="offline">
+          Hay una nueva versión.{" "}
+          <button
+            className="text-button"
+            onClick={() => updateServiceWorker(true)}
+          >
+            Actualizar app
+          </button>
+        </p>
+      )}
+    </>
+  );
+}
 export default function App() {
   const [loadError, setLoadError] = useState(() => {
     try {
@@ -1043,14 +1060,11 @@ export default function App() {
     [confetti, setConfetti] = useState(false),
     [sad, setSad] = useState(false),
     [offline, setOffline] = useState(!navigator.onLine);
+  const [goalFilter, setGoalFilter] = useState("active");
+  const [connectionVersion, setConnectionVersion] = useState(0);
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
     sadTimer = useRef();
-  const {
-    offlineReady: [offlineReady],
-    needRefresh: [needRefresh],
-    updateServiceWorker,
-  } = useRegisterSW();
   function notify(message) {
     clearTimeout(toastTimer.current);
     setToast(message);
@@ -1064,8 +1078,15 @@ export default function App() {
       return false;
     }
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setDataState(next);
+      const saved = { ...next, savedAt: Date.now() };
+      const raw = JSON.stringify(saved);
+      localStorage.setItem(STORAGE_KEY, raw);
+      setDataState(saved);
+      persistSavings(raw).catch(() =>
+        notify(
+          "El cambio está guardado en la app, pero no se pudo actualizar la copia adicional del dispositivo. Descarga un respaldo.",
+        ),
+      );
       if (restoring) setLoadError("");
       return true;
     } catch {
@@ -1080,6 +1101,7 @@ export default function App() {
     clearTimeout(sadTimer.current);
     clearTimeout(celebrationTimer.current);
     setConfetti(true);
+    haptic(true);
     notify("¡Meta alcanzada! Poquito a poquito, lo lograste ✦");
     celebrationTimer.current = setTimeout(() => setConfetti(false), 5000);
   }
@@ -1146,36 +1168,106 @@ export default function App() {
       balance(g) + value >= g.targetCents
     )
       celebrate();
-    else notify("Ahorro registrado. ¡Un pasito más!");
+    else {
+      haptic();
+      notify("Ahorro registrado. ¡Un pasito más!");
+    }
   }
+  useEffect(() => {
+    const connected = (e) => {
+      if (e.detail?.error) notify(e.detail.error);
+      else {
+        setConnectionVersion((v) => v + 1);
+        setTab("connections");
+        notify("Gmail conectado. Ya puedes buscar comprobantes.");
+      }
+    };
+    const back = () => setTab("goals");
+    window.addEventListener("cajitas:connection", connected);
+    window.addEventListener("cajitas:back", back);
+    return () => {
+      window.removeEventListener("cajitas:connection", connected);
+      window.removeEventListener("cajitas:back", back);
+    };
+  }, []);
+  const friend = companionship(data),
+    active = activeGoals(data),
+    pet = data.preferences;
+  const visibleGoals = data.goals.filter((g) =>
+    goalFilter === "archived"
+      ? g.archived
+      : !g.archived &&
+        (goalFilter === "completed" ? balance(g) >= g.targetCents : true),
+  );
   const nav = [
     ["goals", "▦", "Mis cajitas"],
-    ["simulator", "↗", "Rendimiento"],
+    ["pet", "♡", "Mi mascota"],
+    ["activity", "↗", "Actividad"],
+    ["simulator", "✦", "Rendimiento"],
     ["connections", "⌁", "Conexiones"],
     ["backup", "☁", "Respaldo"],
+    ["install", "↓", "Instalar app"],
   ];
+  const mobileNav = [
+    ["goals", "▦", "Mis cajitas"],
+    ["pet", "♡", "Mi mascota"],
+    ["activity", "↗", "Actividad"],
+    ["more", "⋯", "Más"],
+  ];
+  const changeTab = (key) => {
+    setTab(key);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
   return (
-    <div className="app">
+    <div
+      className={`app ${!pet.animations ? "reduced-motion" : ""} ${isNative ? "native-app" : ""}`}
+    >
       <aside className="sidebar">
         <a className="brand" href="/" aria-label="Cajitas inicio">
           <span className="brand-icon">▣</span>cajitas
           <span className="brand-dot">✦</span>
         </a>
         <p className="brand-caption">Poquito a poquito.</p>
-        <nav aria-label="Navegación principal">
+        <nav className="desktop-nav" aria-label="Navegación principal">
           {nav.map(([key, icon, label]) => (
             <button
               key={key}
               className={tab === key ? "active" : ""}
               aria-current={tab === key ? "page" : undefined}
-              onClick={() => {
-                setTab(key);
-                window.scrollTo({ top: 0 });
-              }}
+              onClick={() => changeTab(key)}
             >
               <span aria-hidden="true">{icon}</span>
               <span>{label}</span>
               {key === "goals" && <small>{data.goals.length}</small>}
+            </button>
+          ))}
+        </nav>
+        <nav className="mobile-nav" aria-label="Navegación de la app">
+          {mobileNav.map(([key, icon, label]) => (
+            <button
+              key={key}
+              aria-current={
+                tab === key ||
+                (key === "more" &&
+                  ["simulator", "connections", "backup", "install"].includes(
+                    tab,
+                  ))
+                  ? "page"
+                  : undefined
+              }
+              className={
+                tab === key ||
+                (key === "more" &&
+                  ["simulator", "connections", "backup", "install"].includes(
+                    tab,
+                  ))
+                  ? "active"
+                  : ""
+              }
+              onClick={() => changeTab(key)}
+            >
+              <span aria-hidden="true">{icon}</span>
+              <span>{label}</span>
             </button>
           ))}
         </nav>
@@ -1199,30 +1291,31 @@ export default function App() {
           <span>UN SUEÑO A LA VEZ</span>
           <div className="topbar-right">
             <span className="private-badge">♧ Tu espacio personal</span>
-            <span className="avatar" aria-hidden="true">
-              ✿
-            </span>
+            <button
+              className="avatar avatar-pet"
+              aria-label="Personalizar mi mascota"
+              onClick={() => changeTab("pet")}
+            >
+              <span>
+                {PETS[pet.pet].label === "Cerdito"
+                  ? "🐷"
+                  : pet.pet === "cow"
+                    ? "🐮"
+                    : pet.pet === "bunny"
+                      ? "🐰"
+                      : "🌱"}
+              </span>
+            </button>
           </div>
         </header>
         <main>
-          {(offline || offlineReady) && (
+          {offline && (
             <p className="offline" role="status">
-              {offline
-                ? "Estás sin conexión. Puedes registrar y respaldar tus cajitas; las consultas necesitan internet."
-                : "Cajitas está lista para usarse sin conexión."}
+              Estás sin conexión. Tus cajitas, mascotas y respaldos siguen
+              contigo; las consultas necesitan internet.
             </p>
           )}
-          {needRefresh && (
-            <p className="offline">
-              Hay una nueva versión.{" "}
-              <button
-                className="text-button"
-                onClick={() => updateServiceWorker(true)}
-              >
-                Actualizar app
-              </button>
-            </p>
-          )}
+          {!isNative && <ServiceWorkerNotices />}
           {loadError && (
             <div className="error" role="alert">
               {loadError}
@@ -1269,7 +1362,10 @@ export default function App() {
               <section className="hero">
                 <div className="hero-copy">
                   <span className="hero-pill">
-                    ✦ {data.goals.length ? "VAS MUY BIEN" : "HOLA, SOY CAJI"}
+                    ✦{" "}
+                    {data.goals.length
+                      ? "VAS MUY BIEN"
+                      : `HOLA, SOY ${pet.petName.toLocaleUpperCase("es-MX")}`}
                   </span>
                   <h2>
                     {sad
@@ -1293,11 +1389,53 @@ export default function App() {
                   </div>
                 </div>
                 <div className="hero-mascot">
-                  <Mascot progress={target ? total / target : 0} sad={sad} />
-                  <span className="mascot-caption">
-                    tu compañera de ahorro ♡
-                  </span>
+                  <Mascot
+                    pet={pet.pet}
+                    name={pet.petName}
+                    accessory={pet.accessory}
+                    progress={target ? total / target : 0}
+                    sad={sad}
+                    interactive
+                    onPet={() => {
+                      haptic();
+                      notify("Un abrazo de tu compañero. A tu ritmo ♡");
+                    }}
+                    celebrating={confetti}
+                  />
+                  <button
+                    className="mascot-caption text-button"
+                    onClick={() => changeTab("pet")}
+                  >
+                    {pet.petName} · elige tu compañero ♡
+                  </button>
                 </div>
+              </section>
+              <section className="daily-ritual">
+                <span className="ritual-icon">♡</span>
+                <div>
+                  <strong>Un ratito para ti y tus sueños</strong>
+                  <p>
+                    {data.checkins.includes(today())
+                      ? "Qué bonito verte hoy. Tu compañía ya cuenta."
+                      : `Visita a ${pet.petName}. Hoy puedes venir sin apartar dinero.`}
+                  </p>
+                </div>
+                <button
+                  className="secondary"
+                  disabled={data.checkins.includes(today())}
+                  onClick={() => {
+                    if (setData(checkIn(data))) {
+                      haptic();
+                      notify(
+                        "Visita guardada. Tu ahorro registrado no cambió.",
+                      );
+                    }
+                  }}
+                >
+                  {data.checkins.includes(today())
+                    ? "✓ Hoy nos vimos"
+                    : "Estoy aquí"}
+                </button>
               </section>
               <div className="stats">
                 <div>
@@ -1313,8 +1451,8 @@ export default function App() {
                   <span className="stat-icon lavender">▦</span>
                   <p>
                     <strong>
-                      {data.goals.length}{" "}
-                      {data.goals.length === 1 ? "cajita" : "cajitas"}
+                      {active.length}{" "}
+                      {active.length === 1 ? "cajita" : "cajitas"}
                     </strong>
                     <span>Sueños en camino</span>
                   </p>
@@ -1335,13 +1473,39 @@ export default function App() {
                 </h2>
                 <span>Hechas con ilusión ♡</span>
               </div>
-              {data.goals.length ? (
+              {data.goals.length > 0 && (
+                <div className="goal-filters" aria-label="Filtrar cajitas">
+                  {[
+                    ["active", "Activas"],
+                    ["completed", "Cumplidas"],
+                    ["archived", "Archivadas"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      className={goalFilter === key ? "active" : ""}
+                      aria-pressed={goalFilter === key}
+                      onClick={() => setGoalFilter(key)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {visibleGoals.length ? (
                 <div className="goals-grid">
-                  {data.goals.map((g) => (
+                  {visibleGoals.map((g) => (
                     <GoalCard
                       key={g.id}
                       goal={g}
                       now={now}
+                      onFrequency={(id, frequency) =>
+                        setData({
+                          ...data,
+                          goals: data.goals.map((g) =>
+                            g.id === id ? { ...g, frequency } : g,
+                          ),
+                        })
+                      }
                       onMove={(goal, withdraw) =>
                         setModal({ type: "movement", goal, withdraw })
                       }
@@ -1360,7 +1524,13 @@ export default function App() {
               ) : (
                 <div className="empty-state">
                   <span className="empty-flower">✿</span>
-                  <h3>¿Qué te hace ilusión?</h3>
+                  <h3>
+                    {goalFilter === "archived"
+                      ? "Tus sueños tienen su lugar"
+                      : goalFilter === "completed"
+                        ? "Cada meta llega a su tiempo"
+                        : "¿Qué te hace ilusión?"}
+                  </h3>
                   <p>
                     Un viaje, ese curso, tu fondo de tranquilidad.
                     <br />
@@ -1389,9 +1559,68 @@ export default function App() {
               </p>
             </>
           )}
+          {tab === "pet" && (
+            <PetRoom data={data} onSave={setData} notify={notify} />
+          )}
+          {tab === "activity" && <Activity data={data} notify={notify} />}
+          {tab === "install" && <Install notify={notify} />}
+          {tab === "more" && (
+            <section>
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">TU ESPACIO, A TU ESTILO</p>
+                  <h1>Un poquito más de Cajitas</h1>
+                  <p className="muted">
+                    Todo lo que necesitas para cuidar tus sueños.
+                  </p>
+                </div>
+              </div>
+              <div className="more-grid">
+                {[
+                  [
+                    "simulator",
+                    "✦",
+                    "Rendimiento",
+                    "Compara tasas reales y haz tus cuentas.",
+                  ],
+                  [
+                    "connections",
+                    "⌁",
+                    "Conexiones",
+                    "Comprobantes y saldo, cuando tú quieras.",
+                  ],
+                  [
+                    "backup",
+                    "☁",
+                    "Respaldo",
+                    "Lleva tus cajitas a otro dispositivo.",
+                  ],
+                  [
+                    "install",
+                    "↓",
+                    "Instalar app",
+                    "Tu propia app, siempre cerquita.",
+                  ],
+                ].map(([key, icon, title, description]) => (
+                  <button
+                    className="panel more-card"
+                    key={key}
+                    aria-label={title}
+                    onClick={() => changeTab(key)}
+                  >
+                    <span>{icon}</span>
+                    <h2>{title}</h2>
+                    <p>{description}</p>
+                    <strong>→</strong>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
           {tab === "simulator" && <Simulator />}
           {tab === "connections" && (
             <Connections
+              key={connectionVersion}
               data={data}
               setData={setData}
               notify={notify}
@@ -1401,9 +1630,33 @@ export default function App() {
           {tab === "backup" && (
             <Backup
               data={data}
-              onRestore={(next) => {
-                if (setData(next, true))
-                  notify("Respaldo restaurado. Tus cajitas están aquí.");
+              onRestore={async (next) => {
+                try {
+                  await configureReminder({
+                    ...next.preferences.reminder,
+                    enabled: false,
+                  });
+                  if (
+                    setData(
+                      {
+                        ...next,
+                        preferences: {
+                          ...next.preferences,
+                          reminder: {
+                            ...next.preferences.reminder,
+                            enabled: false,
+                          },
+                        },
+                      },
+                      true,
+                    )
+                  )
+                    notify(
+                      "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Mi mascota.",
+                    );
+                } catch (error) {
+                  notify(error.message);
+                }
               }}
               notify={notify}
             />
@@ -1434,44 +1687,49 @@ export default function App() {
           withdraw={modal.withdraw}
           onClose={() => setModal(null)}
           onSave={movement}
+          preferences={pet}
         />
       )}
       {modal?.type === "edit" && (
-        <Modal title="Dale tiempo a tu sueño" onClose={() => setModal(null)}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const date = new FormData(e.currentTarget).get("date");
-              if (date < today()) return;
+        <GoalForm
+          goal={data.goals.find((g) => g.id === modal.goal.id)}
+          onClose={() => setModal(null)}
+          onSave={(goal) => {
+            const previous = data.goals.find((g) => g.id === goal.id);
+            if (
+              setData({
+                ...data,
+                goals: data.goals.map((g) => (g.id === goal.id ? goal : g)),
+              })
+            ) {
+              setModal(null);
               if (
-                setData({
-                  ...data,
-                  goals: data.goals.map((g) =>
-                    g.id === modal.goal.id ? { ...g, unlockDate: date } : g,
-                  ),
-                })
-              ) {
-                setModal(null);
-                notify("Fecha de compromiso ajustada.");
-              }
-            }}
-          >
-            <p className="muted">
-              Si tu plan semanal se siente pesado, elige una fecha más adelante.
-            </p>
-            <label>
-              Nueva fecha de desbloqueo
-              <input
-                type="date"
-                name="date"
-                min={today()}
-                defaultValue={modal.goal.unlockDate}
-                required
-              />
-            </label>
-            <button className="primary full">Guardar fecha</button>
-          </form>
-        </Modal>
+                balance(previous) < previous.targetCents &&
+                balance(goal) >= goal.targetCents
+              )
+                celebrate();
+              else notify("Tu plan se ajustó. Seguimos a tu ritmo.");
+            }
+          }}
+          onArchive={(goal) => {
+            if (
+              setData({
+                ...data,
+                goals: data.goals.map((g) =>
+                  g.id === goal.id ? { ...g, archived: !g.archived } : g,
+                ),
+              })
+            ) {
+              setModal(null);
+              if (goal.archived) setGoalFilter("active");
+              notify(
+                goal.archived
+                  ? "Tu cajita está de vuelta."
+                  : "Cajita archivada. Su historia está a salvo.",
+              );
+            }
+          }}
+        />
       )}
       {toast && (
         <div className="toast" role="status">

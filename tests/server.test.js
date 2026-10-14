@@ -8,6 +8,7 @@ import {
   vi,
 } from "vitest";
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 const records = vi.hoisted(() => new Map());
 vi.mock("../server/store.js", () => ({
   setRecord: vi.fn(async (id, value) => records.set(id, value)),
@@ -67,6 +68,7 @@ beforeEach(() => {
   vi.unstubAllGlobals();
   for (const [key, value] of Object.entries({
     APP_ORIGIN: base,
+    NATIVE_APP_ORIGINS: "",
     GOOGLE_CLIENT_ID: "mock-client",
     GOOGLE_CLIENT_SECRET: "mock-secret",
     GOOGLE_REDIRECT_URI: `${base}/api/gmail/callback`,
@@ -89,6 +91,89 @@ const post = (path, body = {}, cookie) =>
     body: JSON.stringify(body),
   });
 describe("API y aislamiento de sesiones con proveedores mockeados", () => {
+  it("origins nativos explícitos permiten CORS, otros origins se rechazan", async () => {
+    vi.stubEnv("NATIVE_APP_ORIGINS", "capacitor://localhost,https://localhost");
+    const allowed = await request("/api/status", {
+      headers: { Origin: "capacitor://localhost" },
+    });
+    expect(allowed.headers.get("access-control-allow-origin")).toBe(
+      "capacitor://localhost",
+    );
+    expect(
+      (
+        await request("/api/status", {
+          method: "OPTIONS",
+          headers: { Origin: "https://attacker.example" },
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (await post("/api/gmail/native-start", { challenge: "a".repeat(64) }))
+        .status,
+    ).toBe(403);
+  });
+  it("OAuth móvil entrega un código de un uso ligado a prueba, nunca tokens de Google", async () => {
+    vi.stubEnv("NATIVE_APP_ORIGINS", "capacitor://localhost");
+    const verifier = "b".repeat(64),
+      challenge = createHash("sha256").update(verifier).digest("hex");
+    const mobilePost = (path, body) =>
+      request(path, {
+        method: "POST",
+        headers: {
+          Origin: "capacitor://localhost",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+    const started = await mobilePost("/api/gmail/native-start", { challenge });
+    expect(started.status).toBe(200);
+    const { url } = await started.json();
+    const connect = await request(new URL(url).pathname + new URL(url).search);
+    const state = new URL(connect.headers.get("location")).searchParams.get(
+      "state",
+    );
+    const callback = await request(
+      `/api/gmail/callback?state=${state}&code=test`,
+      { headers: { Cookie: `cajitas_oauth=${state}` } },
+    );
+    const target = new URL(callback.headers.get("location"));
+    expect(target.protocol).toBe("cajitas:");
+    expect(target.hostname).toBe("auth");
+    const code = target.searchParams.get("code");
+    expect(code).toMatch(/^[a-f0-9]{64}$/);
+    expect(target.toString()).not.toContain("mock-access");
+    const exchanged = await mobilePost("/api/gmail/native-exchange", {
+      code,
+      verifier,
+    });
+    expect(exchanged.status).toBe(200);
+    const response = await exchanged.json();
+    expect(response.sessionId).toMatch(/^[a-f0-9]{64}$/);
+    expect(JSON.stringify(response)).not.toContain("mock-refresh");
+    const status = await request("/api/status", {
+      headers: {
+        Origin: "capacitor://localhost",
+        Authorization: `Bearer ${response.sessionId}`,
+      },
+    });
+    expect((await status.json()).gmailConnected).toBe(true);
+    expect(
+      (await mobilePost("/api/gmail/native-exchange", { code, verifier }))
+        .status,
+    ).toBe(403);
+    records.set("native-handoff:" + "c".repeat(64), {
+      challenge,
+      tokens: { access_token: "mock-access" },
+    });
+    expect(
+      (
+        await mobilePost("/api/gmail/native-exchange", {
+          code: "c".repeat(64),
+          verifier: "d".repeat(64),
+        })
+      ).status,
+    ).toBe(403);
+  });
   it("rechaza mutaciones sin Origin y balance privado sin sesión", async () => {
     expect((await request("/api/gmail/sync", { method: "POST" })).status).toBe(
       403,

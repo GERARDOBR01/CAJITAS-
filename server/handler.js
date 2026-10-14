@@ -15,6 +15,13 @@ const opaque = () => randomBytes(32).toString("hex");
 const problem = (message, status = 400) =>
   Object.assign(new Error(message), { status });
 const scopes = ["https://www.googleapis.com/auth/gmail.readonly"];
+function nativeRequest(req) {
+  const permitted = (process.env.NATIVE_APP_ORIGINS ?? "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => ["capacitor://localhost", "https://localhost"].includes(v));
+  return permitted.includes(req.headers.origin);
+}
 function origin() {
   const raw = process.env.APP_ORIGIN ?? "http://localhost:5173";
   const url = new URL(raw);
@@ -61,7 +68,10 @@ function oauth() {
   );
 }
 async function session(req) {
-  const id = cookies(req).cajitas_session;
+  const id =
+    nativeRequest(req) && req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.slice(7)
+      : cookies(req).cajitas_session;
   if (!/^[a-f0-9]{64}$/.test(id ?? "")) return null;
   const record = await getRecord(`session:${id}`);
   return record ? { id, ...record } : null;
@@ -104,13 +114,72 @@ export default async function handler(req, res) {
           ? `/api/${url.searchParams.get("route") ?? ""}`
           : url.pathname,
       method = req.method;
+    const native = nativeRequest(req);
+    if (native) {
+      res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
+    }
+    if (method === "OPTIONS") {
+      res.statusCode = native ? 204 : 403;
+      return res.end();
+    }
     // Mutations require same-origin JSON requests. OAuth callback has its own state binding.
     if (
       method === "POST" &&
-      (req.headers.origin !== origin() ||
+      ((!native && req.headers.origin !== origin()) ||
         !req.headers["content-type"]?.startsWith("application/json"))
     )
       throw problem("Solicitud no autorizada.", 403);
+    if (route === "/api/gmail/native-start" && method === "POST") {
+      if (!native) throw problem("Conexión móvil no autorizada.", 403);
+      oauth();
+      if (!Object.values(configuredSenders()).flat().length)
+        throw problem("Configura los remitentes exactos en el servidor.", 503);
+      const body = await readBody(req);
+      if (!/^[a-f0-9]{64}$/.test(body.challenge ?? ""))
+        throw problem("Solicitud de conexión inválida.");
+      const ticket = opaque();
+      await setRecord(
+        `native-ticket:${ticket}`,
+        { challenge: body.challenge },
+        600,
+      );
+      return json(res, 200, {
+        url: `${origin()}/api/gmail/connect?native=${ticket}`,
+      });
+    }
+    if (route === "/api/gmail/native-exchange" && method === "POST") {
+      if (!native) throw problem("Conexión móvil no autorizada.", 403);
+      const body = await readBody(req);
+      if (
+        !/^[a-f0-9]{64}$/.test(body.code ?? "") ||
+        !/^[a-f0-9]{64}$/.test(body.verifier ?? "")
+      )
+        throw problem("Conexión inválida.");
+      const handoff = await takeRecord(`native-handoff:${body.code}`);
+      if (
+        !handoff ||
+        createHash("sha256").update(body.verifier).digest("hex") !==
+          handoff.challenge
+      )
+        throw problem(
+          "La conexión expiró o no corresponde a este dispositivo.",
+          403,
+        );
+      const previous = await session(req),
+        id = opaque();
+      await setRecord(`session:${id}`, {
+        tokens: handoff.tokens,
+        bitso: previous?.bitso ?? false,
+      });
+      if (previous) await deleteRecord(`session:${previous.id}`);
+      return json(res, 200, { sessionId: id });
+    }
     if (route === "/api/rates" && method === "GET") {
       if (!ratesCache || ratesCache.expires < Date.now())
         ratesCache = { value: await getRates(), expires: Date.now() + 300000 };
@@ -146,7 +215,16 @@ export default async function handler(req, res) {
       const client = oauth(),
         state = opaque(),
         verifier = opaque();
-      await setRecord(`oauth:${state}`, { verifier }, 600);
+      let nativeChallenge;
+      if (url.searchParams.has("native")) {
+        const ticket = url.searchParams.get("native");
+        if (!/^[a-f0-9]{64}$/.test(ticket ?? ""))
+          throw problem("Conexión inválida.");
+        const record = await takeRecord(`native-ticket:${ticket}`);
+        if (!record) throw problem("La conexión expiró.", 403);
+        nativeChallenge = record.challenge;
+      }
+      await setRecord(`oauth:${state}`, { verifier, nativeChallenge }, 600);
       cookie(res, "cajitas_oauth", state, 600);
       return redirect(
         res,
@@ -173,7 +251,12 @@ export default async function handler(req, res) {
       if (!transaction) throw problem("La conexión expiró.", 403);
       cookie(res, "cajitas_oauth", "", 0);
       if (url.searchParams.has("error"))
-        return redirect(res, `${origin()}/?gmail=cancelled`);
+        return redirect(
+          res,
+          transaction.nativeChallenge
+            ? "cajitas://auth?error=cancelled"
+            : `${origin()}/?gmail=cancelled`,
+        );
       const client = oauth();
       const { tokens } = await client.getToken({
         code: url.searchParams.get("code"),
@@ -181,6 +264,15 @@ export default async function handler(req, res) {
       });
       if (!tokens.scope?.split(" ").includes(scopes[0]))
         throw problem("Gmail no concedió el permiso de lectura.", 403);
+      if (transaction.nativeChallenge) {
+        const code = opaque();
+        await setRecord(
+          `native-handoff:${code}`,
+          { challenge: transaction.nativeChallenge, tokens },
+          60,
+        );
+        return redirect(res, `cajitas://auth?code=${code}`);
+      }
       const previous = await session(req),
         id = opaque();
       await setRecord(`session:${id}`, {
@@ -290,8 +382,8 @@ export default async function handler(req, res) {
         86400,
       );
       if (previous) await deleteRecord(`session:${previous.id}`);
-      cookie(res, "cajitas_session", id, 86400);
-      return json(res, 200, { ok: true });
+      if (!native) cookie(res, "cajitas_session", id, 86400);
+      return json(res, 200, { ok: true, ...(native ? { sessionId: id } : {}) });
     }
     if (route === "/api/bitso/balance" && method === "GET") {
       const current = await session(req);

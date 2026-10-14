@@ -2,6 +2,8 @@
 
 PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y una función serverless Node para las integraciones.
 
+**Versión 0.2:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
+
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
 
 ## Arranque local
@@ -19,6 +21,19 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 `npm run dev` sirve React y `/api/*` con el mismo handler de la función serverless. `npm run build` genera `dist`. `npm run preview` permite revisar la PWA construida, pero no ejecuta las APIs; para integraciones usa desarrollo o Vercel.
 
 ## Funciones
+
+### La nueva experiencia
+
+- Cerdito Pipo, vaquita Mila, conejito Luna o Caji: nombre y brote, moñito, bufanda o estrella, con ilustraciones SVG originales.
+- Animaciones de parpadeo, caricias, corazones y celebración. Opción de desactivarlas, además de respetar reducir movimiento del dispositivo.
+- Visita diaria y cinco niveles de compañía. Un día cuenta una vez aunque tenga varias visitas o depósitos; la cantidad de dinero no determina la amistad. Visitar no registra un depósito.
+- Plantillas de sueños, frecuencia de ahorro persistente, edición de nombre/monto/proveedor/fecha y archivo reversible. Archivar conserva dinero e historial y detiene asignaciones automáticas de correo a esa cajita.
+- Actividad unificada, gráfico de saldo registrado de 14 días, tabla accesible, filtros por cajita/mes y CSV con protección contra fórmulas en campos de texto.
+- Recordatorio semanal: notificación local con permiso en apps nativas, o evento `.ics` para importar en calendario en la web. No realiza transferencias ni añade registros automáticamente. Al restaurar un respaldo hay que activar el recordatorio de nuevo.
+- Barra de navegación inferior, zonas seguras y compartir archivos desde el teléfono. En la app nativa se replica el registro local en Preferences; se recupera la copia válida más reciente al abrir.
+- Backups v2 incluyen mascota, visitas, frecuencia y archivo; se migran los respaldos v1 sin perder movimientos. Cada instalación tiene sus propios datos: utiliza el respaldo para trasladarlos.
+
+La investigación usó **REA 6.5.0** para observar artículos públicos oficiales de Qapital, Monarch y Finch. [Patrones y decisiones](docs/research/reference-patterns.md), [evidencia y límites](docs/research/rea-evidence.md). Se adaptaron comportamientos con código y arte originales; no se copiaron recursos de esas apps ni se accedió a sus cuentas privadas.
 
 - Metas con nombre, monto MXN, fecha de desbloqueo y proveedor: Nu, Mercado Pago, Bitso u Otra.
 - Registro en centavos, historial, progreso, racha de días consecutivos y confeti al cruzar el 100%.
@@ -87,6 +102,8 @@ Solo se llama a `GET https://bitso.com/api/v3/balance/`, con HMAC-SHA256 de `non
 
 Incluye `api/router.js` y `vercel.json` para Vercel: una función Node atiende `/api/*`, Vite genera el frontend. No se ha desplegado automáticamente.
 
+Para las apps nativas, `VITE_API_ORIGIN` es el origen **público HTTPS** del backend, no un secreto. Hay que definirlo antes de `npm run build:native`. En el servidor, `NATIVE_APP_ORIGINS=capacitor://localhost,https://localhost` habilita únicamente esos origins de Capacitor. La web conserva sus cookies HttpOnly; la app guarda un ID opaco de sesión en Preferences y usa un bearer para consultar el servidor. El código móvil OAuth es de un solo uso, caduca en 60 segundos y exige la prueba de la app que inició la conexión; los tokens de Google permanecen cifrados en el servidor. La app nativa no registra un service worker ni carga una página remota como `server.url`.
+
 - Configura las variables de `.env.example` en los secretos del hosting; no subas `.env`.
 - Usa `APP_ORIGIN=https://tu-dominio` y registra la redirección HTTPS en Google.
 - Para Gmail/Bitso configura `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` de Redis compatible con Upstash REST. Sesiones cifradas AES-256-GCM con `SESSION_SECRET`, con expiración y compartidas entre invocaciones. El servidor rechaza usar disco temporal como almacén de sesiones de producción.
@@ -102,9 +119,14 @@ npm test
 npx playwright install chromium
 npm run test:e2e
 npm run build
+npm run build:native
+# Con JDK 21 y Android SDK instalados:
+npm run build:android
 ```
 
 Tests unitarios: parser, Banxico con API mockeada, firma Bitso, centavos, rachas, respaldos y deduplicación. Tests del handler: sesiones, rechazo de mutaciones sin Origin, PKCE/state de un solo uso y Gmail filtrado por remitente con proveedores mockeados.
+
+Validación de la versión 0.2: **26 tests unitarios**, **9 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
 Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro anticipado, confirmación, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
 
@@ -118,5 +140,16 @@ Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear me
 | [Meta alcanzada](docs/screenshots/04-meta-alcanzada-mobile.png) | Celebración |
 | [Simulador](docs/screenshots/05-simulador-mobile.png) | Token pendiente y tasa capturada |
 | [Conexiones](docs/screenshots/06-conexiones-mobile.png) | Depósito sintético por revisar |
+
+Las nuevas capturas son de viewport exacto **390 × 844**:
+
+| Captura | Vista |
+| --- | --- |
+| [Cerdito](docs/screenshots/v2-01-cerdito-mobile.png) | Pipo con moñito |
+| [Vaquita](docs/screenshots/v2-02-vaquita-mobile.png) | Mila con bufanda |
+| [Conejito](docs/screenshots/v2-03-conejito-mobile.png) | Luna |
+| [Meta](docs/screenshots/v2-04-meta-mobile.png) | Plan y movimientos |
+| [Actividad](docs/screenshots/v2-05-actividad-mobile.png) | Saldo registrado e historial |
+| [Instalación](docs/screenshots/v2-06-instalar-mobile.png) | Oferta de instalación simulada para verificar el flujo |
 
 Los iconos PWA se regeneran desde la mascota SVG con `node scripts/generate-icons.js` (requiere Chromium instalado).
