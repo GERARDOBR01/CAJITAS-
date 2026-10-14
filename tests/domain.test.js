@@ -56,7 +56,7 @@ describe("registro de ahorro y recuperación", () => {
     ).toThrow();
     expect(
       validateBackup({ ...initialData(), goals: [goal] }).goals[0],
-    ).toEqual(goal);
+    ).toMatchObject(goal);
   });
   it("calcula el ahorro restante por periodos y desbloquea a medianoche local", () => {
     expect(plan(goal, 7, new Date("2026-10-18T00:00:00").getTime())).toBe(

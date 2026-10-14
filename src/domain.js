@@ -57,7 +57,143 @@ export function streak(goals, now = new Date()) {
   return count;
 }
 export function initialData() {
-  return { version: 1, goals: [], importedIds: [], assignments: {} };
+  return {
+    version: 2,
+    goals: [],
+    importedIds: [],
+    assignments: {},
+    checkins: [],
+    preferences: defaultPreferences(),
+  };
+}
+export const PETS = {
+  pig: {
+    name: "Pipo",
+    label: "Cerdito",
+    color: "#f3c8ce",
+    motto: "Un guardadito y un abrazo.",
+  },
+  cow: {
+    name: "Mila",
+    label: "Vaquita",
+    color: "#d9d5ef",
+    motto: "Vamos a tu ritmo, muuuy bien.",
+  },
+  bunny: {
+    name: "Luna",
+    label: "Conejito",
+    color: "#eedec7",
+    motto: "Pasito a pasito, saltito a saltito.",
+  },
+  box: {
+    name: "Caji",
+    label: "Cajita",
+    color: "#c8e8bd",
+    motto: "Los sueños también necesitan una casita.",
+  },
+};
+export function defaultPreferences() {
+  return {
+    pet: "box",
+    petName: "Caji",
+    accessory: "leaf",
+    animations: true,
+    reminder: { enabled: false, day: 5, time: "18:00" },
+  };
+}
+export function activeGoals(data) {
+  return data.goals.filter((g) => !g.archived);
+}
+export function companionship(data) {
+  const dates = new Set([
+    ...data.checkins,
+    ...data.goals.flatMap((g) =>
+      g.entries
+        .filter((e) => e.cents > 0)
+        .map((e) => localDate(new Date(e.at))),
+    ),
+  ]);
+  const thresholds = [0, 3, 7, 14, 30];
+  const level = thresholds.filter((n) => dates.size >= n).length;
+  const next = thresholds[level] ?? null;
+  return {
+    days: dates.size,
+    level,
+    next,
+    progress: next
+      ? (dates.size - thresholds[level - 1]) / (next - thresholds[level - 1])
+      : 1,
+    title: [
+      "Una nueva amistad",
+      "Cómplices de sueños",
+      "Nuestra amistad florece",
+      "Pequeños aventureros",
+      "Una gran compañía",
+    ][level - 1],
+  };
+}
+export function checkIn(data, date = today()) {
+  return data.checkins.includes(date)
+    ? data
+    : { ...data, checkins: [...data.checkins, date].sort() };
+}
+export function activity(data, { goalId = "", month = "" } = {}) {
+  return data.goals
+    .filter((g) => !goalId || g.id === goalId)
+    .flatMap((g) =>
+      g.entries.map((e) => ({
+        ...e,
+        goalId: g.id,
+        goalName: g.name,
+        provider: g.provider,
+      })),
+    )
+    .filter((e) => !month || localDate(new Date(e.at)).startsWith(month))
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+export function balanceHistory(data, days = 14, now = new Date()) {
+  const entries = data.goals.flatMap((g) => g.entries);
+  return Array.from({ length: days }, (_, i) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() - days + i + 1);
+    date.setHours(23, 59, 59, 999);
+    return {
+      date: localDate(date),
+      cents: entries
+        .filter((e) => Date.parse(e.at) <= date.getTime())
+        .reduce((sum, e) => sum + e.cents, 0),
+    };
+  });
+}
+export function goalStatus(goal, now = Date.now()) {
+  const remaining = Math.max(0, goal.targetCents - balance(goal));
+  return {
+    complete: remaining === 0,
+    remaining,
+    pastDue: remaining > 0 && unlockTime(goal.unlockDate) <= now,
+  };
+}
+export function activityCSV(data, filters) {
+  const text = (value) =>
+    '"' +
+    (/^[=+@\-\t\r]/.test(String(value).trimStart()) ? "'" : "") +
+    String(value).replaceAll('"', '""') +
+    '"';
+  return (
+    "\ufeffFecha,Cajita,App,Tipo,Monto MXN,Origen\r\n" +
+    activity(data, filters)
+      .map((e) =>
+        [
+          text(new Date(e.at).toISOString()),
+          text(e.goalName),
+          text(e.provider),
+          text(e.cents > 0 ? "Depósito" : "Retiro"),
+          (e.cents / 100).toFixed(2),
+          text(e.source === "gmail" ? "Correo" : "Manual"),
+        ].join(","),
+      )
+      .join("\r\n")
+  );
 }
 function validDate(value) {
   return (
@@ -68,7 +204,7 @@ function validDate(value) {
 export function validateBackup(data) {
   if (
     !data ||
-    data.version !== 1 ||
+    ![1, 2].includes(data.version) ||
     !Array.isArray(data.goals) ||
     data.goals.length > 200 ||
     !Array.isArray(data.importedIds) ||
@@ -77,6 +213,42 @@ export function validateBackup(data) {
     Array.isArray(data.assignments)
   )
     throw new Error("Este archivo no es un respaldo compatible de Cajitas.");
+  if (
+    data.preferences !== undefined &&
+    (!data.preferences ||
+      typeof data.preferences !== "object" ||
+      Array.isArray(data.preferences))
+  )
+    throw new Error("Las preferencias del respaldo no son válidas.");
+  const preferences = {
+    ...defaultPreferences(),
+    ...data.preferences,
+    reminder: {
+      ...defaultPreferences().reminder,
+      ...data.preferences?.reminder,
+    },
+  };
+  if (
+    !Object.hasOwn(PETS, preferences.pet) ||
+    typeof preferences.petName !== "string" ||
+    !preferences.petName.trim() ||
+    preferences.petName.length > 32 ||
+    !["leaf", "bow", "scarf", "star"].includes(preferences.accessory) ||
+    typeof preferences.animations !== "boolean" ||
+    typeof preferences.reminder.enabled !== "boolean" ||
+    !Number.isInteger(preferences.reminder.day) ||
+    preferences.reminder.day < 0 ||
+    preferences.reminder.day > 6 ||
+    !/^([01]\d|2[0-3]):[0-5]\d$/.test(preferences.reminder.time)
+  )
+    throw new Error("Las preferencias del respaldo no son válidas.");
+  const checkins = data.checkins ?? [];
+  if (
+    !Array.isArray(checkins) ||
+    checkins.length > 4000 ||
+    checkins.some((d) => !validDate(d))
+  )
+    throw new Error("El historial de compañía no es válido.");
   const ids = new Set();
   for (const g of data.goals) {
     if (
@@ -92,7 +264,9 @@ export function validateBackup(data) {
       !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(g.provider) ||
       !Array.isArray(g.entries) ||
       g.entries.length > 10000 ||
-      !["star", "flower", "cloud"].includes(g.icon)
+      !["star", "flower", "cloud"].includes(g.icon) ||
+      (g.frequency !== undefined && ![7, 15, 30].includes(g.frequency)) ||
+      (g.archived !== undefined && typeof g.archived !== "boolean")
     )
       throw new Error("Hay una cajita con datos inválidos.");
     ids.add(g.id);
@@ -121,7 +295,23 @@ export function validateBackup(data) {
   )
     throw new Error("El registro de correos es inválido.");
   return {
-    version: 1,
+    version: 2,
+    savedAt:
+      Number.isSafeInteger(data.savedAt) && data.savedAt >= 0
+        ? data.savedAt
+        : 0,
+    preferences: {
+      pet: preferences.pet,
+      petName: preferences.petName,
+      accessory: preferences.accessory,
+      animations: preferences.animations,
+      reminder: {
+        enabled: preferences.reminder.enabled,
+        day: preferences.reminder.day,
+        time: preferences.reminder.time,
+      },
+    },
+    checkins: [...new Set(checkins)].sort(),
     goals: data.goals.map((g) => ({
       id: g.id,
       name: g.name,
@@ -129,6 +319,8 @@ export function validateBackup(data) {
       unlockDate: g.unlockDate,
       provider: g.provider,
       icon: g.icon,
+      frequency: g.frequency ?? 7,
+      archived: g.archived ?? false,
       entries: g.entries.map((e) => ({
         id: e.id,
         cents: e.cents,

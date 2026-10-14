@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cajitas</string>
+    <string name="title_activity_main">Cajitas</string>
+    <string name="package_name">mx.cajitas.ahorro</string>
+    <string name="custom_url_scheme">cajitas</string>
+</resources>

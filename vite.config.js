@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       VitePWA({
+        disable: mode === "native",
         registerType: "prompt",
         includeAssets: ["mascot.svg", "icon-192.png", "icon-512.png"],
         manifest: {
