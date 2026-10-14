@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import "./styles.css";
 import "./upgrade.css";
 import "./refinement.css";
+import "./finish.css";
 import { setupNativeEvents, hydrateSavings } from "./platform.js";
 async function start() {
   try {

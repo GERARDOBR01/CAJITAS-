@@ -1,14 +1,14 @@
 # Cajitas ✦
 
-## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.4.0-preview.1/Cajitas-0.4.0-android-preview.apk)
+## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.5.0-preview.1/Cajitas-0.5.0-android-preview.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.4.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.4.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.5.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
 
 En Android, abre el APK descargado para instalarlo. Para iPhone puedes instalar la versión web desde Safari con Compartir → Agregar a pantalla de inicio. El proyecto nativo de iPhone requiere Xcode y firma Apple.
 
 PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y una función serverless Node para las integraciones.
 
-**Versión 0.4:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
+**Versión 0.5:** importa comprobantes desde un archivo o texto, revísalos y registra cada depósito una vez, sin conectar Gmail. Incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables y tutorial interactivo. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
 
@@ -30,7 +30,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los registros y respaldos. Las conexiones muestran su configuración pendiente; **no hay tasas inventadas**.
+Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los registros, la importación local de correos y los respaldos. Las conexiones directas muestran su configuración pendiente; **no hay tasas inventadas**.
 
 `npm run dev` sirve React y `/api/*` con el mismo handler de la función serverless. `npm run build` genera `dist`. `npm run preview` permite revisar la PWA construida, pero no ejecuta las APIs; para integraciones usa desarrollo o Vercel.
 
@@ -38,11 +38,15 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 
 ### La nueva experiencia
 
+- **Comprobantes sin conexión a Gmail:** Más → Conexiones permite abrir `.eml`/`.txt` o pegar texto en el celular. Revisión obligatoria de cajita, monto y fecha antes de sumar. El archivo se procesa en el dispositivo; no se guarda su contenido ni se ejecuta su HTML. Huella de importación y posibles coincidencias con movimientos existentes, incluso archivados. También accesible al registrar ahorro en una cajita.
+- **Tu siguiente pasito:** el inicio destaca la siguiente meta y propone un monto editable; una fecha vencida invita a ajustar el plan. Siempre requiere registrar lo que ya apartaste en tu app externa.
+- **Gmail directo preparado:** la web de Pages puede conectarse a un backend HTTPS configurado. Setup guiado y diagnóstico de variables, sin secretos en cliente. **La publicación actual no tiene backend ni OAuth configurados**; usa la importación local. [Guía completa](docs/GMAIL-SETUP.md).
+- Metas, comprobantes, conexiones, rendimiento y respaldos en módulos separados; verificación automática en cada PR. Un fallo al guardar un respaldo conserva los datos actuales y la revisión abierta.
 - Vista previa del aporte semanal o cada 15/30 días antes de crear o editar una meta; muestra cuánto falta y ofrece montos rápidos editables. Ninguna sugerencia crea un depósito por sí sola.
 - Registra la fecha real del movimiento. Corrige o elimina registros manuales equivocados desde Actividad, con confirmación antes de eliminar. Cada cambio valida saldos por orden de fecha; se rechaza una corrección que deje un saldo histórico negativo. Los registros vinculados a Gmail conservan su origen y no se editan como registros manuales.
 - El gráfico de 14 días y su total siguen la cajita seleccionada; el mes filtra la lista, métricas del periodo y CSV.
 - Protección contra consultas lentas y cambios desde otra pestaña que podrían sobrescribir datos más recientes. La vista se actualiza entre pestañas del mismo navegador; los dispositivos siguen siendo independientes.
-- Cinco escenas SVG originales: bienvenida, semillas, libreta, mochila de respaldo y jardín de celebración. Movimiento reducible y botón de corrección con área táctil amplia. En el inicio se destaca la compañía; la racha de depósitos queda como información secundaria.
+- Siete escenas SVG originales: bienvenida, semillas, libreta, mochila de respaldo, jardín de celebración, sobre con conejito y camino de brotes. Movimiento reducible y botón de corrección con área táctil amplia. En el inicio se destaca la compañía; la racha de depósitos queda como información secundaria.
 
 - Cerdito Pipo, vaquita Mila, conejito Luna o Caji: nombre y brote, moñito, bufanda o estrella, con ilustraciones SVG originales.
 - Animaciones de parpadeo, caricias, corazones y celebración. Opción de desactivarlas, además de respetar reducir movimiento del dispositivo.
@@ -56,6 +60,8 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 La revisión del [mercado mexicano](docs/research/mexico-market-2026-10.md) compara documentación oficial de Nu, Mercado Pago, BBVA, Banorte, ScotiaMóvil, Fintual y Spendee. Metas y apartados ya existen: no se afirma exclusividad ni superioridad comercial. [Conciliación estudiada con REA](docs/research/rea-matching.md) documenta el patrón de revisión de registros manuales/importados de YNAB, con sus límites y las decisiones propias de Cajitas.
 
 La investigación usó **REA 6.5.0** para observar artículos públicos oficiales de Qapital, Monarch y Finch. [Patrones y decisiones](docs/research/reference-patterns.md), [evidencia y límites](docs/research/rea-evidence.md). Se adaptaron comportamientos con código y arte originales; no se copiaron recursos de esas apps ni se accedió a sus cuentas privadas.
+
+La [última revisión con REA](docs/research/final-rea-review.md) contrasta la exportación de mensajes de Google y la revisión de importaciones de Monarch. De ahí se adaptan el flujo elegir → revisar → confirmar y la distinción entre archivo repetido y posible depósito ya registrado.
 
 - Metas con nombre, monto MXN, fecha de desbloqueo y proveedor: Nu, Mercado Pago, Bitso u Otra.
 - Registro en centavos, historial, progreso, racha de días consecutivos y confeti al cruzar el 100%.
@@ -84,6 +90,8 @@ Series verificadas en el [catálogo oficial de instrumentos](https://www.banxico
 Endpoint: `GET https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF43783,SF282/datos/oportuno`. Datos ausentes o `N/E` se muestran como no disponibles. Fallos de API no se sustituyen por tasas de ejemplo.
 
 ## Gmail OAuth y comprobantes
+
+**Para usar correos hoy, no necesitas OAuth:** abre un `.eml` o pega texto en Más → Conexiones → Importar un correo. Confirma monto, fecha y cajita. La [guía de correos](docs/GMAIL-SETUP.md) explica esta alternativa y el despliegue HTTPS para activar Gmail directo en Pages, Android e iPhone.
 
 1. Crea un proyecto Google Cloud y habilita **Gmail API**.
 2. Configura la pantalla de consentimiento. Agrega tu cuenta como usuario de prueba si está en modo Testing.
@@ -133,13 +141,13 @@ npm run preview:pages
 npm run deploy:pages
 ```
 
-El script publica únicamente `dist` y `.nojekyll` en la rama de distribución. En Settings → Pages, el origen es Deploy from a branch → gh-pages → /(root). El modo Pages ajusta recursos, manifiesto y service worker al prefijo `/CAJITAS-/`. Metas, mascotas, historial y respaldos funcionan allí; Banxico, Gmail y Bitso requieren el servidor de la aplicación, que Pages no ejecuta. Esa versión muestra las conexiones como no habilitadas y conserva la comparación con tasas capturadas sin inventar referencias.
+El script publica únicamente `dist` y `.nojekyll` en la rama de distribución. En Settings → Pages, el origen es Deploy from a branch → gh-pages → /(root). El modo Pages ajusta recursos, manifiesto y service worker al prefijo `/CAJITAS-/`. Metas, mascotas, historial, importación local de comprobantes y respaldos funcionan allí. Banxico, Gmail directo y Bitso requieren un backend HTTPS externo: Pages no ejecuta servidores. La publicación actual muestra esas conexiones como no habilitadas. Para activarlas, configura `VITE_API_ORIGIN` al compilar y `WEB_APP_URL` en el servidor; sigue la [guía de setup](docs/GMAIL-SETUP.md).
 
 ### Backend
 
 Incluye `api/router.js` y `vercel.json` para Vercel: una función Node atiende `/api/*`, Vite genera el frontend. No se ha desplegado automáticamente.
 
-Para las apps nativas, `VITE_API_ORIGIN` es el origen **público HTTPS** del backend, no un secreto. Hay que definirlo antes de `npm run build:native`. En el servidor, `NATIVE_APP_ORIGINS=capacitor://localhost,https://localhost` habilita únicamente esos origins de Capacitor. La web conserva sus cookies HttpOnly; la app guarda un ID opaco de sesión en Preferences y usa un bearer para consultar el servidor. El código móvil OAuth es de un solo uso, caduca en 60 segundos y exige la prueba de la app que inició la conexión; los tokens de Google permanecen cifrados en el servidor. La app nativa no registra un service worker ni carga una página remota como `server.url`.
+Para Pages y las apps nativas, `VITE_API_ORIGIN` es el origen **público HTTPS** del backend, no un secreto. Hay que definirlo antes de `npm run build:pages` o `npm run build:native`. Pages usa `WEB_APP_URL` como destino permitido de retorno y una sesión opaca por pestaña; los tokens de Google permanecen en el servidor. En el servidor, `NATIVE_APP_ORIGINS=capacitor://localhost,https://localhost` habilita únicamente esos origins de Capacitor. La web conserva sus cookies HttpOnly; la app guarda un ID opaco de sesión en Preferences y usa un bearer para consultar el servidor. El código móvil OAuth es de un solo uso, caduca en 60 segundos y exige la prueba de la app que inició la conexión; los tokens de Google permanecen cifrados en el servidor. La app nativa no registra un service worker ni carga una página remota como `server.url`.
 
 - Configura las variables de `.env.example` en los secretos del hosting; no subas `.env`.
 - Usa `APP_ORIGIN=https://tu-dominio` y registra la redirección HTTPS en Google.
@@ -154,7 +162,8 @@ No se envían ni modifican correos. Sin scraping ni librerías no oficiales de N
 ```bash
 npm test
 npx playwright install chromium
-npm run test:e2e
+npm run verify
+# verify = unitarios + build Pages + Playwright
 npm run build
 npm run build:native
 # Con JDK 21 y Android SDK instalados:
@@ -163,7 +172,7 @@ npm run build:android
 
 Tests unitarios: parser, Banxico con API mockeada, firma Bitso, centavos, rachas, respaldos y deduplicación. Tests del handler: sesiones, rechazo de mutaciones sin Origin, PKCE/state de un solo uso y Gmail filtrado por remitente con proveedores mockeados.
 
-Validación de la versión 0.4: **40 tests unitarios**, **20 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
+Validación de la versión 0.5: **76 tests unitarios**, **26 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
 Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro anticipado, confirmación, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
 
@@ -214,3 +223,15 @@ Los correos de estas capturas son sintéticos y las APIs están mockeadas. Los p
 | [Escritorio](docs/screenshots/tutorial-04-desktop.png) | Recorrido a 1365 × 900 |
 
 Las capturas son de Chromium a 390 × 844 con animaciones detenidas para obtener una imagen legible. La experiencia publicada sí anima las ilustraciones cuando los ajustes de movimiento lo permiten.
+
+### Correos y pulido 0.5
+
+| Captura móvil | Qué muestra |
+| --- | --- |
+| [Importar correo](docs/screenshots/finish-01-correo-mobile.png) | Archivo o texto, sin conectar Gmail |
+| [Revisar comprobante](docs/screenshots/finish-02-revision-mobile.png) | Datos editables y texto inerte de un correo sintético |
+| [Siguiente pasito](docs/screenshots/finish-03-pasito-mobile.png) | Plan orientado a la siguiente acción |
+
+Los tests nuevos verifican importación revisada, coincidencias incluso archivadas, repetición del mismo archivo, contenido HTML inerte, ausencia del cuerpo del correo en el respaldo y conservación de datos cuando falla el almacenamiento. El puente OAuth para Pages se prueba con Google mockeado: retorno ligado a prueba y origen, caducidad y uso único. GitHub Actions ejecuta los tests, la compilación Pages y Playwright en cada PR y cambio a `main`, sin credenciales de proveedores.
+
+Además se verificó la PWA construida con base Pages: tras su primera carga completa, recarga sin internet e importa un correo MIME multipart con revisión, sin llamadas API ni errores JavaScript.

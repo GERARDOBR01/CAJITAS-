@@ -1,0 +1,14 @@
+From: Ejemplo sin autenticar <aviso@example.invalid>
+Subject: Dinero recibido
+Date: Thu, 1 Oct 2026 12:00:00 -0600
+Message-ID: <local-demo-003@example.invalid>
+Authentication-Results: mx.google.com; dkim=pass header.d=example.invalid
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+
+<html><head><style>.money { content: '$99,999.00 MXN'; }</style></head><body>
+<script>globalThis.mailExecuted = true; fetch('https://example.invalid/track');</script>
+<img src="https://example.invalid/pixel" onerror="globalThis.mailExecuted = true">
+<div>Transferencia recibida. Monto recibido: &#36;1,200.50&nbsp;MXN</div>
+<a href="javascript:globalThis.mailExecuted=true">Consultar</a>
+</body></html>

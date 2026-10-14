@@ -5,6 +5,18 @@ export const isNative = Capacitor.isNativePlatform();
 export const platform = Capacitor.getPlatform();
 const nativeSessionKey = "cajitas:native-session";
 const nativeProofKey = "cajitas:native-oauth";
+const webSessionKey = "cajitas:web-session:";
+const webProofKey = "cajitas:web-oauth:";
+let connectionResult;
+export function consumeConnectionResult() {
+  const result = connectionResult;
+  connectionResult = null;
+  return result;
+}
+function announceConnection(detail) {
+  connectionResult = detail;
+  window.dispatchEvent(new CustomEvent("cajitas:connection", { detail }));
+}
 let nativeSession;
 let installPrompt;
 if (typeof window !== "undefined" && !isNative)
@@ -40,59 +52,101 @@ export async function persistSavings(raw) {
   if (isNative) await Preferences.set({ key: STORAGE_KEY, value: raw });
 }
 function apiOrigin() {
-  if (!isNative) return "";
   const configured = import.meta.env.VITE_API_ORIGIN;
+  if (!configured && !isNative) return "";
   if (!configured)
     throw new Error(
       "Las conexiones aún no están habilitadas en esta instalación. Tus cajitas funcionan sin conexión.",
     );
-  const url = new URL(configured);
+  let url;
+  try {
+    url = new URL(configured);
+  } catch {
+    throw new Error(
+      "La dirección de las conexiones de esta instalación no es válida.",
+    );
+  }
   if (
     url.protocol !== "https:" ||
     url.username ||
     url.password ||
     url.pathname !== "/" ||
     url.search ||
-    url.hash
+    url.hash ||
+    (!isNative &&
+      (!url.hostname.includes(".") ||
+        /^[\d.]+$/.test(url.hostname) ||
+        url.hostname.includes(":") ||
+        /(^|\.)(localhost|local|internal|test|invalid|example)$/.test(
+          url.hostname,
+        )))
   )
     throw new Error(
       "La dirección de las conexiones de esta instalación no es válida.",
     );
   return url.origin;
 }
+function externalWeb(origin) {
+  return !isNative && Boolean(origin) && origin !== window.location.origin;
+}
+function unavailableStatus() {
+  return {
+    apiConfigured: false,
+    gmailConnected: false,
+    gmailConfigured: false,
+    gmailReadiness: { ready: false, missing: ["VITE_API_ORIGIN"] },
+    bitsoAuthorized: false,
+    bitsoConfigured: false,
+    patternsValidated: false,
+  };
+}
 export async function api(path, body) {
-  if (!isNative && import.meta.env.MODE === "pages") {
-    if (path === "status")
-      return {
-        gmailConnected: false,
-        gmailConfigured: false,
-        bitsoAuthorized: false,
-        bitsoConfigured: false,
-        patternsValidated: false,
-      };
+  if (
+    !import.meta.env.VITE_API_ORIGIN &&
+    (isNative || import.meta.env.MODE === "pages")
+  ) {
+    if (path === "status") return unavailableStatus();
     throw new Error(
-      "Las consultas externas aún no están habilitadas en esta versión web. Puedes usar tus cajitas y comparar la tasa que captures.",
+      "Las conexiones aún no están habilitadas en esta instalación. Puedes usar tus cajitas y comparar la tasa que captures.",
     );
   }
+  let origin;
+  try {
+    origin = apiOrigin();
+  } catch (error) {
+    if (path === "status") return unavailableStatus();
+    throw error;
+  }
+  const web = externalWeb(origin);
   if (isNative && nativeSession === undefined)
     nativeSession = (await Preferences.get({ key: nativeSessionKey })).value;
-  const response = await fetch(`${apiOrigin()}/api/${path}`, {
+  const session = isNative
+    ? nativeSession
+    : web
+      ? sessionStorage.getItem(webSessionKey + origin)
+      : null;
+  const response = await fetch(`${origin}/api/${path}`, {
     method: body === undefined ? "GET" : "POST",
     headers: {
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-      ...(isNative && nativeSession
-        ? { Authorization: `Bearer ${nativeSession}` }
-        : {}),
+      ...(session ? { Authorization: `Bearer ${session}` } : {}),
     },
+    credentials: web || isNative ? "omit" : "same-origin",
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     signal: AbortSignal.timeout(60000),
   });
-  const data = await response.json();
+  const data = await response.json().catch(() => {
+    throw new Error("El servidor de conexiones no respondió correctamente.");
+  });
   if (!response.ok)
     throw new Error(data.error ?? "No se pudo completar la consulta.");
-  if (isNative && data.sessionId) {
-    nativeSession = data.sessionId;
-    await Preferences.set({ key: nativeSessionKey, value: nativeSession });
+  if ((isNative || web) && data.sessionId) {
+    if (!/^[a-f0-9]{64}$/.test(data.sessionId))
+      throw new Error("La sesión del servidor no es válida.");
+    if (isNative) {
+      nativeSession = data.sessionId;
+      await Preferences.set({ key: nativeSessionKey, value: nativeSession });
+    } else sessionStorage.setItem(webSessionKey + origin, data.sessionId);
   }
   return data;
 }
@@ -143,8 +197,18 @@ export async function saveFile(text, filename, type = "application/json") {
   }
 }
 export async function connectGmail() {
-  if (!isNative) {
-    location.assign("/api/gmail/connect");
+  // Static builds without a backend must never navigate to a nonexistent /api.
+  if (
+    !import.meta.env.VITE_API_ORIGIN &&
+    (isNative || import.meta.env.MODE === "pages")
+  )
+    throw new Error(
+      "Las conexiones aún no están habilitadas en esta instalación. Tus cajitas funcionan sin conexión.",
+    );
+  const origin = apiOrigin(),
+    web = externalWeb(origin);
+  if (!isNative && !web) {
+    window.location.assign(`${origin}/api/gmail/connect`);
     return;
   }
   const bytes = crypto.getRandomValues(new Uint8Array(32));
@@ -158,15 +222,73 @@ export async function connectGmail() {
   const challenge = Array.from(new Uint8Array(hash), (b) =>
     b.toString(16).padStart(2, "0"),
   ).join("");
-  const { url } = await api("gmail/native-start", { challenge });
-  await Preferences.set({
-    key: nativeProofKey,
-    value: JSON.stringify({ verifier, expires: Date.now() + 600000 }),
+  const { url } = await api(web ? "gmail/app-start" : "gmail/native-start", {
+    challenge,
+    ...(web
+      ? {
+          callbackUrl: new URL(
+            import.meta.env.BASE_URL || "/",
+            window.location.origin,
+          ).href,
+        }
+      : {}),
   });
-  await openExternal(url);
+  const target = new URL(url);
+  if (
+    target.origin !== origin ||
+    target.pathname !== "/api/gmail/connect" ||
+    target.username ||
+    target.password
+  )
+    throw new Error("El enlace de conexión del servidor no es válido.");
+  const proof = JSON.stringify({ verifier, expires: Date.now() + 600000 });
+  if (web) {
+    sessionStorage.setItem(webProofKey + origin, proof);
+    window.location.assign(target.href);
+  } else {
+    await Preferences.set({ key: nativeProofKey, value: proof });
+    await openExternal(target.href);
+  }
+}
+async function handleWebConnection() {
+  const fragment = new URLSearchParams(window.location.hash.slice(1));
+  if (!fragment.has("cajitas-auth") && !fragment.has("cajitas-auth-error"))
+    return;
+  // Remove the one-use code before any network call or UI event can expose it.
+  history.replaceState(
+    history.state,
+    "",
+    window.location.pathname + window.location.search,
+  );
+  let origin;
+  try {
+    origin = apiOrigin();
+    if (!externalWeb(origin))
+      throw new Error("Esta instalación no tiene configurada la conexión web.");
+    const raw = sessionStorage.getItem(webProofKey + origin);
+    const proof = raw ? JSON.parse(raw) : null;
+    if (
+      !proof ||
+      !Number.isFinite(proof.expires) ||
+      proof.expires < Date.now() ||
+      !/^[a-f0-9]{64}$/.test(proof.verifier ?? "")
+    )
+      throw new Error("La conexión expiró. Conecta Gmail de nuevo.");
+    if (fragment.has("cajitas-auth-error"))
+      throw new Error("La conexión de Gmail fue cancelada.");
+    const code = fragment.get("cajitas-auth");
+    if (!/^[a-f0-9]{64}$/.test(code ?? ""))
+      throw new Error("El enlace de conexión no es válido.");
+    await api("gmail/app-exchange", { code, verifier: proof.verifier });
+    announceConnection({ connected: true });
+  } catch (error) {
+    announceConnection({ error: error.message });
+  } finally {
+    if (origin) sessionStorage.removeItem(webProofKey + origin);
+  }
 }
 export async function setupNativeEvents() {
-  if (!isNative) return;
+  if (!isNative) return handleWebConnection();
   const { App } = await import("@capacitor/app");
   async function handle({ url: raw }) {
     let url;
@@ -179,7 +301,12 @@ export async function setupNativeEvents() {
     try {
       const proofRaw = (await Preferences.get({ key: nativeProofKey })).value;
       const proof = proofRaw ? JSON.parse(proofRaw) : null;
-      if (!proof || proof.expires < Date.now())
+      if (
+        !proof ||
+        !Number.isFinite(proof.expires) ||
+        proof.expires < Date.now() ||
+        !/^[a-f0-9]{64}$/.test(proof.verifier ?? "")
+      )
         throw new Error("La conexión expiró. Conecta Gmail de nuevo.");
       if (url.searchParams.has("error"))
         throw new Error("La conexión de Gmail fue cancelada.");
@@ -187,15 +314,9 @@ export async function setupNativeEvents() {
       if (!/^[a-f0-9]{64}$/.test(code ?? ""))
         throw new Error("El enlace de conexión no es válido.");
       await api("gmail/native-exchange", { code, verifier: proof.verifier });
-      window.dispatchEvent(
-        new CustomEvent("cajitas:connection", { detail: { connected: true } }),
-      );
+      announceConnection({ connected: true });
     } catch (error) {
-      window.dispatchEvent(
-        new CustomEvent("cajitas:connection", {
-          detail: { error: error.message },
-        }),
-      );
+      announceConnection({ error: error.message });
     } finally {
       await Preferences.remove({ key: nativeProofKey });
       const { Browser } = await import("@capacitor/browser");
