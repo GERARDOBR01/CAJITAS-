@@ -1,5 +1,11 @@
 # Cajitas ✦
 
+## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.2.0-preview.1/Cajitas-0.2.0-android-preview.apk)
+
+**Android 7.0 o posterior · APK de prueba, versión 0.2.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.2.0-preview.1)
+
+En Android, abre el APK descargado para instalarlo. Para iPhone puedes instalar la versión web desde Safari con Compartir → Agregar a pantalla de inicio. El proyecto nativo de iPhone requiere Xcode y firma Apple.
+
 PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y una función serverless Node para las integraciones.
 
 **Versión 0.2:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
@@ -98,7 +104,22 @@ Esta conexión es **personal para el dueño de la instalación**: una llave repr
 
 Solo se llama a `GET https://bitso.com/api/v3/balance/`, con HMAC-SHA256 de `nonce + GET + /api/v3/balance/`. Nonce monotónico, compartido en Redis al desplegar. No existen rutas que muevan dinero. Este endpoint no permite comprobar los permisos adicionales de una llave; créala con el permiso mínimo. [Balance oficial](https://docs.bitso.com/bitso-api/docs/get-account-balance), [firma oficial](https://docs.bitso.com/bitso-api/docs/create-signed-requests).
 
-## Despliegue serverless
+## Publicación web y backend
+
+### GitHub Pages
+
+La web está en [gerardobr01.github.io/CAJITAS-/](https://gerardobr01.github.io/CAJITAS-/), con un botón visible de descarga Android. Pages publica la compilación estática desde `gh-pages` (carpeta raíz). No debe publicar el `index.html` de código fuente de `main`.
+
+```bash
+npm run build:pages
+npm run preview:pages
+# Con acceso Git de escritura configurado:
+npm run deploy:pages
+```
+
+El script publica únicamente `dist` y `.nojekyll` en la rama de distribución. En Settings → Pages, el origen es Deploy from a branch → gh-pages → /(root). El modo Pages ajusta recursos, manifiesto y service worker al prefijo `/CAJITAS-/`. Metas, mascotas, historial y respaldos funcionan allí; Banxico, Gmail y Bitso requieren el servidor de la aplicación, que Pages no ejecuta. Esa versión muestra las conexiones como no habilitadas y conserva la comparación con tasas capturadas sin inventar referencias.
+
+### Backend
 
 Incluye `api/router.js` y `vercel.json` para Vercel: una función Node atiende `/api/*`, Vite genera el frontend. No se ha desplegado automáticamente.
 
@@ -151,5 +172,6 @@ Las nuevas capturas son de viewport exacto **390 × 844**:
 | [Meta](docs/screenshots/v2-04-meta-mobile.png) | Plan y movimientos |
 | [Actividad](docs/screenshots/v2-05-actividad-mobile.png) | Saldo registrado e historial |
 | [Instalación](docs/screenshots/v2-06-instalar-mobile.png) | Oferta de instalación simulada para verificar el flujo |
+| [Descarga en Pages](docs/screenshots/v2-07-descarga-pages-mobile.png) | Botón de descarga al inicio de la web |
 
 Los iconos PWA se regeneran desde la mascota SVG con `node scripts/generate-icons.js` (requiere Chromium instalado).

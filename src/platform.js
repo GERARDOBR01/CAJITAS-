@@ -61,6 +61,19 @@ function apiOrigin() {
   return url.origin;
 }
 export async function api(path, body) {
+  if (!isNative && import.meta.env.MODE === "pages") {
+    if (path === "status")
+      return {
+        gmailConnected: false,
+        gmailConfigured: false,
+        bitsoAuthorized: false,
+        bitsoConfigured: false,
+        patternsValidated: false,
+      };
+    throw new Error(
+      "Las consultas externas aún no están habilitadas en esta versión web. Puedes usar tus cajitas y comparar la tasa que captures.",
+    );
+  }
   if (isNative && nativeSession === undefined)
     nativeSession = (await Preferences.get({ key: nativeSessionKey })).value;
   const response = await fetch(`${apiOrigin()}/api/${path}`, {

@@ -1,6 +1,64 @@
 .mobile-nav {
   display: none !important;
 }
+.download-banner {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 19px;
+  margin-bottom: 25px;
+  background: #f4eee9;
+  border: 1px solid #e9dfd6;
+  border-radius: 15px;
+}
+.download-mascot {
+  font-size: 29px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.download-banner > div {
+  flex: 1;
+}
+.download-banner strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #876b77;
+}
+.download-banner p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #96868d;
+  margin-top: 4px;
+}
+.download-banner .primary {
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 11px 14px;
+}
+@media (max-width: 760px) {
+  .download-banner {
+    padding: 14px;
+    margin-bottom: 23px;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 10px;
+  }
+  .download-banner strong {
+    font-size: 12px;
+  }
+  .download-banner p {
+    font-size: 10px;
+  }
+  .download-banner .primary {
+    grid-column: 1 / -1;
+    width: 100%;
+    font-size: 12px;
+    padding: 11px;
+  }
+  .download-mascot {
+    font-size: 28px;
+  }
+}
 .avatar-pet {
   border: 0;
   cursor: pointer;

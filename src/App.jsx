@@ -5,6 +5,7 @@ import Modal from "./components/Modal.jsx";
 import PetRoom from "./components/PetRoom.jsx";
 import Activity from "./components/Activity.jsx";
 import Install from "./components/Install.jsx";
+import { ANDROID_DOWNLOAD_URL } from "./downloads.js";
 import {
   api,
   connectGmail,
@@ -1223,7 +1224,11 @@ export default function App() {
       className={`app ${!pet.animations ? "reduced-motion" : ""} ${isNative ? "native-app" : ""}`}
     >
       <aside className="sidebar">
-        <a className="brand" href="/" aria-label="Cajitas inicio">
+        <a
+          className="brand"
+          href={import.meta.env.BASE_URL}
+          aria-label="Cajitas inicio"
+        >
           <span className="brand-icon">▣</span>cajitas
           <span className="brand-dot">✦</span>
         </a>
@@ -1309,6 +1314,20 @@ export default function App() {
           </div>
         </header>
         <main>
+          {!isNative && (
+            <aside className="download-banner" aria-label="Descargar Cajitas">
+              <span className="download-mascot" aria-hidden="true">
+                🐷
+              </span>
+              <div>
+                <strong>Lleva tus cajitas contigo</strong>
+                <p>Android 7+ · APK de prueba · versión 0.2</p>
+              </div>
+              <a className="primary" href={ANDROID_DOWNLOAD_URL}>
+                ↓ Descargar para Android
+              </a>
+            </aside>
+          )}
           {offline && (
             <p className="offline" role="status">
               Estás sin conexión. Tus cajitas, mascotas y respaldos siguen
