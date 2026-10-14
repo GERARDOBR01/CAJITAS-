@@ -29,6 +29,71 @@ function origin() {
     throw problem("APP_ORIGIN debe usar HTTPS.", 503);
   return url.origin;
 }
+function webAppUrl() {
+  try {
+    const url = new URL(process.env.WEB_APP_URL);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      !url.hostname.includes(".") ||
+      /^[\d.]+$/.test(url.hostname) ||
+      url.hostname.includes(":") ||
+      /(^|\.)(localhost|local|internal|test|invalid|example)$/.test(
+        url.hostname,
+      )
+    )
+      return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+function webRequest(req) {
+  const web = webAppUrl();
+  return Boolean(
+    web && web.origin !== origin() && req.headers.origin === web.origin,
+  );
+}
+export function gmailReadiness(web = false) {
+  const missing = [
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URI",
+  ].filter((key) => !process.env[key]);
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    try {
+      const callback = new URL(process.env.GOOGLE_REDIRECT_URI);
+      if (
+        callback.origin !== origin() ||
+        callback.pathname !== "/api/gmail/callback" ||
+        callback.search ||
+        callback.hash
+      )
+        missing.push("GOOGLE_REDIRECT_URI");
+    } catch {
+      missing.push("GOOGLE_REDIRECT_URI");
+    }
+  }
+  if (!Object.values(configuredSenders()).flat().length)
+    missing.push("GMAIL_SENDERS");
+  if ((process.env.SESSION_SECRET ?? "").length < 32)
+    missing.push("SESSION_SECRET");
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL)
+    for (const key of ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"])
+      if (!process.env[key]) missing.push(key);
+  if (web && !webAppUrl()) missing.push("WEB_APP_URL");
+  return { ready: !missing.length, missing };
+}
+function requireGmail(web = false) {
+  if (!gmailReadiness(web).ready)
+    throw problem(
+      "Completa la configuración de Gmail y las sesiones en el servidor para conectar tu correo.",
+      503,
+    );
+}
 function cookies(req) {
   return Object.fromEntries(
     (req.headers.cookie ?? "").split(";").map((p) => p.trim().split("=")),
@@ -68,12 +133,21 @@ function oauth() {
   );
 }
 async function session(req) {
-  const id =
-    nativeRequest(req) && req.headers.authorization?.startsWith("Bearer ")
+  const app = nativeRequest(req) || webRequest(req);
+  const id = app
+    ? req.headers.authorization?.startsWith("Bearer ")
       ? req.headers.authorization.slice(7)
-      : cookies(req).cajitas_session;
+      : null
+    : cookies(req).cajitas_session;
   if (!/^[a-f0-9]{64}$/.test(id ?? "")) return null;
   const record = await getRecord(`session:${id}`);
+  if (
+    record?.webOrigin &&
+    (!webRequest(req) || record.webOrigin !== req.headers.origin)
+  )
+    return null;
+  if (webRequest(req) && record && record.webOrigin !== req.headers.origin)
+    return null;
   return record ? { id, ...record } : null;
 }
 async function readBody(req) {
@@ -114,8 +188,10 @@ export default async function handler(req, res) {
           ? `/api/${url.searchParams.get("route") ?? ""}`
           : url.pathname,
       method = req.method;
-    const native = nativeRequest(req);
-    if (native) {
+    const native = nativeRequest(req),
+      web = webRequest(req),
+      app = native || web;
+    if (app) {
       res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
       res.setHeader("Vary", "Origin");
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -125,47 +201,71 @@ export default async function handler(req, res) {
       );
     }
     if (method === "OPTIONS") {
-      res.statusCode = native ? 204 : 403;
+      res.statusCode = app ? 204 : 403;
       return res.end();
     }
-    // Mutations require same-origin JSON requests. OAuth callback has its own state binding.
+    if (req.headers.origin && !app && req.headers.origin !== origin())
+      throw problem("Solicitud no autorizada.", 403);
+    // Cross-origin app requests use an explicitly allowed origin and opaque bearer.
+    // OAuth navigation keeps its state cookie on the backend's own origin.
     if (
       method === "POST" &&
-      ((!native && req.headers.origin !== origin()) ||
+      ((!app && req.headers.origin !== origin()) ||
         !req.headers["content-type"]?.startsWith("application/json"))
     )
       throw problem("Solicitud no autorizada.", 403);
-    if (route === "/api/gmail/native-start" && method === "POST") {
-      if (!native) throw problem("Conexión móvil no autorizada.", 403);
-      oauth();
-      if (!Object.values(configuredSenders()).flat().length)
-        throw problem("Configura los remitentes exactos en el servidor.", 503);
+    if (
+      ["/api/gmail/native-start", "/api/gmail/app-start"].includes(route) &&
+      method === "POST"
+    ) {
+      if (!app || (route.endsWith("native-start") && !native))
+        throw problem("Conexión de aplicación no autorizada.", 403);
+      requireGmail(web);
       const body = await readBody(req);
       if (!/^[a-f0-9]{64}$/.test(body.challenge ?? ""))
         throw problem("Solicitud de conexión inválida.");
+      const callback = web ? webAppUrl() : null;
+      if (web && body.callbackUrl !== callback.href)
+        throw problem("El destino de la conexión no está autorizado.", 403);
       const ticket = opaque();
       await setRecord(
-        `native-ticket:${ticket}`,
-        { challenge: body.challenge },
+        `${web ? "app" : "native"}-ticket:${ticket}`,
+        {
+          challenge: body.challenge,
+          ...(web
+            ? { callbackUrl: callback.href, webOrigin: callback.origin }
+            : {}),
+        },
         600,
       );
       return json(res, 200, {
-        url: `${origin()}/api/gmail/connect?native=${ticket}`,
+        url: `${origin()}/api/gmail/connect?${web ? "app" : "native"}=${ticket}`,
       });
     }
-    if (route === "/api/gmail/native-exchange" && method === "POST") {
-      if (!native) throw problem("Conexión móvil no autorizada.", 403);
+    if (
+      ["/api/gmail/native-exchange", "/api/gmail/app-exchange"].includes(
+        route,
+      ) &&
+      method === "POST"
+    ) {
+      if (!app || (route.endsWith("native-exchange") && !native))
+        throw problem("Conexión de aplicación no autorizada.", 403);
       const body = await readBody(req);
       if (
         !/^[a-f0-9]{64}$/.test(body.code ?? "") ||
         !/^[a-f0-9]{64}$/.test(body.verifier ?? "")
       )
         throw problem("Conexión inválida.");
-      const handoff = await takeRecord(`native-handoff:${body.code}`);
+      const handoff = await takeRecord(
+        `${web ? "app" : "native"}-handoff:${body.code}`,
+      );
       if (
         !handoff ||
         createHash("sha256").update(body.verifier).digest("hex") !==
-          handoff.challenge
+          handoff.challenge ||
+        (web &&
+          (handoff.webOrigin !== req.headers.origin ||
+            handoff.callbackUrl !== webAppUrl()?.href))
       )
         throw problem(
           "La conexión expiró o no corresponde a este dispositivo.",
@@ -176,6 +276,7 @@ export default async function handler(req, res) {
       await setRecord(`session:${id}`, {
         tokens: handoff.tokens,
         bitso: previous?.bitso ?? false,
+        ...(web ? { webOrigin: req.headers.origin } : {}),
       });
       if (previous) await deleteRecord(`session:${previous.id}`);
       return json(res, 200, { sessionId: id });
@@ -186,17 +287,24 @@ export default async function handler(req, res) {
       return json(res, 200, ratesCache.value);
     }
     if (route === "/api/status" && method === "GET") {
-      const current = await session(req);
-      const senders = configuredSenders();
+      const readiness = gmailReadiness(web);
+      // Report incomplete session configuration even if an old client sends a bearer.
+      const sessionMissing = readiness.missing.some((key) =>
+        [
+          "SESSION_SECRET",
+          "UPSTASH_REDIS_REST_URL",
+          "UPSTASH_REDIS_REST_TOKEN",
+        ].includes(key),
+      );
+      const current = sessionMissing ? null : await session(req);
       return json(res, 200, {
+        apiConfigured: true,
         gmailConnected: Boolean(current?.tokens),
         bitsoAuthorized: Boolean(current?.bitso),
-        gmailConfigured: Boolean(
-          process.env.GOOGLE_CLIENT_ID &&
-            process.env.GOOGLE_CLIENT_SECRET &&
-            process.env.GOOGLE_REDIRECT_URI &&
-            Object.values(senders).flat().length,
-        ),
+        gmailConfigured: readiness.ready,
+        gmailReadiness: readiness,
+        webBridgeConfigured: Boolean(webAppUrl()),
+        webReadiness: gmailReadiness(true),
         bitsoConfigured: Boolean(
           process.env.BITSO_API_KEY &&
             process.env.BITSO_API_SECRET &&
@@ -206,16 +314,13 @@ export default async function handler(req, res) {
       });
     }
     if (route === "/api/gmail/connect" && method === "GET") {
-      const senders = Object.values(configuredSenders()).flat();
-      if (!senders.length)
-        throw problem(
-          "Configura los remitentes exactos de tus comprobantes en el servidor.",
-          503,
-        );
+      requireGmail();
       const client = oauth(),
         state = opaque(),
         verifier = opaque();
-      let nativeChallenge;
+      let nativeChallenge, webConnection;
+      if (url.searchParams.has("native") && url.searchParams.has("app"))
+        throw problem("Conexión inválida.");
       if (url.searchParams.has("native")) {
         const ticket = url.searchParams.get("native");
         if (!/^[a-f0-9]{64}$/.test(ticket ?? ""))
@@ -224,7 +329,29 @@ export default async function handler(req, res) {
         if (!record) throw problem("La conexión expiró.", 403);
         nativeChallenge = record.challenge;
       }
-      await setRecord(`oauth:${state}`, { verifier, nativeChallenge }, 600);
+      if (url.searchParams.has("app")) {
+        const ticket = url.searchParams.get("app");
+        if (!/^[a-f0-9]{64}$/.test(ticket ?? ""))
+          throw problem("Conexión inválida.");
+        const record = await takeRecord(`app-ticket:${ticket}`),
+          callback = webAppUrl();
+        if (
+          !record ||
+          !callback ||
+          record.callbackUrl !== callback.href ||
+          record.webOrigin !== callback.origin
+        )
+          throw problem(
+            "La conexión expiró o su destino no está autorizado.",
+            403,
+          );
+        webConnection = record;
+      }
+      await setRecord(
+        `oauth:${state}`,
+        { verifier, nativeChallenge, webConnection },
+        600,
+      );
       cookie(res, "cajitas_oauth", state, 600);
       return redirect(
         res,
@@ -250,12 +377,22 @@ export default async function handler(req, res) {
       const transaction = await takeRecord(`oauth:${state}`);
       if (!transaction) throw problem("La conexión expiró.", 403);
       cookie(res, "cajitas_oauth", "", 0);
+      const callback = transaction.webConnection ? webAppUrl() : null;
+      if (
+        transaction.webConnection &&
+        (!callback ||
+          transaction.webConnection.callbackUrl !== callback.href ||
+          transaction.webConnection.webOrigin !== callback.origin)
+      )
+        throw problem("El destino de la conexión ya no está autorizado.", 403);
       if (url.searchParams.has("error"))
         return redirect(
           res,
           transaction.nativeChallenge
             ? "cajitas://auth?error=cancelled"
-            : `${origin()}/?gmail=cancelled`,
+            : callback
+              ? `${callback.href}#cajitas-auth-error=cancelled`
+              : `${origin()}/?gmail=cancelled`,
         );
       const client = oauth();
       const { tokens } = await client.getToken({
@@ -264,6 +401,15 @@ export default async function handler(req, res) {
       });
       if (!tokens.scope?.split(" ").includes(scopes[0]))
         throw problem("Gmail no concedió el permiso de lectura.", 403);
+      if (callback) {
+        const code = opaque();
+        await setRecord(
+          `app-handoff:${code}`,
+          { ...transaction.webConnection, tokens },
+          60,
+        );
+        return redirect(res, `${callback.href}#cajitas-auth=${code}`);
+      }
       if (transaction.nativeChallenge) {
         const code = opaque();
         await setRecord(
@@ -331,6 +477,7 @@ export default async function handler(req, res) {
       await setRecord(`session:${current.id}`, {
         tokens: client.credentials,
         bitso: current.bitso ?? false,
+        ...(current.webOrigin ? { webOrigin: current.webOrigin } : {}),
       });
       return json(res, 200, {
         receipts,
@@ -349,6 +496,7 @@ export default async function handler(req, res) {
             .catch(() => {});
         await setRecord(`session:${current.id}`, {
           bitso: current.bitso ?? false,
+          ...(current.webOrigin ? { webOrigin: current.webOrigin } : {}),
         });
       }
       return json(res, 200, { ok: true });
@@ -378,12 +526,16 @@ export default async function handler(req, res) {
         id = opaque();
       await setRecord(
         `session:${id}`,
-        { tokens: previous?.tokens, bitso: true },
+        {
+          tokens: previous?.tokens,
+          bitso: true,
+          ...(web ? { webOrigin: req.headers.origin } : {}),
+        },
         86400,
       );
       if (previous) await deleteRecord(`session:${previous.id}`);
-      if (!native) cookie(res, "cajitas_session", id, 86400);
-      return json(res, 200, { ok: true, ...(native ? { sessionId: id } : {}) });
+      if (!app) cookie(res, "cajitas_session", id, 86400);
+      return json(res, 200, { ok: true, ...(app ? { sessionId: id } : {}) });
     }
     if (route === "/api/bitso/balance" && method === "GET") {
       const current = await session(req);
@@ -401,6 +553,7 @@ export default async function handler(req, res) {
         await setRecord(`session:${current.id}`, {
           tokens: current.tokens,
           bitso: false,
+          ...(current.webOrigin ? { webOrigin: current.webOrigin } : {}),
         });
       return json(res, 200, { ok: true });
     }

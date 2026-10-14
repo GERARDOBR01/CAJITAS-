@@ -804,6 +804,12 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                 <>
                   <h3>Un comprobante, un solo registro</h3>
                   <p>
+                    En Conexiones puedes abrir un correo .eml descargado o pegar
+                    su texto. Revisa cajita, monto y fecha antes de importar.
+                    Funciona en este dispositivo, sin conectar el buzón; un
+                    archivo no autentica al remitente.
+                  </p>
+                  <p>
                     Gmail se conecta con permiso de lectura para buscar
                     comprobantes de los remitentes configurados. Revisa la
                     detección y elige la cajita. Los patrones reales de Nu y

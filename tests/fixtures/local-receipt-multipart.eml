@@ -1,0 +1,32 @@
+From: Aviso de ejemplo <notificaciones@example.invalid>
+Subject: =?UTF-8?Q?Dep=C3=B3sito?=
+ =?UTF-8?Q?_recibido?=
+Date: Thu, 1 Oct 2026 12:00:00 -0600
+Message-ID: <local-demo-002@example.invalid>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-demo"
+
+--mixed-demo
+Content-Type: multipart/alternative; boundary="alternative-demo"
+
+--alternative-demo
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dep=C3=B3sito recibido. Monto recibido: $1,200.50 MXN
+La informaci=C3=B3n requiere revisi=C3=B3n humana.
+--alternative-demo
+Content-Type: text/html; charset="UTF-8"
+
+<html><body>Deposito recibido: $9,999.00 MXN<script>globalThis.mailExecuted = true</script></body></html>
+--alternative-demo--
+--mixed-demo
+Content-Type: text/plain; name="adjunto.txt"
+Content-Disposition: attachment; filename="adjunto.txt"
+
+Deposito recibido: $7,000.00 MXN
+--mixed-demo
+Content-Type: text/calendar
+
+Deposito recibido: $8,000.00 MXN
+--mixed-demo--

@@ -1,6 +1,6 @@
 {
   "name": "cajitas-ahorro",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -19,7 +19,9 @@
     "open:android": "cap open android",
     "build:pages": "vite build --mode pages",
     "deploy:pages": "node scripts/deploy-pages.mjs",
-    "preview:pages": "vite preview --mode pages --host 0.0.0.0"
+    "preview:pages": "vite preview --mode pages --host 0.0.0.0",
+    "check:setup": "node scripts/check-setup.mjs",
+    "verify": "npm test && npm run build:pages && npm run test:e2e"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

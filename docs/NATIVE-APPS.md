@@ -4,7 +4,7 @@ La misma interfaz web se empaqueta dentro de proyectos Capacitor 8.5.3. El conte
 
 ## Android: APK de prueba
 
-La entrega 0.4 se distribuye como [APK de prueba](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.4.0-preview.1). La pantalla de instalación web también enlaza esa descarga. El proyecto iOS se incluye en el código fuente; su instalación nativa requiere Xcode y firma de Apple.
+La entrega 0.5 se distribuye como [APK de prueba](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1). La pantalla de instalación web también enlaza esa descarga. El proyecto iOS se incluye en el código fuente; su instalación nativa requiere Xcode y firma de Apple.
 
 Requisitos: Node compatible con `package.json`, JDK 21 y Android SDK con plataforma 36, build-tools 35.0.0 y platform-tools. Android Gradle Plugin 8.13 utiliza build-tools 35.0.0 con la plataforma 36. La configuración actual admite Android 7.0 / API 24 o superior.
 
@@ -41,11 +41,11 @@ En Xcode seleccionar el equipo de Apple Developer en **Signing & Capabilities**,
 
 Android sirve los recursos internos como `https://localhost`; iOS usa `capacitor://localhost`. El retorno de autorización abre `cajitas://auth`, registrado en ambos proyectos. Las credenciales de Google, Banxico y Bitso permanecen en el servidor.
 
-Si se necesitan conexiones remotas, compilar con `VITE_API_ORIGIN` apuntando a un servidor HTTPS público, y permitir los orígenes nativos mediante `NATIVE_APP_ORIGINS` en ese servidor. Seguir las instrucciones de conexiones del README para configurar las credenciales del servidor. Sin ese origen la aplicación funciona localmente; no se debe configurar `server.url` de Capacitor para producción.
+Si se necesitan conexiones remotas, compilar con `VITE_API_ORIGIN` apuntando a un servidor HTTPS público, y permitir los orígenes nativos mediante `NATIVE_APP_ORIGINS` en ese servidor. Seguir las instrucciones de conexiones del README para configurar las credenciales del servidor. La [guía de Gmail y comprobantes](GMAIL-SETUP.md) explica el backend y el intercambio OAuth. Sin ese origen la aplicación funciona localmente, incluyendo archivos `.eml` y texto pegado con revisión; no se debe configurar `server.url` de Capacitor para producción.
 
 Los proyectos incluyen App, Browser, Filesystem, Haptics, Local Notifications, Preferences y Share. Las notificaciones solicitan permiso al usuario; no se registra permiso de alarmas exactas. Android gestiona los bordes con SystemBars, que expone `--safe-area-inset-*`; la interfaz utiliza estos valores para respetar cámaras y gestos.
 
-Android desactiva el backup automático de la app para que los identificadores de sesión no viajen con la copia del sistema. El respaldo JSON explícito lleva metas, mascota y visitas, sin sesiones ni claves. Al restaurarlo se desactiva el recordatorio: actívalo de nuevo en Mi mascota en ese dispositivo. La versión 0.4 tiene build number 4 en ambos proyectos.
+Android desactiva el backup automático de la app para que los identificadores de sesión no viajen con la copia del sistema. El respaldo JSON explícito lleva metas, mascota y visitas, sin sesiones ni claves. Al restaurarlo se desactiva el recordatorio: actívalo de nuevo en Mi mascota en ese dispositivo. La versión 0.5 tiene build number 5 en ambos proyectos.
 
 Las APIs reales requieren un backend HTTPS desplegado y las credenciales del dueño. El APK de prueba sin `VITE_API_ORIGIN` contiene toda la experiencia local, pero no puede consultar Banxico/Gmail/Bitso. No se inventa una dirección de servidor. Añade la URL pública, recompila y sincroniza para activar las conexiones. El botón de descarga web admite un enlace público mediante `VITE_ANDROID_DOWNLOAD_URL`.
 

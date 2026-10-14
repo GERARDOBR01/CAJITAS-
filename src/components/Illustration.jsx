@@ -306,12 +306,124 @@ function Complete() {
   );
 }
 
+function Mail() {
+  return (
+    <>
+      <path
+        d="M39 132C18 112 34 75 65 68 70 34 117 28 139 51 177 33 216 68 204 102 226 132 189 157 157 145 117 166 65 160 39 132Z"
+        fill="#f2edf5"
+        stroke="none"
+      />
+      <ellipse
+        cx="122"
+        cy="155"
+        rx="85"
+        ry="7"
+        fill={ink}
+        opacity=".07"
+        stroke="none"
+      />
+      <g transform="rotate(-6 137 106)">
+        <rect x="77" y="63" width="122" height="84" rx="11" fill={cream} />
+        <path d="m79 70 51 39q8 6 16 0l51-39" fill="#f7dce1" />
+        <path d="m79 141 37-30m81 30-37-30" fill="none" stroke="#d6c4b6" />
+        <rect x="170" y="74" width="19" height="23" rx="3" fill={lilac} />
+        <path
+          d="M179 79q-5-3-5 2-5 2-1 5-1 5 4 4 4 4 6 0 5 0 3-4 3-5-2-5-2-4-5-2Z"
+          fill={cream}
+          stroke="none"
+        />
+        <circle cx="180" cy="85" r="2.2" fill={honey} stroke="none" />
+        <Face x={138} y={121} />
+      </g>
+      <g className="illustration-sway">
+        <path
+          d="M58 114Q39 100 44 88q13-5 18 20 2-26 16-26 9 12-12 32"
+          fill={sage}
+        />
+        <path d="m50 96 10 17m12-22-8 22" fill="none" stroke="#809775" />
+      </g>
+      <path
+        d="M37 132q-1-23 25-26 25 3 25 26-1 24-25 24-23 0-25-24Z"
+        fill={honey}
+      />
+      <path d="M62 111q-6 12-4 20" fill="none" stroke="#d3b570" />
+      <g transform="translate(62 133) scale(.58)">
+        <Face x={0} y={0} />
+      </g>
+      <path d="m42 148-6 4m45-4 6 4" fill="none" />
+      <Flower x={204} y={132} color={pink} scale={0.55} />
+      <Sparkle x={46} y={56} small />
+      <Sparkle x={210} y={50} small />
+    </>
+  );
+}
+
+function Path() {
+  return (
+    <>
+      <path
+        d="M31 130C14 106 37 76 64 78 81 43 113 43 139 56 158 24 206 40 207 72 234 98 213 140 181 137 144 168 71 163 31 130Z"
+        fill="#eff2e7"
+        stroke="none"
+      />
+      <path
+        d="M52 134c26 19 36-33 69-16s43 6 69-24"
+        fill="none"
+        stroke="#a5b796"
+        strokeWidth="3"
+        strokeDasharray="1 8"
+      />
+      <g transform="translate(52 127)">
+        <g transform="translate(0 -47) scale(.48)">
+          <Leaf />
+        </g>
+        <path
+          d="M-21-18c0-25 42-25 42 0C21-5 7 0 0 7-7 0-21-5-21-18Z"
+          fill={cream}
+        />
+        <g transform="translate(0 -18) scale(.48)">
+          <Face x={0} y={0} />
+        </g>
+      </g>
+      <g transform="translate(121 111)">
+        <g transform="translate(0 -49) scale(.58)">
+          <Leaf />
+        </g>
+        <path
+          d="M-21-18c0-25 42-25 42 0C21-5 7 0 0 7-7 0-21-5-21-18Z"
+          fill={lilac}
+        />
+        <g transform="translate(0 -18) scale(.48)">
+          <Face x={0} y={0} />
+        </g>
+      </g>
+      <g transform="translate(190 87)">
+        <g transform="translate(0 -51) scale(.68)">
+          <Leaf />
+        </g>
+        <path
+          d="M-21-18c0-25 42-25 42 0C21-5 7 0 0 7-7 0-21-5-21-18Z"
+          fill="#f7ccd4"
+        />
+        <g transform="translate(0 -18) scale(.48)">
+          <Face x={0} y={0} />
+        </g>
+      </g>
+      <Sparkle x={157} y={34} />
+      <path d="m150 137 3 4m-69-88 3-3" fill="none" stroke="#baa3c9" />
+    </>
+  );
+}
+
 const scenes = {
   welcome: Welcome,
   empty: Empty,
   activity: Activity,
   backup: Backup,
   complete: Complete,
+  mail: Mail,
+  path: Path,
 };
 
 /** Decorative by default. Supply a Spanish title when the drawing conveys content. */
