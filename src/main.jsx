@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./styles.css";
 import "./upgrade.css";
+import "./refinement.css";
 import { setupNativeEvents, hydrateSavings } from "./platform.js";
 async function start() {
   try {

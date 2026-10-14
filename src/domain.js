@@ -201,6 +201,36 @@ function validDate(value) {
     localDate(new Date(`${value}T12:00:00`)) === value
   );
 }
+function validMovementDate(value) {
+  if (typeof value !== "string") return false;
+  const match =
+    /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?)?$/.exec(
+      value,
+    );
+  const timestamp = Date.parse(value);
+  return Boolean(
+    match &&
+    validDate(match[1]) &&
+    (match[2] === undefined ||
+      (Number(match[2]) < 24 &&
+        Number(match[3]) < 60 &&
+        Number(match[4] ?? 0) < 60)) &&
+    Number.isFinite(timestamp) &&
+    localDate(new Date(timestamp)) <= today(),
+  );
+}
+function validateHistory(entries) {
+  let sum = 0;
+  for (const entry of [...entries].sort(
+    (a, b) => Date.parse(a.at) - Date.parse(b.at),
+  )) {
+    sum += entry.cents;
+    if (!Number.isSafeInteger(sum) || sum < 0)
+      throw new Error(
+        "El historial contiene un saldo inválido en alguna fecha.",
+      );
+  }
+}
 export function validateBackup(data) {
   if (
     !data ||
@@ -252,6 +282,7 @@ export function validateBackup(data) {
   const ids = new Set();
   for (const g of data.goals) {
     if (
+      !g ||
       typeof g.id !== "string" ||
       ids.has(g.id) ||
       typeof g.name !== "string" ||
@@ -271,23 +302,21 @@ export function validateBackup(data) {
       throw new Error("Hay una cajita con datos inválidos.");
     ids.add(g.id);
     const entryIds = new Set();
-    let sum = 0;
     for (const e of g.entries) {
       if (
+        !e ||
         typeof e.id !== "string" ||
         entryIds.has(e.id) ||
         !Number.isSafeInteger(e.cents) ||
         e.cents === 0 ||
         Math.abs(e.cents) > 1e11 ||
-        typeof e.at !== "string" ||
-        !Number.isFinite(Date.parse(e.at))
+        !validMovementDate(e.at) ||
+        (e.source !== undefined && !["manual", "gmail"].includes(e.source))
       )
         throw new Error("Hay un movimiento inválido.");
       entryIds.add(e.id);
-      sum += e.cents;
-      if (!Number.isSafeInteger(sum) || sum < 0)
-        throw new Error("El respaldo contiene un saldo inválido.");
     }
+    validateHistory(g.entries);
   }
   if (
     data.importedIds.length > 50000 ||
@@ -337,15 +366,125 @@ export function validateBackup(data) {
     ),
   };
 }
-export function addReceipt(data, receipt, goalId) {
+function validateReceipt(receipt) {
+  if (!receipt || typeof receipt.id !== "string" || !receipt.id.trim())
+    throw new Error("Identificador de correo inválido.");
+  if (
+    !Number.isSafeInteger(receipt.amountCents) ||
+    receipt.amountCents <= 0 ||
+    receipt.amountCents > 1e11
+  )
+    throw new Error("Monto de correo inválido.");
+  if (!validMovementDate(receipt.at))
+    throw new Error("Fecha de correo inválida o futura.");
+  if (
+    (receipt.provider !== undefined &&
+      !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(receipt.provider)) ||
+    (receipt.validated !== undefined && typeof receipt.validated !== "boolean")
+  )
+    throw new Error("El comprobante de correo no es válido.");
+}
+export function possibleReceiptMatches(data, receipt) {
+  validateReceipt(receipt);
+  if (data.importedIds.includes(receipt.id) || !receipt.provider) return [];
+  const receiptDay = localDate(new Date(receipt.at));
+  return data.goals
+    .filter((goal) => goal.provider === receipt.provider)
+    .flatMap((goal) =>
+      goal.entries
+        .filter(
+          (entry) =>
+            (entry.source === undefined || entry.source === "manual") &&
+            entry.cents === receipt.amountCents &&
+            localDate(new Date(entry.at)) === receiptDay,
+        )
+        .map((entry) => ({
+          goalId: goal.id,
+          goalName: goal.name,
+          entryId: entry.id,
+          at: entry.at,
+        })),
+    );
+}
+export function reconcileReceipt(data, receipt, goalId, entryId) {
+  validateReceipt(receipt);
+  if (data.importedIds.includes(receipt.id)) return data;
+  if (
+    !possibleReceiptMatches(data, receipt).some(
+      (match) => match.goalId === goalId && match.entryId === entryId,
+    )
+  )
+    throw new Error("Elige un movimiento manual del mismo monto, app y día.");
+  const next = {
+    ...data,
+    importedIds: [...data.importedIds, receipt.id],
+    goals: data.goals.map((goal) =>
+      goal.id === goalId
+        ? {
+            ...goal,
+            entries: goal.entries.map((entry) =>
+              entry.id === entryId ? { ...entry, source: "gmail" } : entry,
+            ),
+          }
+        : goal,
+    ),
+  };
+  validateBackup(next);
+  return next;
+}
+function changeManualEntry(data, goalId, entryId, change) {
+  const goal = data.goals.find((item) => item.id === goalId);
+  const entry = goal?.entries.find((item) => item.id === entryId);
+  if (!entry || (entry.source !== undefined && entry.source !== "manual"))
+    throw new Error("Solo puedes corregir o eliminar movimientos manuales.");
+  const next = {
+    ...data,
+    goals: data.goals.map((item) =>
+      item.id === goalId
+        ? {
+            ...item,
+            entries: item.entries.flatMap((movement) => {
+              if (movement.id !== entryId) return [movement];
+              const updated = change(movement);
+              return updated ? [updated] : [];
+            }),
+          }
+        : item,
+    ),
+  };
+  validateBackup(next);
+  return next;
+}
+export function correctManualEntry(data, goalId, entryId, { cents, at }) {
+  return changeManualEntry(data, goalId, entryId, (entry) => ({
+    ...entry,
+    cents,
+    at,
+  }));
+}
+export function removeManualEntry(data, goalId, entryId) {
+  return changeManualEntry(data, goalId, entryId, () => null);
+}
+export function addReceipt(
+  data,
+  receipt,
+  goalId,
+  { allowPossibleDuplicate = false } = {},
+) {
   if (
     data.importedIds.includes(receipt.id) ||
     !data.goals.some((g) => g.id === goalId)
   )
     return data;
-  if (!Number.isSafeInteger(receipt.amountCents) || receipt.amountCents <= 0)
-    throw new Error("Monto de correo inválido.");
-  return {
+  validateReceipt(receipt);
+  const goal = data.goals.find((item) => item.id === goalId);
+  if (goal.archived || (receipt.provider && goal.provider !== receipt.provider))
+    throw new Error("Elige una cajita activa de la misma app del comprobante.");
+  if (!allowPossibleDuplicate && possibleReceiptMatches(data, receipt).length)
+    throw new Error(
+      "Revisa los movimientos manuales que podrían corresponder a este correo.",
+    );
+  const next = {
     ...data,
     importedIds: [...data.importedIds, receipt.id],
     goals: data.goals.map((g) =>
@@ -365,6 +504,8 @@ export function addReceipt(data, receipt, goalId) {
         : g,
     ),
   };
+  validateBackup(next);
+  return next;
 }
 export function estimate(principalCents, annualRate, days) {
   return Math.round((((principalCents * annualRate) / 100) * days) / 365);

@@ -5,6 +5,8 @@ import Modal from "./components/Modal.jsx";
 import PetRoom from "./components/PetRoom.jsx";
 import Activity from "./components/Activity.jsx";
 import Install from "./components/Install.jsx";
+import Illustration from "./components/Illustration.jsx";
+import CorrectEntry from "./components/CorrectEntry.jsx";
 import { ANDROID_DOWNLOAD_URL } from "./downloads.js";
 import {
   api,
@@ -36,6 +38,10 @@ import {
   checkIn,
   localDate,
   goalStatus,
+  possibleReceiptMatches,
+  reconcileReceipt,
+  correctManualEntry,
+  removeManualEntry,
 } from "./domain.js";
 
 const destinations = {
@@ -79,6 +85,25 @@ function GoalForm({ onSave, onClose, goal = null, onArchive }) {
   ];
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 30);
+  const [draftPlan, setDraftPlan] = useState({
+    amount: goal ? String(goal.targetCents / 100) : "",
+    date: goal?.unlockDate ?? localDate(tomorrow),
+    frequency: goal?.frequency ?? 7,
+  });
+  let preview = null;
+  try {
+    if (draftPlan.date >= today())
+      preview = plan(
+        {
+          targetCents: cents(draftPlan.amount),
+          unlockDate: draftPlan.date,
+          entries: goal?.entries ?? [],
+        },
+        Number(draftPlan.frequency),
+      );
+  } catch {
+    /* The preview appears once the amount is valid. */
+  }
   function submit(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -148,7 +173,10 @@ function GoalForm({ onSave, onClose, goal = null, onArchive }) {
             min="0.01"
             step="0.01"
             max="1000000000"
-            defaultValue={goal ? (goal.targetCents / 100).toFixed(2) : ""}
+            value={draftPlan.amount}
+            onChange={(e) =>
+              setDraftPlan({ ...draftPlan, amount: e.target.value })
+            }
             placeholder="5000"
             required
           />
@@ -160,7 +188,10 @@ function GoalForm({ onSave, onClose, goal = null, onArchive }) {
               name="date"
               type="date"
               min={today()}
-              defaultValue={goal?.unlockDate ?? localDate(tomorrow)}
+              value={draftPlan.date}
+              onChange={(e) =>
+                setDraftPlan({ ...draftPlan, date: e.target.value })
+              }
               required
             />
           </label>
@@ -176,12 +207,35 @@ function GoalForm({ onSave, onClose, goal = null, onArchive }) {
         </div>
         <label>
           Mi ritmo de ahorro
-          <select name="frequency" defaultValue={goal?.frequency ?? 7}>
+          <select
+            name="frequency"
+            value={draftPlan.frequency}
+            onChange={(e) =>
+              setDraftPlan({ ...draftPlan, frequency: e.target.value })
+            }
+          >
             <option value={7}>Por semana</option>
             <option value={15}>Cada 15 días</option>
             <option value={30}>Cada 30 días</option>
           </select>
         </label>
+        {preview !== null && (
+          <div className="plan-preview" role="status">
+            <span aria-hidden="true">🌱</span>
+            <div>
+              <strong>
+                {money(preview)}{" "}
+                {Number(draftPlan.frequency) === 7
+                  ? "por semana"
+                  : `cada ${draftPlan.frequency} días`}
+              </strong>
+              <p>
+                Para llegar a tu meta. Si se siente pesado, cambia el monto o la
+                fecha. Es una guía, no un cargo automático.
+              </p>
+            </div>
+          </div>
+        )}
         <fieldset>
           <legend>Elige su amuleto</legend>
           <div className="icon-options">
@@ -232,9 +286,10 @@ function GoalForm({ onSave, onClose, goal = null, onArchive }) {
 }
 function MovementForm({ goal, withdraw, onSave, onClose, preferences }) {
   const [amount, setAmount] = useState(""),
+    [date, setDate] = useState(today()),
     [confirm, setConfirm] = useState(false),
     [error, setError] = useState("");
-  const early = withdraw && unlockTime(goal.unlockDate) > Date.now();
+  const early = withdraw && unlockTime(goal.unlockDate) > unlockTime(date);
   function submit(e) {
     e.preventDefault();
     try {
@@ -245,7 +300,15 @@ function MovementForm({ goal, withdraw, onSave, onClose, preferences }) {
         setConfirm(true);
         return;
       }
-      onSave(withdraw ? -value : value);
+      if (!date || date > today())
+        throw new Error(
+          "Elige la fecha en que ocurrió el movimiento, hasta hoy.",
+        );
+      const at =
+        date === today()
+          ? new Date().toISOString()
+          : new Date(`${date}T12:00:00`).toISOString();
+      onSave({ cents: withdraw ? -value : value, at });
     } catch (err) {
       setError(err.message);
     }
@@ -279,18 +342,53 @@ function MovementForm({ goal, withdraw, onSave, onClose, preferences }) {
       )}
       <form onSubmit={submit}>
         {!confirm && (
-          <label>
-            Monto (MXN)
-            <input
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-              autoFocus
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-          </label>
+          <>
+            <label>
+              Monto (MXN)
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                required
+                autoFocus
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </label>
+            {!withdraw && (
+              <div className="quick-amounts" aria-label="Montos rápidos">
+                {[5000, 10000, 20000].map((value) => (
+                  <button
+                    type="button"
+                    key={value}
+                    onClick={() => setAmount(String(value / 100))}
+                  >
+                    {money(value)}
+                  </button>
+                ))}
+                {plan(goal, goal.frequency) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAmount((plan(goal, goal.frequency) / 100).toFixed(2))
+                    }
+                  >
+                    Mi siguiente pasito
+                  </button>
+                )}
+              </div>
+            )}
+            <label>
+              Fecha del movimiento
+              <input
+                type="date"
+                value={date}
+                max={today()}
+                required
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </label>
+          </>
         )}
         <p className="notice">
           Tu dinero sigue disponible en {goal.provider}. Cajitas solo lleva el
@@ -338,6 +436,7 @@ function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
         </button>
       </div>
       <h3>{goal.name}</h3>
+      <span className="saved-label">Ahorro registrado</span>
       <p className="saved">
         {money(saved)} <span>de {money(goal.targetCents)}</span>
       </p>
@@ -352,7 +451,11 @@ function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
         <span style={{ width: `${progress * 100}%` }} />
       </div>
       <div className="progress-caption">
-        <span>Ahorro registrado</span>
+        <span>
+          {status.complete
+            ? "Ahorro registrado"
+            : `Te faltan ${money(status.remaining)}`}
+        </span>
         <strong>{Math.round(progress * 100)}%</strong>
       </div>
       <div className="lock">
@@ -365,7 +468,10 @@ function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
         </div>
       </div>
       {progress >= 1 ? (
-        <p className="complete">✦ ¡Lo lograste! Tu esfuerzo floreció.</p>
+        <div className="complete-scene">
+          <Illustration kind="complete" />
+          <p className="complete">✦ ¡Lo lograste! Tu esfuerzo floreció.</p>
+        </div>
       ) : (
         <div className="plan">
           <span>Tu siguiente pasito</span>
@@ -586,6 +692,8 @@ function Connections({ data, setData, notify, celebrate }) {
     [pageToken, setPageToken] = useState(null),
     [balances, setBalances] = useState(null),
     [password, setPassword] = useState(""),
+    [linkChoice, setLinkChoice] = useState({}),
+    [distinct, setDistinct] = useState({}),
     [assign, setAssign] = useState({}),
     [remember, setRemember] = useState({});
   async function refresh() {
@@ -615,6 +723,7 @@ function Connections({ data, setData, notify, celebrate }) {
       automatic = 0,
       achieved = false;
     for (const receipt of result.receipts) {
+      const matches = possibleReceiptMatches(updated, receipt);
       const goalId = updated.assignments[receipt.patternId],
         goal = updated.goals.find(
           (g) =>
@@ -623,7 +732,8 @@ function Connections({ data, setData, notify, celebrate }) {
       if (
         receipt.validated &&
         goal &&
-        !updated.importedIds.includes(receipt.id)
+        !updated.importedIds.includes(receipt.id) &&
+        !matches.length
       ) {
         const before = balance(goal);
         updated = addReceipt(updated, receipt, goalId);
@@ -654,24 +764,52 @@ function Connections({ data, setData, notify, celebrate }) {
       );
   }
   function accept(receipt) {
-    const goalId =
-      assign[receipt.id] ?? data.assignments[receipt.patternId] ?? "";
-    const goal = data.goals.find((g) => g.id === goalId);
-    if (!goal || goal.archived) {
-      notify("Elige una cajita para este depósito.");
-      return;
+    try {
+      const matches = possibleReceiptMatches(data, receipt);
+      const choice = linkChoice[receipt.id];
+      if (matches.length && choice !== "new") {
+        const match = matches.find(
+          (m) => JSON.stringify([m.goalId, m.entryId]) === choice,
+        );
+        if (!match) {
+          notify("Elige el registro existente o indica que es otro depósito.");
+          return;
+        }
+        if (
+          !setData(reconcileReceipt(data, receipt, match.goalId, match.entryId))
+        )
+          return;
+        setReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
+        notify("Correo vinculado. El monto registrado se mantiene igual.");
+        return;
+      }
+      if (matches.length && !distinct[receipt.id]) {
+        notify("Confirma que este correo corresponde a otro depósito.");
+        return;
+      }
+      const goalId =
+        assign[receipt.id] ?? data.assignments[receipt.patternId] ?? "";
+      const goal = data.goals.find((g) => g.id === goalId);
+      if (!goal || goal.archived) {
+        notify("Elige una cajita para este depósito.");
+        return;
+      }
+      const next = addReceipt(data, receipt, goalId, {
+        allowPossibleDuplicate: matches.length > 0 && distinct[receipt.id],
+      });
+      if (remember[receipt.id])
+        next.assignments = { ...next.assignments, [receipt.patternId]: goalId };
+      if (!setData(next)) return;
+      if (
+        balance(goal) < goal.targetCents &&
+        balance(next.goals.find((g) => g.id === goalId)) >= goal.targetCents
+      )
+        celebrate();
+      setReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
+      notify("Depósito registrado una sola vez.");
+    } catch (error) {
+      notify(error.message);
     }
-    const next = addReceipt(data, receipt, goalId);
-    if (remember[receipt.id])
-      next.assignments = { ...next.assignments, [receipt.patternId]: goalId };
-    if (!setData(next)) return;
-    if (
-      balance(goal) < goal.targetCents &&
-      balance(next.goals.find((g) => g.id === goalId)) >= goal.targetCents
-    )
-      celebrate();
-    setReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
-    notify("Depósito registrado una sola vez.");
   }
   return (
     <section>
@@ -844,65 +982,137 @@ function Connections({ data, setData, notify, celebrate }) {
       {receipts.length > 0 && (
         <div className="panel receipts">
           <h2>Depósitos por revisar</h2>
-          {receipts.map((r) => (
-            <article key={r.id}>
-              <div>
-                <strong>
-                  {money(r.amountCents)} · {r.provider}
-                </strong>
-                <p className="small-text muted">
-                  {new Date(r.at).toLocaleDateString("es-MX")} · patrón
-                  pendiente de validar
-                </p>
-              </div>
-              <label>
-                Cajita
-                <select
-                  aria-label="Cajita"
-                  value={assign[r.id] ?? data.assignments[r.patternId] ?? ""}
-                  onChange={(e) =>
-                    setAssign({ ...assign, [r.id]: e.target.value })
-                  }
-                >
-                  <option value="">Selecciona una cajita</option>
-                  {data.goals
-                    .filter((g) => g.provider === r.provider && !g.archived)
-                    .map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                </select>
-              </label>
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  checked={remember[r.id] ?? false}
-                  onChange={(e) =>
-                    setRemember({ ...remember, [r.id]: e.target.checked })
-                  }
-                />
-                Recordar esta cajita para el patrón
-              </label>
-              <div className="button-row">
-                <button className="primary" onClick={() => accept(r)}>
-                  Confirmar depósito
-                </button>
-                <button
-                  className="text-button"
-                  onClick={() => {
-                    setData({
-                      ...data,
-                      importedIds: [...data.importedIds, r.id],
-                    });
-                    setReceipts((prev) => prev.filter((x) => x.id !== r.id));
-                  }}
-                >
-                  Ignorar
-                </button>
-              </div>
-            </article>
-          ))}
+          {receipts.map((r) => {
+            const matches = possibleReceiptMatches(data, r);
+            const newDeposit = !matches.length || linkChoice[r.id] === "new";
+            return (
+              <article key={r.id}>
+                <div>
+                  <strong>
+                    {money(r.amountCents)} · {r.provider}
+                  </strong>
+                  <p className="small-text muted">
+                    {new Date(r.at).toLocaleDateString("es-MX")} ·{" "}
+                    {r.validated
+                      ? "patrón validado"
+                      : "patrón pendiente de validar"}
+                  </p>
+                </div>
+                {matches.length > 0 && (
+                  <div className="receipt-match">
+                    <p>
+                      <strong>Puede que ya lo hayas registrado.</strong>{" "}
+                      Encontramos el mismo monto, app y día. Revisa tu
+                      comprobante: la coincidencia no lo confirma.
+                    </p>
+                    <label>
+                      ¿Ya lo registraste?
+                      <select
+                        value={linkChoice[r.id] ?? ""}
+                        onChange={(e) =>
+                          setLinkChoice({
+                            ...linkChoice,
+                            [r.id]: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Elige cómo revisar este correo</option>
+                        {matches.map((m) => (
+                          <option
+                            key={JSON.stringify([m.goalId, m.entryId])}
+                            value={JSON.stringify([m.goalId, m.entryId])}
+                          >
+                            {m.goalName} ·{" "}
+                            {new Date(m.at).toLocaleTimeString("es-MX", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}{" "}
+                            · {money(r.amountCents)}
+                          </option>
+                        ))}
+                        <option value="new">Es otro depósito</option>
+                      </select>
+                    </label>
+                    {linkChoice[r.id] === "new" && (
+                      <label className="checkbox">
+                        <input
+                          type="checkbox"
+                          checked={distinct[r.id] ?? false}
+                          onChange={(e) =>
+                            setDistinct({
+                              ...distinct,
+                              [r.id]: e.target.checked,
+                            })
+                          }
+                        />
+                        Confirmo que es un depósito distinto a los registros
+                        sugeridos
+                      </label>
+                    )}
+                  </div>
+                )}
+                {newDeposit && (
+                  <>
+                    <label>
+                      Cajita
+                      <select
+                        aria-label="Cajita"
+                        value={
+                          assign[r.id] ?? data.assignments[r.patternId] ?? ""
+                        }
+                        onChange={(e) =>
+                          setAssign({ ...assign, [r.id]: e.target.value })
+                        }
+                      >
+                        <option value="">Selecciona una cajita</option>
+                        {data.goals
+                          .filter(
+                            (g) => g.provider === r.provider && !g.archived,
+                          )
+                          .map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.name}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label className="checkbox">
+                      <input
+                        type="checkbox"
+                        checked={remember[r.id] ?? false}
+                        onChange={(e) =>
+                          setRemember({ ...remember, [r.id]: e.target.checked })
+                        }
+                      />
+                      Recordar esta cajita para el patrón
+                    </label>
+                  </>
+                )}
+                <div className="button-row">
+                  <button className="primary" onClick={() => accept(r)}>
+                    {matches.length && !newDeposit
+                      ? "Vincular al registro existente"
+                      : "Confirmar depósito"}
+                  </button>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      if (
+                        !setData({
+                          ...data,
+                          importedIds: [...data.importedIds, r.id],
+                        })
+                      )
+                        return;
+                      setReceipts((prev) => prev.filter((x) => x.id !== r.id));
+                    }}
+                  >
+                    Ignorar
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
       {pageToken && (
@@ -954,7 +1164,7 @@ function Backup({ data, onRestore, notify }) {
         </div>
       </div>
       <div className="panel backup-panel">
-        <span className="backup-art">☁</span>
+        <Illustration kind="backup" className="backup-illustration" />
         <h2>Un lugar seguro para tus sueños</h2>
         <p>
           Tus metas, compañeros y movimientos se guardan en este dispositivo.
@@ -1063,6 +1273,16 @@ export default function App() {
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
   const [connectionVersion, setConnectionVersion] = useState(0);
+  const [startingRaw] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const lastStoredRaw = useRef(startingRaw);
+  const latestData = useRef(data);
+  latestData.current = data;
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
     sadTimer = useRef();
@@ -1079,9 +1299,24 @@ export default function App() {
       return false;
     }
     try {
-      const saved = { ...next, savedAt: Date.now() };
+      if (
+        !restoring &&
+        ((next.savedAt ?? 0) !== (latestData.current.savedAt ?? 0) ||
+          localStorage.getItem(STORAGE_KEY) !== lastStoredRaw.current)
+      ) {
+        notify(
+          "Tus cajitas cambiaron mientras revisabas. Abre de nuevo esta pantalla antes de guardar.",
+        );
+        return false;
+      }
+      const saved = {
+        ...validateBackup(next),
+        savedAt: Math.max(Date.now(), (latestData.current.savedAt ?? 0) + 1),
+      };
       const raw = JSON.stringify(saved);
       localStorage.setItem(STORAGE_KEY, raw);
+      lastStoredRaw.current = raw;
+      latestData.current = saved;
       setDataState(saved);
       persistSavings(raw).catch(() =>
         notify(
@@ -1090,9 +1325,11 @@ export default function App() {
       );
       if (restoring) setLoadError("");
       return true;
-    } catch {
+    } catch (error) {
       notify(
-        "No pudimos guardar el cambio. Revisa el espacio o los permisos del navegador y descarga un respaldo.",
+        error.name === "QuotaExceededError" || error.name === "SecurityError"
+          ? "No pudimos guardar el cambio. Revisa el espacio o los permisos del navegador y descarga un respaldo."
+          : error.message || "No pudimos guardar el cambio.",
       );
       return false;
     }
@@ -1121,6 +1358,34 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
+    function changed(event) {
+      if (
+        event.storageArea !== localStorage ||
+        (event.key !== STORAGE_KEY && event.key !== null)
+      )
+        return;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      try {
+        const next = raw ? validateBackup(JSON.parse(raw)) : initialData();
+        lastStoredRaw.current = raw;
+        latestData.current = next;
+        setDataState(next);
+        setModal(null);
+        setLoadError("");
+        notify(
+          "Tus cajitas se actualizaron desde otra pestaña. Revisa el cambio antes de continuar.",
+        );
+      } catch {
+        setLoadError(
+          "Los datos cambiaron en otra pestaña y necesitan recuperación. Descarga los datos originales o importa un respaldo.",
+        );
+        setModal(null);
+      }
+    }
+    window.addEventListener("storage", changed);
+    return () => window.removeEventListener("storage", changed);
+  }, []);
+  useEffect(() => {
     const gmail = new URLSearchParams(location.search).get("gmail");
     if (gmail) {
       setTab("connections");
@@ -1136,7 +1401,7 @@ export default function App() {
     target = data.goals.reduce((sum, g) => sum + g.targetCents, 0),
     completed = data.goals.filter((g) => balance(g) >= g.targetCents).length,
     racha = streak(data.goals);
-  function movement(value) {
+  function movement({ cents: value, at }) {
     const g = data.goals.find((g) => g.id === modal.goal.id);
     const next = {
       ...data,
@@ -1149,7 +1414,7 @@ export default function App() {
                 {
                   id: crypto.randomUUID(),
                   cents: value,
-                  at: new Date().toISOString(),
+                  at,
                   source: "manual",
                 },
               ],
@@ -1160,9 +1425,11 @@ export default function App() {
     if (!setData(next)) return;
     setModal(null);
     if (value < 0) {
-      setSad(true);
+      const earlyWithdrawal = Date.parse(at) < unlockTime(g.unlockDate);
+      setSad(earlyWithdrawal);
       clearTimeout(sadTimer.current);
-      sadTimer.current = setTimeout(() => setSad(false), 8000);
+      if (earlyWithdrawal)
+        sadTimer.current = setTimeout(() => setSad(false), 8000);
       notify("Retiro registrado. Los planes cambian; puedes seguir después.");
     } else if (
       balance(g) < g.targetCents &&
@@ -1321,7 +1588,7 @@ export default function App() {
               </span>
               <div>
                 <strong>Lleva tus cajitas contigo</strong>
-                <p>Android 7+ · APK de prueba · versión 0.2</p>
+                <p>Android 7+ · APK de prueba · versión 0.3</p>
               </div>
               <a className="primary" href={ANDROID_DOWNLOAD_URL}>
                 ↓ Descargar para Android
@@ -1458,12 +1725,14 @@ export default function App() {
               </section>
               <div className="stats">
                 <div>
-                  <span className="stat-icon peach">♨</span>
+                  <span className="stat-icon peach" aria-hidden="true">
+                    ♡
+                  </span>
                   <p>
                     <strong>
-                      {racha} {racha === 1 ? "día" : "días"}
+                      {friend.days} {friend.days === 1 ? "día" : "días"}
                     </strong>
-                    <span>Racha de ahorro</span>
+                    <span>De compañía</span>
                   </p>
                 </div>
                 <div>
@@ -1542,7 +1811,9 @@ export default function App() {
                 </div>
               ) : (
                 <div className="empty-state">
-                  <span className="empty-flower">✿</span>
+                  <Illustration
+                    kind={goalFilter === "completed" ? "complete" : "empty"}
+                  />
                   <h3>
                     {goalFilter === "archived"
                       ? "Tus sueños tienen su lugar"
@@ -1551,21 +1822,42 @@ export default function App() {
                         : "¿Qué te hace ilusión?"}
                   </h3>
                   <p>
-                    Un viaje, ese curso, tu fondo de tranquilidad.
-                    <br />
-                    Tu primera cajita empieza contigo.
+                    {goalFilter === "archived"
+                      ? "Tus cajitas archivadas aparecerán aquí con todo su historial."
+                      : goalFilter === "completed"
+                        ? "Cuando alcances una meta, aquí celebraremos tu esfuerzo."
+                        : "Un viaje, ese curso, tu fondo de tranquilidad. Dale una casita a tu siguiente sueño."}
                   </p>
                   <button
                     className="secondary"
                     onClick={() => setModal({ type: "new" })}
                   >
-                    Crear mi primera cajita ↗
+                    {data.goals.length
+                      ? "Crear otra cajita ↗"
+                      : "Crear mi primera cajita ↗"}
                   </button>
                   <div className="dream-tags">
                     <span>☁ Una escapadita</span>
                     <span>✦ Mi guardadito</span>
                     <span>✿ Algo para mí</span>
                   </div>
+                  {!data.goals.length && (
+                    <details className="getting-started">
+                      <summary>¿Cómo funciona Cajitas?</summary>
+                      <ol>
+                        <li>Elige tu sueño, monto y fecha.</li>
+                        <li>Aparta el dinero en tu app de confianza.</li>
+                        <li>
+                          Registra aquí lo que apartaste y ve crecer a tu
+                          compañero.
+                        </li>
+                      </ol>
+                      <p>
+                        Tú conservas el control de tu dinero. Tu registro se
+                        guarda en este dispositivo.
+                      </p>
+                    </details>
+                  )}
                 </div>
               )}
               <p className="commitment">
@@ -1573,15 +1865,28 @@ export default function App() {
                 dinero sigue disponible en la app externa.
               </p>
               <p className="streak-note">
-                La racha cuenta días consecutivos con depósitos registrados;
-                puedes continuar aunque un día no ahorres.
+                Racha de ahorro: {racha} {racha === 1 ? "día" : "días"}{" "}
+                consecutivos con depósitos registrados. Puedes continuar aunque
+                un día no ahorres.
               </p>
             </>
           )}
           {tab === "pet" && (
             <PetRoom data={data} onSave={setData} notify={notify} />
           )}
-          {tab === "activity" && <Activity data={data} notify={notify} />}
+          {tab === "activity" && (
+            <Activity
+              data={data}
+              notify={notify}
+              onCorrect={(entry) =>
+                setModal({
+                  type: "correct",
+                  goalId: entry.goalId,
+                  entryId: entry.id,
+                })
+              }
+            />
+          )}
           {tab === "install" && <Install notify={notify} />}
           {tab === "more" && (
             <section>
@@ -1707,6 +2012,34 @@ export default function App() {
           onClose={() => setModal(null)}
           onSave={movement}
           preferences={pet}
+        />
+      )}
+      {modal?.type === "correct" && (
+        <CorrectEntry
+          goal={data.goals.find((g) => g.id === modal.goalId)}
+          entry={data.goals
+            .find((g) => g.id === modal.goalId)
+            .entries.find((e) => e.id === modal.entryId)}
+          onClose={() => setModal(null)}
+          onSave={(value) => {
+            const next = correctManualEntry(
+              data,
+              modal.goalId,
+              modal.entryId,
+              value,
+            );
+            if (setData(next)) {
+              setModal(null);
+              notify("Registro corregido. Tu historial ya está actualizado.");
+            }
+          }}
+          onRemove={() => {
+            const next = removeManualEntry(data, modal.goalId, modal.entryId);
+            if (setData(next)) {
+              setModal(null);
+              notify("Registro equivocado eliminado.");
+            }
+          }}
         />
       )}
       {modal?.type === "edit" && (
