@@ -1,3 +1,11 @@
+.tutorial-launch {
+  display: block;
+  padding: 10px 0;
+  margin-top: 5px;
+  font-size: 13px;
+  min-height: 44px;
+  color: #526e48;
+}
 .saved-label {
   display: block;
   color: #697b62;

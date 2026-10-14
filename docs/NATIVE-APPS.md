@@ -4,7 +4,7 @@ La misma interfaz web se empaqueta dentro de proyectos Capacitor 8.5.3. El conte
 
 ## Android: APK de prueba
 
-La entrega 0.3 se distribuye como [APK de prueba](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.3.0-preview.1). La pantalla de instalación web también enlaza esa descarga. El proyecto iOS se incluye en el código fuente; su instalación nativa requiere Xcode y firma de Apple.
+La entrega 0.4 se distribuye como [APK de prueba](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.4.0-preview.1). La pantalla de instalación web también enlaza esa descarga. El proyecto iOS se incluye en el código fuente; su instalación nativa requiere Xcode y firma de Apple.
 
 Requisitos: Node compatible con `package.json`, JDK 21 y Android SDK con plataforma 36, build-tools 35.0.0 y platform-tools. Android Gradle Plugin 8.13 utiliza build-tools 35.0.0 con la plataforma 36. La configuración actual admite Android 7.0 / API 24 o superior.
 
@@ -45,7 +45,7 @@ Si se necesitan conexiones remotas, compilar con `VITE_API_ORIGIN` apuntando a u
 
 Los proyectos incluyen App, Browser, Filesystem, Haptics, Local Notifications, Preferences y Share. Las notificaciones solicitan permiso al usuario; no se registra permiso de alarmas exactas. Android gestiona los bordes con SystemBars, que expone `--safe-area-inset-*`; la interfaz utiliza estos valores para respetar cámaras y gestos.
 
-Android desactiva el backup automático de la app para que los identificadores de sesión no viajen con la copia del sistema. El respaldo JSON explícito lleva metas, mascota y visitas, sin sesiones ni claves. Al restaurarlo se desactiva el recordatorio: actívalo de nuevo en Mi mascota en ese dispositivo. La versión 0.3 tiene build number 3 en ambos proyectos.
+Android desactiva el backup automático de la app para que los identificadores de sesión no viajen con la copia del sistema. El respaldo JSON explícito lleva metas, mascota y visitas, sin sesiones ni claves. Al restaurarlo se desactiva el recordatorio: actívalo de nuevo en Mi mascota en ese dispositivo. La versión 0.4 tiene build number 4 en ambos proyectos.
 
 Las APIs reales requieren un backend HTTPS desplegado y las credenciales del dueño. El APK de prueba sin `VITE_API_ORIGIN` contiene toda la experiencia local, pero no puede consultar Banxico/Gmail/Bitso. No se inventa una dirección de servidor. Añade la URL pública, recompila y sincroniza para activar las conexiones. El botón de descarga web admite un enlace público mediante `VITE_ANDROID_DOWNLOAD_URL`.
 
