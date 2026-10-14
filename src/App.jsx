@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import Mascot from "./components/Mascot.jsx";
 import Modal from "./components/Modal.jsx";
@@ -43,6 +43,8 @@ import {
   correctManualEntry,
   removeManualEntry,
 } from "./domain.js";
+
+const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
 const destinations = {
   Nu: "https://nu.com.mx/",
@@ -1264,7 +1266,11 @@ export default function App() {
       return initialData();
     }
   });
-  const [tab, setTab] = useState("goals"),
+  const [tab, setTab] = useState(() =>
+      new URLSearchParams(location.search).get("tutorial") === "1"
+        ? "tutorial"
+        : "goals",
+    ),
     [modal, setModal] = useState(null),
     [toast, setToast] = useState(""),
     [now, setNow] = useState(Date.now()),
@@ -1450,7 +1456,7 @@ export default function App() {
         notify("Gmail conectado. Ya puedes buscar comprobantes.");
       }
     };
-    const back = () => setTab("goals");
+    const back = () => changeTab("goals");
     window.addEventListener("cajitas:connection", connected);
     window.addEventListener("cajitas:back", back);
     return () => {
@@ -1475,6 +1481,7 @@ export default function App() {
     ["connections", "⌁", "Conexiones"],
     ["backup", "☁", "Respaldo"],
     ["install", "↓", "Instalar app"],
+    ["tutorial", "▷", "Tutorial interactivo"],
   ];
   const mobileNav = [
     ["goals", "▦", "Mis cajitas"],
@@ -1484,6 +1491,10 @@ export default function App() {
   ];
   const changeTab = (key) => {
     setTab(key);
+    const url = new URL(location.href);
+    if (key === "tutorial") url.searchParams.set("tutorial", "1");
+    else url.searchParams.delete("tutorial");
+    history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
   return (
@@ -1521,18 +1532,26 @@ export default function App() {
               aria-current={
                 tab === key ||
                 (key === "more" &&
-                  ["simulator", "connections", "backup", "install"].includes(
-                    tab,
-                  ))
+                  [
+                    "simulator",
+                    "connections",
+                    "backup",
+                    "install",
+                    "tutorial",
+                  ].includes(tab))
                   ? "page"
                   : undefined
               }
               className={
                 tab === key ||
                 (key === "more" &&
-                  ["simulator", "connections", "backup", "install"].includes(
-                    tab,
-                  ))
+                  [
+                    "simulator",
+                    "connections",
+                    "backup",
+                    "install",
+                    "tutorial",
+                  ].includes(tab))
                   ? "active"
                   : ""
               }
@@ -1581,14 +1600,14 @@ export default function App() {
           </div>
         </header>
         <main>
-          {!isNative && (
+          {!isNative && tab !== "tutorial" && (
             <aside className="download-banner" aria-label="Descargar Cajitas">
               <span className="download-mascot" aria-hidden="true">
                 🐷
               </span>
               <div>
                 <strong>Lleva tus cajitas contigo</strong>
-                <p>Android 7+ · APK de prueba · versión 0.3</p>
+                <p>Android 7+ · APK de prueba · versión 0.4</p>
               </div>
               <a className="primary" href={ANDROID_DOWNLOAD_URL}>
                 ↓ Descargar para Android
@@ -1637,6 +1656,12 @@ export default function App() {
                   <p className="muted">
                     Cada pasito cuenta. Dale una cajita a eso que tanto quieres.
                   </p>
+                  <button
+                    className="text-button tutorial-launch"
+                    onClick={() => changeTab("tutorial")}
+                  >
+                    ▷ Ver tutorial interactivo
+                  </button>
                 </div>
                 <button
                   className="primary new-goal"
@@ -1887,6 +1912,18 @@ export default function App() {
               }
             />
           )}
+          {tab === "tutorial" && (
+            <Suspense fallback={<p role="status">Caji prepara tu paseíto…</p>}>
+              <Tutorial
+                preferences={pet}
+                onNavigate={changeTab}
+                onCreate={() => {
+                  changeTab("goals");
+                  setModal({ type: "new" });
+                }}
+              />
+            </Suspense>
+          )}
           {tab === "install" && <Install notify={notify} />}
           {tab === "more" && (
             <section>
@@ -1901,6 +1938,12 @@ export default function App() {
               </div>
               <div className="more-grid">
                 {[
+                  [
+                    "tutorial",
+                    "▷",
+                    "Tutorial interactivo",
+                    "Aprende jugando con cajitas de ejemplo.",
+                  ],
                   [
                     "simulator",
                     "✦",

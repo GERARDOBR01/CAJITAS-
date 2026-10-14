@@ -1,16 +1,24 @@
 # Cajitas ✦
 
-## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.3.0-preview.1/Cajitas-0.3.0-android-preview.apk)
+## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.4.0-preview.1/Cajitas-0.4.0-android-preview.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.3.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.3.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.4.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.4.0-preview.1)
 
 En Android, abre el APK descargado para instalarlo. Para iPhone puedes instalar la versión web desde Safari con Compartir → Agregar a pantalla de inicio. El proyecto nativo de iPhone requiere Xcode y firma Apple.
 
 PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y una función serverless Node para las integraciones.
 
-**Versión 0.3:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
+**Versión 0.4:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
+
+## Tutorial animado e interactivo
+
+[▷ Abrir el tutorial de Cajitas](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Inicio → Ver tutorial interactivo y Más → Tutorial interactivo.
+
+Ocho pasos: espacio personal, crear meta, registrar ahorro, candado/retiro/celebración, mascota, herramientas, instalación y repaso. Incluye ejercicios con dinero de ejemplo, elección de mascota y accesorios, calculadora con tasa capturada, explicación de correos y respaldos, y guía Android/iPhone. No consulta APIs ni guarda datos de práctica. Al salir o recargar se reinicia; las cajitas reales permanecen intactas. El botón final solo abre el formulario para crear una cajita real, que requiere guardarse explícitamente.
+
+Puedes avanzar o volver, ir directo a un tema y pausar animaciones. Respeta reducir movimiento del dispositivo y el ajuste de Mi mascota. Funciona offline en la PWA después de la primera carga completa; las APIs y las descargas externas requieren conexión.
 
 ## Arranque local
 
@@ -155,7 +163,7 @@ npm run build:android
 
 Tests unitarios: parser, Banxico con API mockeada, firma Bitso, centavos, rachas, respaldos y deduplicación. Tests del handler: sesiones, rechazo de mutaciones sin Origin, PKCE/state de un solo uso y Gmail filtrado por remitente con proveedores mockeados.
 
-Validación de la versión 0.3: **40 tests unitarios**, **16 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
+Validación de la versión 0.4: **40 tests unitarios**, **20 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
 Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro anticipado, confirmación, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
 
@@ -195,3 +203,14 @@ Los iconos PWA se regeneran desde la mascota SVG con `node scripts/generate-icon
 | [Jardín de sueños](docs/screenshots/v3-05-jardin-mobile.png) | Ilustración original y primer paso |
 
 Los correos de estas capturas son sintéticos y las APIs están mockeadas. Los patrones reales de Nu y Mercado Pago siguen pendientes de validar con correos anonimizados.
+
+### Tutorial 0.4
+
+| Captura móvil | Qué muestra |
+| --- | --- |
+| [Bienvenida](docs/screenshots/tutorial-01-bienvenida-mobile.png) | Entrada y pasos del recorrido |
+| [Mascota de práctica](docs/screenshots/tutorial-02-mascota-mobile.png) | Vaquita, accesorio y visita sin dinero |
+| [Respaldo explicado](docs/screenshots/tutorial-03-respaldo-mobile.png) | Contenido y recuperación de datos |
+| [Escritorio](docs/screenshots/tutorial-04-desktop.png) | Recorrido a 1365 × 900 |
+
+Las capturas son de Chromium a 390 × 844 con animaciones detenidas para obtener una imagen legible. La experiencia publicada sí anima las ilustraciones cuando los ajustes de movimiento lo permiten.
