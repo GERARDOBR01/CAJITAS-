@@ -16,7 +16,10 @@
     "build:android": "node scripts/android-build.mjs",
     "sync:ios": "npm run build:native && cap sync ios",
     "open:ios": "cap open ios",
-    "open:android": "cap open android"
+    "open:android": "cap open android",
+    "build:pages": "vite build --mode pages",
+    "deploy:pages": "node scripts/deploy-pages.mjs",
+    "preview:pages": "vite preview --mode pages --host 0.0.0.0"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

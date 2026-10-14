@@ -6,6 +6,7 @@ import {
   clearInstallPrompt,
 } from "../platform.js";
 import Mascot from "./Mascot.jsx";
+import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
 export default function Install({ notify }) {
   const [prompt, setPrompt] = useState(getInstallPrompt),
     [installed, setInstalled] = useState(
@@ -39,7 +40,7 @@ export default function Install({ notify }) {
     if (choice.outcome === "accepted")
       notify("Cajitas se está instalando. ¡Nos vemos en tu inicio!");
   }
-  const apk = import.meta.env.VITE_ANDROID_DOWNLOAD_URL || 'https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.2.0-preview.1/Cajitas-0.2.0-android-preview.apk';
+  const apk = ANDROID_DOWNLOAD_URL;
   return (
     <section>
       <div className="section-heading">

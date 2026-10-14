@@ -5,7 +5,9 @@ import handler from "./server/handler.js";
 
 export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
+  const base = mode === "pages" ? "/CAJITAS-/" : "/";
   return {
+    base,
     plugins: [
       react(),
       {
@@ -29,11 +31,12 @@ export default defineConfig(({ mode }) => {
           theme_color: "#f8f6f1",
           background_color: "#f8f6f1",
           display: "standalone",
-          start_url: "/",
+          start_url: base,
+          scope: base,
           icons: [
-            { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+            { src: `${base}icon-192.png`, sizes: "192x192", type: "image/png" },
             {
-              src: "/icon-512.png",
+              src: `${base}icon-512.png`,
               sizes: "512x512",
               type: "image/png",
               purpose: "any",
