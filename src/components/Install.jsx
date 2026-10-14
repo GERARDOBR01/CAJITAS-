@@ -5,7 +5,7 @@ import {
   getInstallPrompt,
   clearInstallPrompt,
 } from "../platform.js";
-import Mascot from "./Mascot.jsx";
+import Illustration from "./Illustration.jsx";
 import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
 export default function Install({ notify }) {
   const [prompt, setPrompt] = useState(getInstallPrompt),
@@ -53,7 +53,7 @@ export default function Install({ notify }) {
         </div>
       </div>
       <div className="install-hero panel">
-        <Mascot pet="pig" accessory="bow" small />
+        <Illustration kind="welcome" className="install-illustration" />
         <span className="badge">
           {installed
             ? "Cajitas ya está en tu dispositivo"

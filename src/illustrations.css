@@ -1,0 +1,54 @@
+.cajitas-illustration {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.cajitas-illustration--welcome {
+  width: 220px;
+}
+
+.cajitas-illustration .illustration-float {
+  animation: cajitas-illustration-float 7s ease-in-out infinite;
+}
+
+.cajitas-illustration .illustration-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cajitas-illustration-sway 8s ease-in-out infinite;
+}
+
+@keyframes cajitas-illustration-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes cajitas-illustration-sway {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+.reduced-motion .cajitas-illustration .illustration-float,
+.reduced-motion .cajitas-illustration .illustration-sway {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cajitas-illustration .illustration-float,
+  .cajitas-illustration .illustration-sway {
+    animation: none;
+  }
+}

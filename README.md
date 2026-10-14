@@ -1,14 +1,14 @@
 # Cajitas ✦
 
-## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.2.0-preview.1/Cajitas-0.2.0-android-preview.apk)
+## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.3.0-preview.1/Cajitas-0.3.0-android-preview.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.2.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.2.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.3.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.3.0-preview.1)
 
 En Android, abre el APK descargado para instalarlo. Para iPhone puedes instalar la versión web desde Safari con Compartir → Agregar a pantalla de inicio. El proyecto nativo de iPhone requiere Xcode y firma Apple.
 
 PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y una función serverless Node para las integraciones.
 
-**Versión 0.2:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
+**Versión 0.3:** también incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables, hábitos y una navegación móvil pensada para usarla como app. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
 
@@ -30,6 +30,12 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 
 ### La nueva experiencia
 
+- Vista previa del aporte semanal o cada 15/30 días antes de crear o editar una meta; muestra cuánto falta y ofrece montos rápidos editables. Ninguna sugerencia crea un depósito por sí sola.
+- Registra la fecha real del movimiento. Corrige o elimina registros manuales equivocados desde Actividad, con confirmación antes de eliminar. Cada cambio valida saldos por orden de fecha; se rechaza una corrección que deje un saldo histórico negativo. Los registros vinculados a Gmail conservan su origen y no se editan como registros manuales.
+- El gráfico de 14 días y su total siguen la cajita seleccionada; el mes filtra la lista, métricas del periodo y CSV.
+- Protección contra consultas lentas y cambios desde otra pestaña que podrían sobrescribir datos más recientes. La vista se actualiza entre pestañas del mismo navegador; los dispositivos siguen siendo independientes.
+- Cinco escenas SVG originales: bienvenida, semillas, libreta, mochila de respaldo y jardín de celebración. Movimiento reducible y botón de corrección con área táctil amplia. En el inicio se destaca la compañía; la racha de depósitos queda como información secundaria.
+
 - Cerdito Pipo, vaquita Mila, conejito Luna o Caji: nombre y brote, moñito, bufanda o estrella, con ilustraciones SVG originales.
 - Animaciones de parpadeo, caricias, corazones y celebración. Opción de desactivarlas, además de respetar reducir movimiento del dispositivo.
 - Visita diaria y cinco niveles de compañía. Un día cuenta una vez aunque tenga varias visitas o depósitos; la cantidad de dinero no determina la amistad. Visitar no registra un depósito.
@@ -38,6 +44,8 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 - Recordatorio semanal: notificación local con permiso en apps nativas, o evento `.ics` para importar en calendario en la web. No realiza transferencias ni añade registros automáticamente. Al restaurar un respaldo hay que activar el recordatorio de nuevo.
 - Barra de navegación inferior, zonas seguras y compartir archivos desde el teléfono. En la app nativa se replica el registro local en Preferences; se recupera la copia válida más reciente al abrir.
 - Backups v2 incluyen mascota, visitas, frecuencia y archivo; se migran los respaldos v1 sin perder movimientos. Cada instalación tiene sus propios datos: utiliza el respaldo para trasladarlos.
+
+La revisión del [mercado mexicano](docs/research/mexico-market-2026-10.md) compara documentación oficial de Nu, Mercado Pago, BBVA, Banorte, ScotiaMóvil, Fintual y Spendee. Metas y apartados ya existen: no se afirma exclusividad ni superioridad comercial. [Conciliación estudiada con REA](docs/research/rea-matching.md) documenta el patrón de revisión de registros manuales/importados de YNAB, con sus límites y las decisiones propias de Cajitas.
 
 La investigación usó **REA 6.5.0** para observar artículos públicos oficiales de Qapital, Monarch y Finch. [Patrones y decisiones](docs/research/reference-patterns.md), [evidencia y límites](docs/research/rea-evidence.md). Se adaptaron comportamientos con código y arte originales; no se copiaron recursos de esas apps ni se accedió a sus cuentas privadas.
 
@@ -91,7 +99,7 @@ OAuth usa state ligado al navegador, PKCE y cookies HttpOnly/SameSite con ID opa
 
 Para ajustar patrones, hacen falta 3 o 4 correos de Nu y Mercado Pago anonimizados, conservando asunto, estructura MIME/HTML, etiquetas, separadores del monto y dominio del remitente. Sustituye nombres, CLABE, cuentas, referencias y cantidades por datos ficticios con el mismo formato. Agrega fixtures y pruebas antes de cambiar `validated` a `true`. Mientras estén pendientes, recordar una cajita solo preselecciona el destino: no elimina la revisión.
 
-Cada correo aceptado o ignorado deja un ID hash persistente para no contarlo de nuevo. La consulta es manual, sin lectura de fondo. Un correo demuestra un depósito, **no el saldo actual**. Antes de aceptar un correo, revisa si ya registraste ese depósito manualmente: no se deduplica un movimiento manual contra un correo sin identificador común.
+Cada correo aceptado, vinculado o ignorado deja un ID hash persistente para no contarlo de nuevo. La consulta es manual, sin lectura de fondo. Un correo demuestra un depósito, **no el saldo actual**. Si hay registros manuales con el mismo monto, proveedor y día local, Cajitas suspende el registro automático y pide revisión. Puedes vincular el correo a un registro existente, incluso archivado, sin cambiar su monto/fecha/ID ni sumar dinero; si es otro depósito, se requiere confirmación explícita. La coincidencia es una sugerencia, no una identidad demostrada. Fechas distintas o montos capturados incorrectamente pueden no producir sugerencias: revisa siempre el comprobante.
 
 ## Bitso: llave de solo balances
 
@@ -147,7 +155,7 @@ npm run build:android
 
 Tests unitarios: parser, Banxico con API mockeada, firma Bitso, centavos, rachas, respaldos y deduplicación. Tests del handler: sesiones, rechazo de mutaciones sin Origin, PKCE/state de un solo uso y Gmail filtrado por remitente con proveedores mockeados.
 
-Validación de la versión 0.2: **26 tests unitarios**, **9 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
+Validación de la versión 0.3: **40 tests unitarios**, **16 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
 Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro anticipado, confirmación, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
 
@@ -175,3 +183,15 @@ Las nuevas capturas son de viewport exacto **390 × 844**:
 | [Descarga en Pages](docs/screenshots/v2-07-descarga-pages-mobile.png) | Botón de descarga al inicio de la web |
 
 Los iconos PWA se regeneran desde la mascota SVG con `node scripts/generate-icons.js` (requiere Chromium instalado).
+
+### Refinamiento 0.3
+
+| Captura móvil | Qué verifica |
+| --- | --- |
+| [Plan antes de crear](docs/screenshots/v3-01-plan-mobile.png) | Aporte estimado por frecuencia |
+| [Correo y registro existente](docs/screenshots/v3-02-correo-mobile.png) | Selección explícita sin sumar dos veces |
+| [Corrección](docs/screenshots/v3-03-correccion-mobile.png) | Ajuste de error de captura |
+| [Actividad filtrada](docs/screenshots/v3-04-actividad-mobile.png) | Saldo e historial de una cajita |
+| [Jardín de sueños](docs/screenshots/v3-05-jardin-mobile.png) | Ilustración original y primer paso |
+
+Los correos de estas capturas son sintéticos y las APIs están mockeadas. Los patrones reales de Nu y Mercado Pago siguen pendientes de validar con correos anonimizados.

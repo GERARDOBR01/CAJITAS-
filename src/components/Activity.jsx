@@ -8,7 +8,8 @@ import {
   balance,
 } from "../domain.js";
 import { saveFile } from "../platform.js";
-export default function Activity({ data, notify }) {
+import Illustration from "./Illustration.jsx";
+export default function Activity({ data, notify, onCorrect }) {
   const [goalId, setGoalId] = useState(""),
     [month, setMonth] = useState(localDate(new Date()).slice(0, 7));
   const entries = activity(data, { goalId, month }),
@@ -16,7 +17,11 @@ export default function Activity({ data, notify }) {
     withdrawn = -entries
       .filter((e) => e.cents < 0)
       .reduce((s, e) => s + e.cents, 0),
-    points = balanceHistory(data),
+    chartData = {
+      ...data,
+      goals: data.goals.filter((g) => !goalId || g.id === goalId),
+    },
+    points = balanceHistory(chartData),
     maximum = Math.max(1, ...points.map((p) => p.cents));
   const coords = points.map(
       (p, i) =>
@@ -30,7 +35,8 @@ export default function Activity({ data, notify }) {
           <p className="eyebrow">CADA PASITO TIENE HISTORIA</p>
           <h1>Así van tus guardaditos</h1>
           <p className="muted">
-            Tus movimientos reales registrados, en un solo lugar.
+            Lo que has registrado, en un solo lugar. Puedes corregir errores de
+            captura.
           </p>
         </div>
         <button
@@ -59,8 +65,12 @@ export default function Activity({ data, notify }) {
             <h2>Un poquito más cerca</h2>
           </div>
           <strong>
-            {money(data.goals.reduce((s, g) => s + balance(g), 0))}
-            <small>Total registrado · incluye archivadas</small>
+            {money(chartData.goals.reduce((s, g) => s + balance(g), 0))}
+            <small>
+              {goalId
+                ? "Total registrado de esta cajita"
+                : "Total registrado · incluye archivadas"}
+            </small>
           </strong>
         </div>
         <svg
@@ -208,12 +218,21 @@ export default function Activity({ data, notify }) {
                   {e.cents > 0 ? "+" : ""}
                   {money(e.cents)}
                 </strong>
+                {e.source === "manual" && (
+                  <button
+                    className="text-button correct-entry"
+                    aria-label={`Corregir registro de ${e.goalName} del ${new Date(e.at).toLocaleDateString("es-MX")}`}
+                    onClick={() => onCorrect(e)}
+                  >
+                    Corregir
+                  </button>
+                )}
               </li>
             ))}
           </ol>
         ) : (
           <div className="activity-empty">
-            <span>☁</span>
+            <Illustration kind="activity" />
             <p>Tu historia está por empezar.</p>
             <small>Cuando registres un movimiento aparecerá aquí.</small>
           </div>
