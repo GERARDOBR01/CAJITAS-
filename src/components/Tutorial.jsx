@@ -96,7 +96,7 @@ function PracticeCard({ goal }) {
   const saved = balance(goal),
     percent = Math.min(100, Math.round((saved / goal.targetCents) * 100));
   return (
-    <div className="tutorial-goal" aria-label="Cajita de práctica">
+    <div className="tutorial-goal" role="group" aria-label="Cajita de práctica">
       <div>
         <span>✦ CAJITA DE PRÁCTICA</span>
         <span>{goal.provider}</span>
@@ -638,7 +638,11 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                 {visited ? "Qué bonito verte hoy ♡" : PETS[pet].motto}
               </p>
             </div>
-            <div className="tutorial-pets" aria-label="Mascotas de práctica">
+            <div
+              className="tutorial-pets"
+              role="group"
+              aria-label="Mascotas de práctica"
+            >
               {Object.entries(PETS).map(([key, spec]) => (
                 <button
                   aria-pressed={pet === key}
@@ -882,7 +886,11 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
         )}
         {step === 6 && (
           <>
-            <div className="tutorial-platforms" aria-label="Elegir dispositivo">
+            <div
+              className="tutorial-platforms"
+              role="group"
+              aria-label="Elegir dispositivo"
+            >
               <button
                 aria-pressed={phone === "android"}
                 onClick={() => setPhone("android")}

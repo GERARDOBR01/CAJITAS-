@@ -1,0 +1,1715 @@
+{
+  "tool": "@axe-core/playwright",
+  "engine": {
+    "name": "axe-core",
+    "version": "4.13.0"
+  },
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa"
+  ],
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "palette": {
+    "light": [
+      {
+        "foreground": "--text",
+        "background": "--surface",
+        "fg": "#30223f",
+        "bg": "#ffffff",
+        "ratio": 14.72379298501398
+      },
+      {
+        "foreground": "--muted",
+        "background": "--surface",
+        "fg": "#695675",
+        "bg": "#ffffff",
+        "ratio": 6.58588443571978
+      },
+      {
+        "foreground": "--muted",
+        "background": "--canvas",
+        "fg": "#695675",
+        "bg": "#fff9f1",
+        "ratio": 6.294991390410118
+      },
+      {
+        "foreground": "--primary",
+        "background": "--surface",
+        "fg": "#7040d5",
+        "bg": "#ffffff",
+        "ratio": 6.207276027545808
+      },
+      {
+        "foreground": "--on-primary",
+        "background": "--primary",
+        "fg": "#ffffff",
+        "bg": "#7040d5",
+        "ratio": 6.207276027545808
+      },
+      {
+        "foreground": "--on-mint",
+        "background": "--mint",
+        "fg": "#285238",
+        "bg": "#e0f6d5",
+        "ratio": 7.778537193766245
+      },
+      {
+        "foreground": "--on-pink",
+        "background": "--pink",
+        "fg": "#903357",
+        "bg": "#ffe4ed",
+        "ratio": 6.282504278089749
+      },
+      {
+        "foreground": "--on-yellow",
+        "background": "--yellow",
+        "fg": "#6e4c10",
+        "bg": "#fff0b5",
+        "ratio": 6.797899666354959
+      },
+      {
+        "foreground": "--on-sky",
+        "background": "--sky",
+        "fg": "#2c4f80",
+        "bg": "#e3efff",
+        "ratio": 7.116841729293318
+      },
+      {
+        "foreground": "--text",
+        "background": "--surface-soft",
+        "fg": "#30223f",
+        "bg": "#f5efff",
+        "ratio": 13.09232397879542
+      },
+      {
+        "foreground": "--muted",
+        "background": "--surface-soft",
+        "fg": "#695675",
+        "bg": "#f5efff",
+        "ratio": 5.856135902420647
+      },
+      {
+        "foreground": "--muted",
+        "background": "--yellow",
+        "fg": "#695675",
+        "bg": "#fff0b5",
+        "ratio": 5.7652438641479655
+      },
+      {
+        "foreground": "--muted",
+        "background": "--pink",
+        "fg": "#695675",
+        "bg": "#ffe4ed",
+        "ratio": 5.510894340456577
+      },
+      {
+        "foreground": "--muted",
+        "background": "--mint",
+        "fg": "#695675",
+        "bg": "#e0f6d5",
+        "ratio": 5.743074638517946
+      }
+    ],
+    "dark": [
+      {
+        "foreground": "--text",
+        "background": "--surface",
+        "fg": "#f9f2ff",
+        "bg": "#271e36",
+        "ratio": 14.467366418373047
+      },
+      {
+        "foreground": "--muted",
+        "background": "--surface",
+        "fg": "#cabbda",
+        "bg": "#271e36",
+        "ratio": 8.777120640038786
+      },
+      {
+        "foreground": "--muted",
+        "background": "--canvas",
+        "fg": "#cabbda",
+        "bg": "#181322",
+        "ratio": 10.070103795654854
+      },
+      {
+        "foreground": "--primary",
+        "background": "--surface",
+        "fg": "#bd9aff",
+        "bg": "#271e36",
+        "ratio": 6.96475474994879
+      },
+      {
+        "foreground": "--on-primary",
+        "background": "--primary",
+        "fg": "#25113f",
+        "bg": "#bd9aff",
+        "ratio": 7.500295214487395
+      },
+      {
+        "foreground": "--on-mint",
+        "background": "--mint",
+        "fg": "#c9f1be",
+        "bg": "#233e32",
+        "ratio": 9.304448235164873
+      },
+      {
+        "foreground": "--on-pink",
+        "background": "--pink",
+        "fg": "#ffc3d8",
+        "bg": "#482636",
+        "ratio": 8.747893129825991
+      },
+      {
+        "foreground": "--on-yellow",
+        "background": "--yellow",
+        "fg": "#ffe193",
+        "bg": "#43351e",
+        "ratio": 9.307689569873228
+      },
+      {
+        "foreground": "--on-sky",
+        "background": "--sky",
+        "fg": "#c3dcff",
+        "bg": "#25354c",
+        "ratio": 8.864866278547177
+      },
+      {
+        "foreground": "--text",
+        "background": "--surface-soft",
+        "fg": "#f9f2ff",
+        "bg": "#352647",
+        "ratio": 12.616933291354671
+      },
+      {
+        "foreground": "--muted",
+        "background": "--surface-soft",
+        "fg": "#cabbda",
+        "bg": "#352647",
+        "ratio": 7.654492352174424
+      },
+      {
+        "foreground": "--muted",
+        "background": "--yellow",
+        "fg": "#cabbda",
+        "bg": "#43351e",
+        "ratio": 6.5841289740485145
+      },
+      {
+        "foreground": "--muted",
+        "background": "--pink",
+        "fg": "#cabbda",
+        "bg": "#482636",
+        "ratio": 7.242477033337589
+      },
+      {
+        "foreground": "--muted",
+        "background": "--mint",
+        "fg": "#cabbda",
+        "bg": "#233e32",
+        "ratio": 6.438618607706117
+      }
+    ]
+  },
+  "reports": [
+    {
+      "theme": "light",
+      "screen": "empty",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "create-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "button[type=\"button\"]:nth-child(2) > span"
+            ],
+            [
+              "button[type=\"button\"]:nth-child(3) > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "goal-created",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "deposit-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".notice"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "deposit-recorded",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "withdraw-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".muted"
+            ],
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "early-withdrawal-confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "withdrawal-recorded",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".toast"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "goal-completed",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".toast"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "more",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Rendimiento\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Rendimiento\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Conexiones\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Conexiones\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Respaldo\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Instalar app\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Instalar app\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              ".ritual-icon"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "Mi mascota",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".flower-one"
+            ],
+            [
+              ".flower-two"
+            ],
+            [
+              ".waiting:nth-child(1) > span"
+            ],
+            [
+              ".waiting:nth-child(2) > span"
+            ],
+            [
+              ".waiting:nth-child(3) > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "Actividad",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".yellow"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "Rendimiento",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "Conexiones",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "Respaldo",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "Instalar app",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-1-Tu espacio",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "li:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "li:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "li:nth-child(3) > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-2-Tu meta",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-3-Ahorrar",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-4-El candado",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".tutorial-lock-scene > div > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-5-Tu mascota",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-6-Herramientas",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-7-Tu app",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".tutorial-phone-icons > span:nth-child(1)"
+            ],
+            [
+              ".tutorial-phone-icons > span:nth-child(2)"
+            ],
+            [
+              "span:nth-child(3)"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "tutorial-8-Repaso",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "empty",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "create-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "button[type=\"button\"]:nth-child(2) > span"
+            ],
+            [
+              "button[type=\"button\"]:nth-child(3) > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "goal-created",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "deposit-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".notice"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "deposit-recorded",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "withdraw-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".muted"
+            ],
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "early-withdrawal-confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "withdrawal-recorded",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".toast"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "goal-completed",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
+              ".goal-symbol"
+            ],
+            [
+              ".icon-button"
+            ],
+            [
+              ".lock > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".toast"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "more",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Rendimiento\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Rendimiento\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Conexiones\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Conexiones\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Respaldo\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              "button[aria-label=\"Instalar app\"] > span[aria-hidden=\"true\"]:nth-child(1)"
+            ],
+            [
+              "button[aria-label=\"Instalar app\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+            ],
+            [
+              ".ritual-icon"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "Mi mascota",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".flower-one"
+            ],
+            [
+              ".flower-two"
+            ],
+            [
+              ".waiting:nth-child(1) > span"
+            ],
+            [
+              ".waiting:nth-child(2) > span"
+            ],
+            [
+              ".waiting:nth-child(3) > span"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "Actividad",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".yellow"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "Rendimiento",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "Conexiones",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "Respaldo",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "Instalar app",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-1-Tu espacio",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "li:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "li:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              "li:nth-child(3) > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-2-Tu meta",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-3-Ahorrar",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-4-El candado",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".tutorial-lock-scene > div > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-5-Tu mascota",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-6-Herramientas",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-7-Tu app",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".tutorial-phone-icons > span:nth-child(1)"
+            ],
+            [
+              ".tutorial-phone-icons > span:nth-child(2)"
+            ],
+            [
+              "span:nth-child(3)"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "tutorial-8-Repaso",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".brand-icon"
+            ],
+            [
+              ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

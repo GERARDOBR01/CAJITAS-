@@ -1,5 +1,4 @@
 import { useId } from "react";
-import "../illustrations.css";
 
 // Small, original drawings: a seed becomes a flower as a goal grows.
 const ink = "#66564e";

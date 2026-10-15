@@ -81,8 +81,8 @@ export default function Activity({ data, notify, onCorrect }) {
         >
           <defs>
             <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#c7deb4" stopOpacity=".65" />
-              <stop offset="1" stopColor="#eaf1e1" stopOpacity=".08" />
+              <stop offset="0" stopColor="var(--primary)" stopOpacity=".3" />
+              <stop offset="1" stopColor="var(--primary)" stopOpacity=".02" />
             </linearGradient>
           </defs>
           {[40, 105, 170].map((y) => (
@@ -92,7 +92,7 @@ export default function Activity({ data, notify, onCorrect }) {
               y1={y}
               x2="575"
               y2={y}
-              stroke="#e7ebdf"
+              stroke="var(--line)"
               strokeDasharray="4 5"
             />
           ))}
@@ -102,7 +102,7 @@ export default function Activity({ data, notify, onCorrect }) {
           />
           <polyline
             points={coords.join(" ")}
-            stroke="#8fae7b"
+            stroke="var(--primary)"
             strokeWidth="3"
             fill="none"
             strokeLinejoin="round"
@@ -112,18 +112,16 @@ export default function Activity({ data, notify, onCorrect }) {
               cx={final[0]}
               cy={final[1]}
               r="5"
-              fill="#648454"
-              stroke="white"
+              fill="var(--primary)"
+              stroke="var(--surface)"
               strokeWidth="2"
             />
           )}
-          <text x="25" y="198" fill="#87947d" fontSize="11">
-            {points[0].date.slice(5)}
-          </text>
-          <text x="575" y="198" textAnchor="end" fill="#87947d" fontSize="11">
-            Hoy
-          </text>
         </svg>
+        <div className="chart-axis">
+          <span>{points[0].date.slice(5)}</span>
+          <span>Hoy</span>
+        </div>
         <details>
           <summary>Ver los valores del historial</summary>
           <table className="history-table">
