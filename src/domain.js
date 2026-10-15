@@ -68,6 +68,12 @@ export function initialData() {
   };
 }
 export const PETS = {
+  cat: {
+    name: "Cookie",
+    label: "Gatito",
+    color: "#c98b5b",
+    motto: "¡BECHO! Aquí estoy para cuidar tus sueños.",
+  },
   pig: {
     name: "Pipo",
     label: "Cerdito",
@@ -95,8 +101,8 @@ export const PETS = {
 };
 export function defaultPreferences() {
   return {
-    pet: "box",
-    petName: "Caji",
+    pet: "cat",
+    petName: "Cookie",
     accessory: "leaf",
     animations: true,
     reminder: defaultReminder(),

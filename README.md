@@ -1,10 +1,10 @@
 # Cajitas ✦
 
-## [⬇️ Descargar la app para Android](https://gerardobr01.github.io/CAJITAS-/descargas/Cajitas-0.7.0-android.apk)
+## [⬇️ Descargar la app para Android](https://gerardobr01.github.io/CAJITAS-/descargas/Cajitas-0.8.0-android.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.7.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.8.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
 
-> **¿Tienes instalada la 0.5?** Las dos versiones están firmadas con llaves de prueba distintas, así que Android no deja actualizar encima. En la 0.5 ve a Más → Respaldo y descarga tu respaldo; desinstala, instala la 0.7 y restaura el respaldo. Los datos viven en el teléfono: sin respaldo se pierden al desinstalar.
+> **¿Tienes instalada la 0.5?** Las dos versiones están firmadas con llaves de prueba distintas, así que Android no deja actualizar encima. En la 0.5 ve a Más → Respaldo y descarga tu respaldo; desinstala, instala la 0.8 y restaura el respaldo. Los datos viven en el teléfono: sin respaldo se pierden al desinstalar.
 
 En Android, abre el APK descargado para instalarlo. Para iPhone puedes instalar la versión web desde Safari con Compartir → Agregar a pantalla de inicio. El proyecto nativo de iPhone requiere Xcode y firma Apple.
 
@@ -13,6 +13,18 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 **Versión 0.5:** importa comprobantes desde un archivo o texto, revísalos y registra cada depósito una vez, sin conectar Gmail. Incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables y tutorial interactivo. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
+
+## Cookie, el gatito v0.8 🐱
+
+Cajitas se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
+
+- Mueve la cola, mueve las orejas, parpadea, inclina la cabeza, se le mueven los bigotes y se balancea la placa. Saluda con la patita cuando espera tu actualización.
+- **Cada 9 a 16 segundos dice “¡BECHO!”, alternando con “BECHO BECHO”**, con un globito, boquita de beso y corazones.
+- **Al tocarlo dice “¡Te amo Jade!”**: ojos de corazón, salto, una explosión de corazones y un letrero grande con lluvia de corazones en toda la pantalla. Si lo mantienes presionado, ronronea.
+- Tiene todos los estados de la mascota (feliz, emocionado, triste con orejitas caídas, dormido, esperando, celebración), el brote que crece y los accesorios (moñito, bufanda, estrella). Con movimiento reducido cambian las caras y el mensaje sigue apareciendo, pero sin animación.
+- Es la mascota por defecto; las demás (Pipo, Mila, Luna y Caji) siguen en Mi mascota.
+
+[Capturas](docs/screenshots/v08/).
 
 ## Mascota viva y recordatorios v0.7
 

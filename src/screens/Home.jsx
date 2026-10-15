@@ -126,11 +126,12 @@ export default function Home({
             stage={stage}
             mood={mood}
             motion={pet.animations}
-            interactive={!empty}
+            interactive={!empty || pet.pet === "cat"}
             onPet={(kind) => {
               onPet?.();
               if (Date.now() < trickUntil.current) return;
-              if (kind === "cuddle")
+              if (kind === "love") say(`${pet.petName} te dice: ¡Te amo Jade! 💖`);
+              else if (kind === "cuddle")
                 say("Un abrazo para ti. Gracias por venir ♡");
               else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
             }}

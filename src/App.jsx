@@ -408,7 +408,7 @@ export default function App() {
           />
         )}
         {tab === "tutorial" && (
-          <Suspense fallback={<p role="status">Caji prepara tu paseíto…</p>}>
+          <Suspense fallback={<p role="status">Cookie prepara tu paseíto…</p>}>
             <Tutorial
               preferences={pet}
               onNavigate={changeTab}

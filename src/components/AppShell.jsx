@@ -66,13 +66,15 @@ export default function AppShell({
             onClick={() => onNavigate("pet")}
           >
             <span aria-hidden="true">
-              {pet.pet === "pig"
-                ? "🐷"
-                : pet.pet === "cow"
-                  ? "🐮"
-                  : pet.pet === "bunny"
-                    ? "🐰"
-                    : "🌱"}
+              {pet.pet === "cat"
+                ? "🐱"
+                : pet.pet === "pig"
+                  ? "🐷"
+                  : pet.pet === "cow"
+                    ? "🐮"
+                    : pet.pet === "bunny"
+                      ? "🐰"
+                      : "🌱"}
             </span>
           </button>
         </header>
