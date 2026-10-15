@@ -41,7 +41,7 @@ const lessons = [
   [
     "Tu mascota",
     "Una compañía a tu ritmo",
-    "Elige cerdito, vaquita, conejito o Caji, ponle nombre y un accesorio. Tu compañía cuenta aunque hoy no apartes dinero.",
+    "Elige a Cookie el gatito, cerdito, vaquita, conejito o Caji, ponle nombre y un accesorio. Tu compañía cuenta aunque hoy no apartes dinero.",
   ],
   [
     "Herramientas",

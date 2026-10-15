@@ -153,7 +153,11 @@ for (const theme of ["light", "dark"]) {
     await page.goto("/");
     await page.evaluate(() => document.fonts.ready);
     const home = page.getByRole("region", { name: "Inicio", exact: true });
-    await expect(home.getByRole("button")).toHaveCount(1);
+    // One action to create, plus Cookie, who can always be petted.
+    await expect(home.getByRole("button")).toHaveCount(2);
+    await expect(
+      home.getByRole("button", { name: "Acariciar a Cookie" }),
+    ).toBeVisible();
     await expect(home.locator("svg")).toHaveCount(1);
     expect(
       await home

@@ -304,3 +304,20 @@ describe("respuesta y paciencia", () => {
     );
   });
 });
+
+describe("Cookie", () => {
+  it("el siguiente becho llega entre 9 y 16 segundos", async () => {
+    const { nextBechoDelay, BECHO_LINES, LOVE_TEXT } =
+      await import("../src/components/CookieCat.jsx");
+    expect(nextBechoDelay(() => 0)).toBe(9000);
+    expect(nextBechoDelay(() => 0.9999)).toBeLessThanOrEqual(16000);
+    expect(BECHO_LINES).toEqual(["¡BECHO!", "BECHO BECHO"]);
+    expect(LOVE_TEXT).toBe("¡Te amo Jade!");
+  });
+  it("es la mascota por defecto", () => {
+    expect(initialData().preferences).toMatchObject({
+      pet: "cat",
+      petName: "Cookie",
+    });
+  });
+});
