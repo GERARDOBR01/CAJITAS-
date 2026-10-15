@@ -304,7 +304,7 @@ test("un retiro cumplido no entristece y un retiro histórico anticipado sí pid
   await page.getByRole("button", { name: "Continuar con el retiro" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(
-    page.getByRole("img", { name: "La mascota está triste y te acompaña" }),
+    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
   ).toHaveCount(0);
   await card
     .getByRole("button", { name: "Registrar retiro", exact: true })
@@ -318,7 +318,7 @@ test("un retiro cumplido no entristece y un retiro histórico anticipado sí pid
   await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
   await expect(card.locator(".saved")).toContainText("$175.00");
   await expect(
-    page.getByRole("img", { name: "La mascota está triste y te acompaña" }),
+    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
   ).toBeVisible();
 });
 test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async ({

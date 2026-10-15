@@ -1,7 +1,22 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Mascot from "../components/Mascot.jsx";
 import { GoalCard } from "../components/Goals.jsx";
 import { balance, money } from "../domain.js";
+import {
+  STAGE_NAMES,
+  daysAway,
+  growthStage,
+  overallProgress,
+  petMood,
+} from "../pet/state.js";
+
+const TAP_LINES = [
+  "¡Jiji, me haces cosquillas!",
+  "Aquí ando, cuidando tus sueños 🌱",
+  "¿Sabías que cada pasito cuenta? ✦",
+  "¡Otra vez, otra vez!",
+  "Me gusta cuando vienes ♡",
+];
 
 export default function Home({
   data,
@@ -16,7 +31,20 @@ export default function Home({
   onEdit,
   onFrequency,
   onPet,
+  checkIn,
+  onCheckIn,
+  onLater,
 }) {
+  const [line, setLine] = useState("");
+  const lineTimer = useRef(),
+    taps = useRef(0),
+    trickUntil = useRef(0);
+  useEffect(() => () => clearTimeout(lineTimer.current), []);
+  function say(text) {
+    setLine(text);
+    clearTimeout(lineTimer.current);
+    lineTimer.current = setTimeout(() => setLine(""), 3200);
+  }
   const pet = data.preferences,
     total = data.goals.reduce((sum, goal) => sum + balance(goal), 0),
     target = data.goals.reduce((sum, goal) => sum + goal.targetCents, 0),
@@ -26,7 +54,18 @@ export default function Home({
         : !goal.archived &&
           (filter === "completed" ? balance(goal) >= goal.targetCents : true),
     ),
-    empty = data.goals.length === 0;
+    empty = data.goals.length === 0,
+    progress = overallProgress(data),
+    stage = growthStage(progress),
+    away = daysAway(data, new Date(now)),
+    waiting = Boolean(checkIn),
+    mood = petMood({
+      celebrating,
+      sad,
+      excited: cheering,
+      waiting,
+      daysAway: away,
+    });
   const greeting = useRef();
   useEffect(() => {
     if (sad || cheering || celebrating)
@@ -36,7 +75,7 @@ export default function Home({
     <section className="home" aria-label="Inicio">
       <header
         ref={greeting}
-        className={`home-greeting ${empty ? "is-empty" : ""} ${sad ? "is-sad" : celebrating || cheering ? "is-cheering" : ""}`}
+        className={`home-greeting mood-${mood} ${empty ? "is-empty" : ""} ${sad ? "is-sad" : celebrating || cheering ? "is-cheering" : ""}`}
       >
         <div className="home-speech">
           <p className="eyebrow">TU EQUIPO DE AHORRO</p>
@@ -47,20 +86,29 @@ export default function Home({
                 ? "¡Lo lograste!"
                 : cheering
                   ? "¡Ese ahorro se aplaude!"
-                  : empty
-                    ? `¡Hola, soy ${pet.petName}!`
-                    : "¡Vamos por ese sueño!"}
+                  : waiting
+                    ? "¡Llegó tu ratito de ahorro!"
+                    : empty
+                      ? `¡Hola, soy ${pet.petName}!`
+                      : mood === "sleepy"
+                        ? `${pet.petName} toma una siesta`
+                        : "¡Vamos por ese sueño!"}
           </h1>
-          <p>
-            {sad
-              ? "Los planes cambian. Vamos a tu ritmo."
-              : celebrating
-                ? "Una meta cumplida. ¡Chócalas!"
-                : cheering
-                  ? "Tu cajita ya tiene un pasito más."
-                  : empty
-                    ? "Hagamos espacio para lo que quieres."
-                    : `${pet.petName} te echa porras.`}
+          <p aria-live="polite">
+            {line ||
+              (sad
+                ? "Los planes cambian. Vamos a tu ritmo."
+                : celebrating
+                  ? "Una meta cumplida. ¡Chócalas!"
+                  : cheering
+                    ? "Tu cajita ya tiene un pasito más."
+                    : waiting
+                      ? checkIn.message.body
+                      : empty
+                        ? "Hagamos espacio para lo que quieres."
+                        : mood === "sleepy"
+                          ? "Tócame para despertar. Te extrañaba 💤"
+                          : `${pet.petName} te echa porras.`)}
           </p>
         </div>
         <div className="home-mascot">
@@ -74,13 +122,37 @@ export default function Home({
             pet={pet.pet}
             name={pet.petName}
             accessory={pet.accessory}
-            progress={target ? total / target : 0}
-            sad={sad}
-            celebrating={celebrating || cheering}
+            progress={progress}
+            stage={stage}
+            mood={mood}
+            motion={pet.animations}
             interactive={!empty}
-            onPet={onPet}
+            onPet={(kind) => {
+              onPet?.();
+              if (Date.now() < trickUntil.current) return;
+              if (kind === "cuddle")
+                say("Un abrazo para ti. Gracias por venir ♡");
+              else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
+            }}
+            onTrick={() => {
+              trickUntil.current = Date.now() + 2500;
+              say("¡Ta-dá! Mi truco secreto ✦");
+            }}
           />
+          {!empty && (
+            <span className="sprout-stage">🌱 {STAGE_NAMES[stage]}</span>
+          )}
         </div>
+        {waiting && (
+          <div className="checkin-actions">
+            <button className="primary" onClick={() => onCheckIn(checkIn.goal)}>
+              Registrar lo que aparté
+            </button>
+            <button className="secondary" onClick={onLater}>
+              Ahora no
+            </button>
+          </div>
+        )}
         {total > 0 && (
           <p className="home-total">
             <span>Ahorro registrado</span>

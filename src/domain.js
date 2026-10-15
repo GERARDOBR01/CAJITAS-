@@ -1,3 +1,4 @@
+import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
 export const STORAGE_KEY = "cajitas:v1";
 export const money = (cents) =>
   new Intl.NumberFormat("es-MX", {
@@ -98,7 +99,7 @@ export function defaultPreferences() {
     petName: "Caji",
     accessory: "leaf",
     animations: true,
-    reminder: { enabled: false, day: 5, time: "18:00" },
+    reminder: defaultReminder(),
   };
 }
 export function activeGoals(data) {
@@ -253,10 +254,7 @@ export function validateBackup(data) {
   const preferences = {
     ...defaultPreferences(),
     ...data.preferences,
-    reminder: {
-      ...defaultPreferences().reminder,
-      ...data.preferences?.reminder,
-    },
+    reminder: normalizeReminder(data.preferences?.reminder),
   };
   if (
     !Object.hasOwn(PETS, preferences.pet) ||
@@ -264,12 +262,7 @@ export function validateBackup(data) {
     !preferences.petName.trim() ||
     preferences.petName.length > 32 ||
     !["leaf", "bow", "scarf", "star"].includes(preferences.accessory) ||
-    typeof preferences.animations !== "boolean" ||
-    typeof preferences.reminder.enabled !== "boolean" ||
-    !Number.isInteger(preferences.reminder.day) ||
-    preferences.reminder.day < 0 ||
-    preferences.reminder.day > 6 ||
-    !/^([01]\d|2[0-3]):[0-5]\d$/.test(preferences.reminder.time)
+    typeof preferences.animations !== "boolean"
   )
     throw new Error("Las preferencias del respaldo no son válidas.");
   const checkins = data.checkins ?? [];
@@ -334,11 +327,7 @@ export function validateBackup(data) {
       petName: preferences.petName,
       accessory: preferences.accessory,
       animations: preferences.animations,
-      reminder: {
-        enabled: preferences.reminder.enabled,
-        day: preferences.reminder.day,
-        time: preferences.reminder.time,
-      },
+      reminder: preferences.reminder,
     },
     checkins: [...new Set(checkins)].sort(),
     goals: data.goals.map((g) => ({

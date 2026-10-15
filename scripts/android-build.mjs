@@ -49,7 +49,7 @@ try {
     "android",
   ]);
 
-  const gradleArgs = ["--no-daemon", "--console=plain"];
+  const gradleArgs = ["--no-daemon", "--console=plain", "--max-workers=2"];
   // Java tools don't automatically read the session's HTTP(S)_PROXY variables.
   const proxyValue =
     process.env.HTTPS_PROXY ||

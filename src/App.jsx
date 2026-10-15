@@ -14,9 +14,12 @@ import {
   haptic,
   isNative,
   persistSavings,
-  configureReminder,
+  syncReminders,
+  listenToReminders,
   consumeConnectionResult,
 } from "./platform.js";
+import { answerCheckIn, dueCheckIn, easeReminders } from "./pet/reminders.js";
+import { EXCITED_MS, SAD_MS } from "./pet/state.js";
 import {
   STORAGE_KEY,
   balance,
@@ -82,6 +85,7 @@ export default function App() {
     [now, setNow] = useState(Date.now()),
     [confetti, setConfetti] = useState(false),
     [sad, setSad] = useState(false),
+    [excited, setExcited] = useState(false),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
   const [connectionVersion, setConnectionVersion] = useState(0);
@@ -97,7 +101,8 @@ export default function App() {
   latestData.current = data;
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
-    sadTimer = useRef();
+    sadTimer = useRef(),
+    excitedTimer = useRef();
   function notify(message) {
     clearTimeout(toastTimer.current);
     setToast(message);
@@ -167,6 +172,7 @@ export default function App() {
       clearTimeout(toastTimer.current);
       clearTimeout(celebrationTimer.current);
       clearTimeout(sadTimer.current);
+      clearTimeout(excitedTimer.current);
     };
   }, []);
   useEffect(() => {
@@ -230,14 +236,21 @@ export default function App() {
           : goal,
       ),
     };
-    if (!setData(next)) return;
+    if (
+      !setData(
+        value > 0 && next.preferences.reminder.enabled
+          ? answerCheckIn(next, new Date())
+          : next,
+      )
+    )
+      return;
     setModal(null);
     if (value < 0) {
       const earlyWithdrawal = Date.parse(at) < unlockTime(g.unlockDate);
       setSad(earlyWithdrawal);
       clearTimeout(sadTimer.current);
       if (earlyWithdrawal)
-        sadTimer.current = setTimeout(() => setSad(false), 8000);
+        sadTimer.current = setTimeout(() => setSad(false), SAD_MS);
       notify("Retiro registrado. Los planes cambian; puedes seguir después.");
     } else if (
       balance(g) < g.targetCents &&
@@ -246,9 +259,37 @@ export default function App() {
       celebrate();
     else {
       haptic();
+      setExcited(true);
+      clearTimeout(excitedTimer.current);
+      excitedTimer.current = setTimeout(() => setExcited(false), EXCITED_MS);
       notify("Ahorro registrado. ¡Un pasito más!");
     }
   }
+  // Two unanswered reminders in a row: write less often instead of insisting.
+  useEffect(() => {
+    if (loadError) return;
+    const eased = easeReminders(latestData.current);
+    if (eased.notice && setData(eased.data)) notify(eased.notice);
+  }, []);
+  // Keep the next dated notifications in sync with the cajitas.
+  useEffect(() => {
+    syncReminders(data).catch(() => {});
+  }, [data.savedAt]);
+  useEffect(() => {
+    listenToReminders(({ action, goalId }) => {
+      const current = latestData.current;
+      if (action === "later") {
+        if (setData(answerCheckIn(current)))
+          notify("¡Va! Aquí sigo cuando quieras 💛");
+        return;
+      }
+      const goal =
+        current.goals.find((g) => g.id === goalId && !g.archived) ??
+        dueCheckIn(current)?.goal;
+      changeTab("goals");
+      if (goal) setModal({ type: "movement", goal, withdraw: false });
+    }).catch(() => {});
+  }, []);
   useEffect(() => {
     const connected = (e) => {
       consumeConnectionResult();
@@ -324,8 +365,16 @@ export default function App() {
             onFilter={setGoalFilter}
             now={now}
             sad={sad}
-            cheering={toast === "Ahorro registrado. ¡Un pasito más!"}
+            cheering={excited}
             celebrating={confetti}
+            checkIn={dueCheckIn(data, new Date(now))}
+            onCheckIn={(goal) =>
+              setModal({ type: "movement", goal, withdraw: false })
+            }
+            onLater={() => {
+              if (setData(answerCheckIn(data)))
+                notify("¡Va! Aquí sigo cuando quieras 💛");
+            }}
             onCreate={() => setModal({ type: "new" })}
             onMove={(goal, withdraw) =>
               setModal({ type: "movement", goal, withdraw })
@@ -339,10 +388,7 @@ export default function App() {
                 ),
               })
             }
-            onPet={() => {
-              haptic();
-              notify("Un abrazo de tu compañero. A tu ritmo ♡");
-            }}
+            onPet={() => haptic()}
           />
         )}
         {tab === "pet" && (
@@ -423,9 +469,12 @@ export default function App() {
               )
                 return false;
               try {
-                await configureReminder({
-                  ...next.preferences.reminder,
-                  enabled: false,
+                await syncReminders({
+                  ...next,
+                  preferences: {
+                    ...next.preferences,
+                    reminder: { ...next.preferences.reminder, enabled: false },
+                  },
                 });
                 notify(
                   "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Mi mascota.",

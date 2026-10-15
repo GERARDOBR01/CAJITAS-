@@ -1,5 +1,5 @@
 import NextStep from "../components/NextStep.jsx";
-import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
+import { ANDROID_DOWNLOAD_URL, ANDROID_VERSION } from "../downloads.js";
 import { haptic, isNative } from "../platform.js";
 import {
   activeGoals,
@@ -82,7 +82,11 @@ export default function More({
           </span>
           <div>
             <strong>Lleva tus cajitas contigo</strong>
-            <p>Android 7+ · APK de prueba</p>
+            <p>Android 7+ · versión {ANDROID_VERSION} · avisos de tu mascota</p>
+            <p className="small-text">
+              ¿Tenías la 0.5? Descarga un respaldo, desinstálala e instala esta;
+              luego restaura tu respaldo.
+            </p>
           </div>
           <a className="primary" href={ANDROID_DOWNLOAD_URL}>
             ↓ Descargar para Android

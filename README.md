@@ -1,8 +1,10 @@
 # Cajitas ✦
 
-## [⬇️ Descargar la app para Android](https://github.com/GERARDOBR01/CAJITAS-/releases/download/v0.5.0-preview.1/Cajitas-0.5.0-android-preview.apk)
+## [⬇️ Descargar la app para Android](https://gerardobr01.github.io/CAJITAS-/descargas/Cajitas-0.7.0-android.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.5.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Todas las descargas](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.7.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
+
+> **¿Tienes instalada la 0.5?** Las dos versiones están firmadas con llaves de prueba distintas, así que Android no deja actualizar encima. En la 0.5 ve a Más → Respaldo y descarga tu respaldo; desinstala, instala la 0.7 y restaura el respaldo. Los datos viven en el teléfono: sin respaldo se pierden al desinstalar.
 
 En Android, abre el APK descargado para instalarlo. Para iPhone puedes instalar la versión web desde Safari con Compartir → Agregar a pantalla de inicio. El proyecto nativo de iPhone requiere Xcode y firma Apple.
 
@@ -11,6 +13,17 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 **Versión 0.5:** importa comprobantes desde un archivo o texto, revísalos y registra cada depósito una vez, sin conectar Gmail. Incluye proyectos **Android e iPhone con Capacitor**, mascotas personalizables y tutorial interactivo. [Setup nativo, APK y Xcode](docs/NATIVE-APPS.md).
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
+
+## Mascota viva y recordatorios v0.7
+
+- **La mascota tiene siete estados** (SVG + CSS, sin librerías de animación): tranquila (respira y parpadea), feliz (al tocarla o acariciarla), emocionada (salta al registrar ahorro), celebración (meta cumplida), triste (retiro anticipado, **se le pasa sola en 8 s**), dormida (7 días sin visitas ni depósitos; al tocarla despierta) y esperando (cuando toca actualizar el ahorro). Lógica pura y probada en `src/pet/state.js`.
+- **Interacción:** tocar = rebote y frase; mantener presionado = caricia; **cinco toques rápidos = truco secreto**; los ojos siguen el dedo o el cursor. Vibración ligera en la app nativa.
+- **El brote crece con tu avance:** semilla → brote → hojitas → botón → flor.
+- **Recordatorios semanales, quincenales (día 15 y fin de mes) o mensuales (fin de mes)**, con hora entre 8:00 y 21:59. En Android son notificaciones con mensajes que rotan (24 textos en `src/pet/reminders.js`, sin repetir entre los últimos cinco); al tocarla se abre el registro de esa cajita; “Ahora no” solo la descarta. En la web, la mascota te espera dentro de la app y puedes agregar el evento a tu calendario (`.ics` con la regla quincenal).
+- **Sin presión:** registrar o decir “Ahora no” nunca baja la amistad. Si dos avisos seguidos se quedan sin respuesta, escribe menos seguido (semanal → quincenal → mensual) y lo avisa una vez. Solo propone ahorrar más (“¿y si probamos $X más?”) si cumpliste tu plan tres periodos seguidos sin retiros, y nunca más de +10 % redondeado a $10. Un test revisa que ningún mensaje culpe, avergüence, compare ni meta urgencia.
+- Los respaldos de versiones anteriores se migran: un recordatorio nocturno se mueve al horario permitido más cercano.
+
+[Detalles, estados y capturas](docs/design/V0.7.md).
 
 ## Pasada visual v0.6
 
@@ -175,6 +188,8 @@ npm run build:android
 ```
 
 Tests unitarios: parser, Banxico con API mockeada, firma Bitso, centavos, rachas, respaldos y deduplicación. Tests del handler: sesiones, rechazo de mutaciones sin Origin, PKCE/state de un solo uso y Gmail filtrado por remitente con proveedores mockeados.
+
+Validación de la versión 0.7: **95 tests unitarios** (17 nuevos de mascota y recordatorios) y **39 flujos en Chromium a 390 × 844** (8 nuevos, en claro y oscuro, con axe), compilación web y APK Android 0.7.0 (versionCode 7) compilado y con firma verificada. No hay prueba en un dispositivo físico: las notificaciones nativas se verificaron por código y tests, no en un teléfono.
 
 Validación de la versión 0.5: **76 tests unitarios**, **26 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
