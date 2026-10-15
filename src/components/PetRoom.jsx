@@ -9,12 +9,34 @@ import {
   streak,
 } from "../domain.js";
 import {
-  configureReminder,
+  allowReminders,
   reminderCalendar,
   saveFile,
   isNative,
   haptic,
 } from "../platform.js";
+import { composeMessage, nextOccurrences } from "../pet/reminders.js";
+import { allowedTime } from "../pet/reminderSettings.js";
+import {
+  daysAway,
+  growthStage,
+  overallProgress,
+  petMood,
+  STAGE_NAMES,
+} from "../pet/state.js";
+
+const FREQUENCY_OPTIONS = [
+  ["weekly", "Semanal", "Un día de la semana"],
+  ["biweekly", "Quincenal", "Días 15 y fin de mes"],
+  ["monthly", "Mensual", "Fin de mes"],
+];
+const shortDate = new Intl.DateTimeFormat("es-MX", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 export default function PetRoom({ data, onSave, notify }) {
   const prefs = data.preferences,
     friend = companionship(data),
@@ -24,20 +46,28 @@ export default function PetRoom({ data, onSave, notify }) {
   const checked = data.checkins.includes(today());
   async function save(e) {
     e.preventDefault();
-    if (
-      !draft.petName.trim() ||
-      !/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.reminder.time)
-    ) {
-      notify("Elige un nombre y una hora válidos.");
+    if (!draft.petName.trim() || !allowedTime(draft.reminder.time)) {
+      notify(
+        "Elige un nombre y una hora entre 8:00 y 21:59. De noche no molestamos.",
+      );
       return;
     }
     setSaving(true);
     try {
-      await configureReminder(draft.reminder);
+      const turningOn = draft.reminder.enabled && !prefs.reminder.enabled;
+      if (turningOn) await allowReminders();
+      const reminder = {
+        ...draft.reminder,
+        since:
+          turningOn || !draft.reminder.since
+            ? new Date().toISOString()
+            : draft.reminder.since,
+        ignored: 0,
+      };
       if (
         onSave({
           ...data,
-          preferences: { ...draft, petName: draft.petName.trim() },
+          preferences: { ...draft, reminder, petName: draft.petName.trim() },
         })
       ) {
         notify("Tu compañía está lista. ¡Qué bonita amistad!");
@@ -90,14 +120,21 @@ export default function PetRoom({ data, onSave, notify }) {
             pet={draft.pet}
             name={draft.petName}
             accessory={draft.accessory}
-            progress={friend.progress}
+            progress={overallProgress(data)}
+            mood={petMood({ daysAway: daysAway(data) })}
+            motion={draft.animations}
             interactive
+            onTrick={() => setBubble("¡Ta-dá! Mi truco secreto ✦")}
             onPet={() => {
               haptic();
               setBubble("Un abrazo para ti. Gracias por venir ♡");
             }}
           />
           <h2>{draft.petName || PETS[draft.pet].name}</h2>
+          <p className="sprout-stage">
+            🌱 Su brote: {STAGE_NAMES[growthStage(overallProgress(data))]}.
+            Crece con el avance de tus cajitas.
+          </p>
           <p className="pet-speech">{bubble || PETS[draft.pet].motto}</p>
           <div className="friendship-meter">
             <div className="progress">
@@ -210,42 +247,88 @@ export default function PetRoom({ data, onSave, notify }) {
         </div>
       </section>
       <section className="panel reminder-panel">
-        <h2>Un ratito para tus sueños</h2>
+        <h2>{draft.petName || "Tu compañero"} te recuerda</h2>
         <p className="muted">
-          Un recordatorio semanal, sin presión ni movimientos automáticos.
+          Te pregunta cuánto apartaste. Tú decides si registras algo; nunca
+          mueve dinero.
         </p>
-        <div className="form-row">
-          <label>
-            Día
-            <select
-              value={draft.reminder.day}
-              onChange={(e) =>
+        <label className="checkbox switch">
+          <input
+            type="checkbox"
+            checked={draft.reminder.enabled}
+            onChange={(e) =>
+              setDraft({
+                ...draft,
+                reminder: { ...draft.reminder, enabled: e.target.checked },
+              })
+            }
+          />
+          Recordarme registrar mi ahorro
+        </label>
+        <fieldset
+          className="frequency-options"
+          disabled={!draft.reminder.enabled}
+        >
+          <legend>¿Cada cuándo?</legend>
+          {FREQUENCY_OPTIONS.map(([key, title, hint]) => (
+            <button
+              type="button"
+              key={key}
+              aria-pressed={draft.reminder.frequency === key}
+              className={draft.reminder.frequency === key ? "selected" : ""}
+              onClick={() =>
                 setDraft({
                   ...draft,
-                  reminder: { ...draft.reminder, day: Number(e.target.value) },
+                  reminder: { ...draft.reminder, frequency: key },
                 })
               }
             >
-              {[
-                "Domingo",
-                "Lunes",
-                "Martes",
-                "Miércoles",
-                "Jueves",
-                "Viernes",
-                "Sábado",
-              ].map((day, i) => (
-                <option key={day} value={i}>
-                  {day}
-                </option>
-              ))}
-            </select>
-          </label>
+              <strong>{title}</strong>
+              <small>{hint}</small>
+            </button>
+          ))}
+        </fieldset>
+        <div className="form-row">
+          {draft.reminder.frequency === "weekly" && (
+            <label>
+              Día
+              <select
+                value={draft.reminder.day}
+                disabled={!draft.reminder.enabled}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    reminder: {
+                      ...draft.reminder,
+                      day: Number(e.target.value),
+                    },
+                  })
+                }
+              >
+                {[
+                  "Domingo",
+                  "Lunes",
+                  "Martes",
+                  "Miércoles",
+                  "Jueves",
+                  "Viernes",
+                  "Sábado",
+                ].map((day, i) => (
+                  <option key={day} value={i}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
             Hora
             <input
               type="time"
+              min="08:00"
+              max="21:59"
               value={draft.reminder.time}
+              disabled={!draft.reminder.enabled}
               onChange={(e) =>
                 setDraft({
                   ...draft,
@@ -256,61 +339,69 @@ export default function PetRoom({ data, onSave, notify }) {
             />
           </label>
         </div>
-        {isNative ? (
-          <>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={draft.reminder.enabled}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    reminder: { ...draft.reminder, enabled: e.target.checked },
-                  })
-                }
-              />
-              Recordarme en este dispositivo
-            </label>
-            <button
-              className="secondary"
-              disabled={saving}
-              onClick={() => save({ preventDefault() {} })}
-            >
-              Guardar recordatorio
-            </button>
-            <p className="small-text muted">
-              La entrega puede variar por batería y ajustes del teléfono. Los
-              horarios usan la zona del dispositivo.
-            </p>
-          </>
-        ) : (
-          <>
-            <button
-              className="secondary"
-              onClick={async () => {
-                try {
-                  await saveFile(
-                    reminderCalendar(draft.reminder),
-                    "cajitas-recordatorio.ics",
-                    "text/calendar",
-                  );
-                  notify(
-                    "Abre el archivo en tu calendario para activar el recordatorio.",
-                  );
-                } catch (e) {
-                  notify(e.message);
-                }
-              }}
-            >
-              Agregar a mi calendario ↗
-            </button>
-            <p className="small-text muted">
-              Descarga un evento semanal para importarlo en tu calendario.
-              Cajitas no envía avisos desde el navegador cerrado.
-            </p>
-          </>
+        {draft.reminder.enabled && allowedTime(draft.reminder.time) && (
+          <ReminderPreview data={data} draft={draft} />
+        )}
+        <button
+          className="primary"
+          disabled={saving}
+          onClick={() => save({ preventDefault() {} })}
+        >
+          {saving ? "Guardando…" : "Guardar recordatorio"}
+        </button>
+        <p className="small-text muted">
+          Máximo un aviso al día y nunca entre 22:00 y 8:00. Si dos avisos
+          seguidos se quedan sin respuesta, te escribirá menos seguido.
+          {isNative
+            ? " La entrega puede variar por batería y ajustes del teléfono."
+            : " En la web te espera al abrir Cajitas; para avisos con la app cerrada, agrégalo a tu calendario o instala la app de Android."}
+        </p>
+        {!isNative && (
+          <button
+            className="secondary"
+            onClick={async () => {
+              try {
+                await saveFile(
+                  reminderCalendar(draft.reminder),
+                  "cajitas-recordatorio.ics",
+                  "text/calendar",
+                );
+                notify(
+                  "Abre el archivo en tu calendario para activar el recordatorio.",
+                );
+              } catch (e) {
+                notify(e.message);
+              }
+            }}
+          >
+            Agregar a mi calendario ↗
+          </button>
         )}
       </section>
     </section>
+  );
+}
+
+function ReminderPreview({ data, draft }) {
+  const preview = {
+      ...data,
+      preferences: { ...draft, reminder: { ...draft.reminder, enabled: true } },
+    },
+    next = nextOccurrences(preview.preferences.reminder, new Date(), 3),
+    goal = data.goals.find((g) => !g.archived && balance(g) < g.targetCents),
+    sample = goal && next[0] ? composeMessage(preview, goal, next[0]) : null;
+  return (
+    <div className="reminder-preview">
+      <p className="small-text">
+        <strong>Próximos avisos:</strong>{" "}
+        {next.map((d) => shortDate.format(d)).join(" · ")}
+      </p>
+      {sample && (
+        <p className="notification-sample" aria-label="Ejemplo de aviso">
+          <strong>{sample.title}</strong>
+          {sample.body}
+        </p>
+      )}
+    </div>
   );
 }

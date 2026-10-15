@@ -48,7 +48,11 @@ try {
   if (existing) {
     await git(["fetch", "--depth", "1", "origin", branch], staging);
     await git(["checkout", "-B", branch, "FETCH_HEAD"], staging);
-    await git(["rm", "-r", "--ignore-unmatch", "."], staging);
+    // Keep the published APKs: they are built separately and not part of dist.
+    await git(
+      ["rm", "-r", "--ignore-unmatch", "--", ".", ":(exclude)descargas"],
+      staging,
+    );
   }
   await cp(join(project, "dist"), staging, { recursive: true });
   await writeFile(join(staging, ".nojekyll"), "");

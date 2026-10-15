@@ -391,7 +391,7 @@ footer > span {
 .home-speech h1 {
   max-width: 420px;
 }
-.home-speech > p:last-child {
+.home-speech > p:not(.eyebrow) {
   color: var(--muted);
   margin-top: var(--space-3);
 }
@@ -447,6 +447,107 @@ footer > span {
 }
 .home-greeting.is-sad {
   background: var(--pink);
+}
+.home-greeting.mood-waiting {
+  background: var(--yellow);
+  border-color: var(--on-yellow);
+}
+.mood-waiting .home-speech > p:not(.eyebrow) {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+.home-greeting.mood-sleepy {
+  background: var(--sky);
+}
+.checkin-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.checkin-actions > button {
+  flex: 1 1 160px;
+}
+.sprout-stage {
+  display: block;
+  width: fit-content;
+  margin: var(--space-2) auto 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--on-mint);
+  font-size: var(--small);
+  font-weight: 850;
+  text-align: center;
+}
+.frequency-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: 0;
+  border: 0;
+}
+.frequency-options legend {
+  margin-bottom: var(--space-2);
+  font-weight: 850;
+}
+.frequency-options button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px;
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+.frequency-options button small {
+  color: var(--muted);
+  font-size: var(--small);
+  line-height: 1.25;
+}
+.frequency-options button.selected {
+  border-color: var(--primary);
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+.frequency-options:disabled button {
+  opacity: 0.55;
+}
+.reminder-preview {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.notification-sample {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow);
+}
+.notification-sample strong {
+  font-size: var(--small);
+  color: var(--primary);
+}
+.reminder-panel > .primary {
+  margin: var(--space-2) 0 var(--space-3);
+}
+@media (max-width: 420px) {
+  .frequency-options {
+    grid-template-columns: 1fr;
+  }
+  .frequency-options button {
+    min-height: 0;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 .goals-title {
   display: flex;
@@ -1126,6 +1227,82 @@ summary {
 }
 .mascot.celebrating {
   animation: celebrate-bounce 0.7s ease-in-out 5;
+}
+/* Mascot moods (src/pet/state.js). Only transform/opacity animate. */
+.pet-motion,
+.pet-sprout,
+.pet-tear,
+.pet-zzz text,
+.pet-question,
+.pet-burst {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+.pet-cuddle {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+.pet-cuddle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.pet-motion.tap-0 {
+  animation: pet-tap-a 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pet-motion.tap-1 {
+  animation: pet-tap-b 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pet-motion.trick {
+  animation: pet-trick 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mascot.mood-excited {
+  animation: pet-jump 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 3;
+}
+.mascot.mood-happy {
+  animation: pet-wiggle 0.9s ease-in-out 2;
+}
+.mascot.mood-sad {
+  animation: none;
+  translate: 0 4px;
+  scale: 0.97;
+  transition:
+    translate 0.4s,
+    scale 0.4s;
+}
+.mascot.mood-sleepy {
+  animation: pet-snooze 4.5s ease-in-out infinite;
+}
+.mascot.mood-sleepy .pet-sparkles {
+  opacity: 0;
+}
+.mood-waiting .pet-arm.right {
+  animation: wave 1.1s ease-in-out infinite;
+}
+.mood-waiting .pet-question {
+  animation: pet-pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.pet-sprout {
+  animation:
+    sprout-pop 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) both,
+    illustration-sway 3.5s ease-in-out 0.7s infinite;
+}
+.pet-tear {
+  animation: tear-drop 1.6s ease-in infinite;
+}
+.pet-zzz text {
+  animation: zzz-float 2.4s ease-in-out infinite;
+}
+.pet-zzz text:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.pet-zzz text:nth-child(3) {
+  animation-delay: 1s;
+}
+.pet-burst {
+  animation: twinkle 0.6s ease-in-out infinite;
 }
 .pet-cuddle:hover .pet-arm.right {
   animation: wave 1.2s ease-in-out;
@@ -1809,6 +1986,89 @@ summary {
     transform: translateY(0) rotate(4deg);
   }
 }
+@keyframes pet-tap-a {
+  40% {
+    transform: scale(1.08, 0.9);
+  }
+  70% {
+    transform: scale(0.96, 1.06) translateY(-6px);
+  }
+}
+@keyframes pet-tap-b {
+  40% {
+    transform: scale(1.08, 0.9);
+  }
+  70% {
+    transform: scale(0.96, 1.06) translateY(-6px);
+  }
+}
+@keyframes pet-trick {
+  30% {
+    transform: translateY(-24px) rotate(0deg);
+  }
+  80% {
+    transform: translateY(-24px) rotate(360deg);
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+  }
+}
+@keyframes pet-jump {
+  30% {
+    transform: scale(1.06, 0.92);
+  }
+  60% {
+    transform: translateY(-18px) scale(0.95, 1.07);
+  }
+}
+@keyframes pet-wiggle {
+  25% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes pet-snooze {
+  50% {
+    transform: translateY(2px) rotate(-2deg) scale(1.01, 0.98);
+  }
+}
+@keyframes pet-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes sprout-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+@keyframes tear-drop {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes zzz-float {
+  0% {
+    opacity: 0;
+    transform: translate(0, 6px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(6px, -10px);
+  }
+}
 @keyframes illustration-float {
   50% {
     transform: translateY(-3px);
@@ -1947,7 +2207,7 @@ summary {
     font-size: var(--small);
     letter-spacing: 0;
   }
-  .home-speech > p:last-child {
+  .home-speech > p:not(.eyebrow) {
     font-size: var(--small);
     margin-top: 10px;
   }

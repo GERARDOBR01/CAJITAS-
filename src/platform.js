@@ -159,9 +159,8 @@ export async function openExternal(url) {
 export async function haptic(celebrate = false) {
   if (!isNative) return;
   try {
-    const { Haptics, ImpactStyle, NotificationType } = await import(
-      "@capacitor/haptics"
-    );
+    const { Haptics, ImpactStyle, NotificationType } =
+      await import("@capacitor/haptics");
     if (celebrate)
       await Haptics.notification({ type: NotificationType.Success });
     else await Haptics.impact({ style: ImpactStyle.Light });
@@ -171,9 +170,8 @@ export async function haptic(celebrate = false) {
 }
 export async function saveFile(text, filename, type = "application/json") {
   if (isNative) {
-    const { Filesystem, Directory, Encoding } = await import(
-      "@capacitor/filesystem"
-    );
+    const { Filesystem, Directory, Encoding } =
+      await import("@capacitor/filesystem");
     const { Share } = await import("@capacitor/share");
     const result = await Filesystem.writeFile({
       path: `cajitas/${filename}`,
@@ -333,59 +331,131 @@ export async function setupNativeEvents() {
     else window.dispatchEvent(new Event("cajitas:back"));
   });
 }
-export async function configureReminder(reminder) {
+const LEGACY_REMINDER_ID = 71401;
+const REMINDER_IDS = Array.from({ length: 12 }, (_, i) => 71500 + i);
+let reminderListeners = false;
+
+/** Ask for permission once, when the person turns reminders on. */
+export async function allowReminders() {
   if (!isNative) return;
   const { LocalNotifications } = await import("@capacitor/local-notifications");
-  if (reminder.enabled) {
-    const permission = await LocalNotifications.requestPermissions();
-    if (permission.display !== "granted")
-      throw new Error(
-        "No se activó el recordatorio. Puedes permitir las notificaciones en los ajustes de tu dispositivo.",
-      );
-  }
-  await LocalNotifications.cancel({ notifications: [{ id: 71401 }] });
-  if (reminder.enabled) {
-    const [hour, minute] = reminder.time.split(":").map(Number);
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: 71401,
-          title: "Un ratito para tus sueños ✦",
-          body: "Revisa tus cajitas y decide si hoy puedes dar un pasito. Tú marcas el ritmo.",
-          schedule: {
-            on: { weekday: reminder.day + 1, hour, minute },
-            repeats: true,
-            allowWhileIdle: false,
-          },
-          isExactNotification: false,
-        },
-      ],
-    });
-  }
+  const permission = await LocalNotifications.requestPermissions();
+  if (permission.display !== "granted")
+    throw new Error(
+      "No se activó el recordatorio. Puedes permitir las notificaciones en los ajustes de tu dispositivo.",
+    );
+}
+
+/** Replace the scheduled notifications with the next ones for this data.
+ * Each one is a single dated notification so quincenas and rotating messages
+ * stay exact. Returns the ids of the messages used, to avoid repeats. */
+export async function syncReminders(data, now = new Date()) {
+  const { upcomingNotifications } = await import("./pet/reminders.js");
+  const plan = upcomingNotifications(data, now);
+  if (!isNative) return plan.recent;
+  const { LocalNotifications } = await import("@capacitor/local-notifications");
+  await LocalNotifications.cancel({
+    notifications: [LEGACY_REMINDER_ID, ...REMINDER_IDS].map((id) => ({ id })),
+  });
+  if (!plan.items.length) return plan.recent;
+  const { display } = await LocalNotifications.checkPermissions();
+  if (display !== "granted") return plan.recent;
+  await LocalNotifications.schedule({
+    notifications: plan.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      body: item.body,
+      schedule: { at: item.at, allowWhileIdle: false },
+      actionTypeId: "cajitas-checkin",
+      extra: { goalId: item.goalId },
+    })),
+  });
+  return plan.recent;
+}
+
+/** Tapping a reminder opens the record dialog of that cajita; "Ahora no" only
+ * acknowledges it. */
+export async function listenToReminders(onAction) {
+  if (!isNative || reminderListeners) return;
+  reminderListeners = true;
+  const { LocalNotifications } = await import("@capacitor/local-notifications");
+  await LocalNotifications.registerActionTypes({
+    types: [
+      {
+        id: "cajitas-checkin",
+        actions: [
+          { id: "save", title: "Registrar ahorro", foreground: true },
+          { id: "later", title: "Ahora no", foreground: false },
+        ],
+      },
+    ],
+  });
+  await LocalNotifications.addListener(
+    "localNotificationActionPerformed",
+    ({ actionId, notification }) =>
+      onAction({
+        action: actionId === "later" ? "later" : "save",
+        goalId: notification.extra?.goalId,
+      }),
+  );
 }
 export function reminderCalendar(reminder, now = new Date()) {
-  const [hours, minutes] = reminder.time.split(":").map(Number),
+  const frequency = reminder.frequency ?? "weekly";
+  const [hours, minutes] = reminder.time.split(":").map(Number);
+  let date = new Date(now);
+  if (frequency === "weekly") {
+    date.setHours(hours, minutes, 0, 0);
+    date.setDate(date.getDate() + ((reminder.day - date.getDay() + 7) % 7));
+    if (date <= now) date.setDate(date.getDate() + 7);
+  } else {
+    // First 15th or last day of the month (or last day, monthly) still ahead.
     date = new Date(now);
-  date.setHours(hours, minutes, 0, 0);
-  date.setDate(date.getDate() + ((reminder.day - date.getDay() + 7) % 7));
-  if (date <= now) date.setDate(date.getDate() + 7);
+    for (let i = 0; i < 70; i++) {
+      const last = new Date(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        0,
+      ).getDate();
+      const day = date.getDate();
+      const candidate = new Date(date);
+      candidate.setHours(hours, minutes, 0, 0);
+      if (
+        (day === last || (frequency === "biweekly" && day === 15)) &&
+        candidate > now
+      ) {
+        date = candidate;
+        break;
+      }
+      date.setDate(date.getDate() + 1);
+    }
+  }
   const stamp = (d) =>
     `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
+  const rule = {
+    weekly: `RRULE:FREQ=WEEKLY;BYDAY=${["SU", "MO", "TU", "WE", "TH", "FR", "SA"][reminder.day]}`,
+    biweekly: "RRULE:FREQ=MONTHLY;BYMONTHDAY=15,-1",
+    monthly: "RRULE:FREQ=MONTHLY;BYMONTHDAY=-1",
+  }[frequency];
+  const summary = {
+    weekly: "Un ratito para tus cajitas",
+    biweekly: "Quincena: un ratito para tus cajitas",
+    monthly: "Fin de mes: un ratito para tus cajitas",
+  }[frequency];
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Cajitas//Ahorro//ES",
     "BEGIN:VEVENT",
-    "UID:cajitas-weekly-reminder@mx.cajitas.ahorro",
+    `UID:cajitas-${frequency}-reminder@mx.cajitas.ahorro`,
     `DTSTAMP:${now
       .toISOString()
       .replace(/[-:]/g, "")
       .replace(/\.\d{3}/, "")}`,
     `DTSTART:${stamp(date)}`,
-    `RRULE:FREQ=WEEKLY;BYDAY=${["SU", "MO", "TU", "WE", "TH", "FR", "SA"][reminder.day]}`,
+    rule,
     "DURATION:PT10M",
-    "SUMMARY:Un ratito para tus cajitas",
-    "DESCRIPTION:Revisa tu plan y decide si hoy puedes dar un pasito. Sin transferencias automaticas.",
+    `SUMMARY:${summary}`,
+    "DESCRIPTION:Abre Cajitas y registra lo que apartaste. Sin transferencias automaticas.",
     "END:VEVENT",
     "END:VCALENDAR",
     "",

@@ -210,7 +210,7 @@ for (const theme of ["light", "dark"]) {
       .getByRole("button", { name: "Registrar ahorro", exact: true })
       .click();
     await expect(home.locator(".home-greeting")).toHaveClass(/is-cheering/);
-    await expect(home.locator(".mascot")).toHaveClass(/celebrating/);
+    await expect(home.locator(".mascot")).toHaveClass(/mood-excited/);
     await expect(home.locator(".mascot")).toBeInViewport();
     await page.evaluate(() => scrollTo(0, 0));
     await snapshot(page, `flow-saving-${theme}`);
@@ -232,7 +232,9 @@ for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
     await expect(card.locator(".saved")).toContainText("$200.00");
     await expect(
-      home.getByRole("img", { name: "La mascota está triste y te acompaña" }),
+      home.getByRole("img", {
+        name: /se puso triste un momento y te acompaña/,
+      }),
     ).toBeVisible();
     await expect(home.locator(".mascot")).toBeInViewport();
     await audit(page, theme, "withdrawal-recorded");

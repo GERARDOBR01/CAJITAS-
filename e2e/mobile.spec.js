@@ -58,7 +58,7 @@ test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390�
   await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
   await expect(card.locator(".saved")).toContainText("$500.00");
   await expect(
-    page.getByRole("img", { name: "La mascota está triste y te acompaña" }),
+    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
   ).toBeVisible();
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("500");
