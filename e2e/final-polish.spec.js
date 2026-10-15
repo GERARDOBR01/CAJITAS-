@@ -242,6 +242,7 @@ test("el siguiente pasito prellena sin registrar y una fecha vencida propone edi
   page,
 }) => {
   await open(page);
+  await page.getByRole("button", { name: "Más", exact: true }).click();
   const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
   await expect(next).toContainText("Mi viaje bonito");
   await page.screenshot({
@@ -265,6 +266,7 @@ test("el siguiente pasito prellena sin registrar y una fecha vencida propone edi
     expired,
   );
   await page.reload();
+  await page.getByRole("button", { name: "Más", exact: true }).click();
   await next.getByRole("button", { name: "Revisar mi plan" }).click();
   await expect(
     page.getByRole("button", { name: "Guardar cambios" }),
@@ -280,13 +282,11 @@ test("si falla guardar un respaldo conserva los datos y la revisión abierta", a
   await more(page, "Respaldo");
   const replacement = fixture();
   replacement.goals[0].name = "Otra instalación";
-  await page
-    .locator('input[type="file"]')
-    .setInputFiles({
-      name: "respaldo.json",
-      mimeType: "application/json",
-      buffer: Buffer.from(JSON.stringify(replacement)),
-    });
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "respaldo.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(replacement)),
+  });
   await expect(
     page.getByRole("dialog", { name: "Revisar respaldo" }),
   ).toBeVisible();

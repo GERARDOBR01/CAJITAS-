@@ -236,8 +236,9 @@ test("acceso desde inicio y Más, pausa, reducción de movimiento, salida y rein
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Más", exact: true }).click();
   await page
-    .getByRole("button", { name: "Ver tutorial interactivo", exact: false })
+    .getByRole("button", { name: "Tutorial interactivo", exact: true })
     .click();
   await expect(page).toHaveURL(/tutorial=1/);
   await page

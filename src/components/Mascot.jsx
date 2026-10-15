@@ -20,7 +20,9 @@ export default function Mascot({
     outline = "#574d55";
   const label = sad
     ? "La mascota está triste y te acompaña"
-    : `${name ?? spec.name}, tu ${spec.label.toLowerCase()} de ahorro`;
+    : celebrating
+      ? `${name ?? spec.name} celebra tu ahorro`
+      : `${name ?? spec.name}, tu ${spec.label.toLowerCase()} de ahorro`;
   function cuddle() {
     setTouched(true);
     setTimeout(() => setTouched(false), 1800);
@@ -373,7 +375,7 @@ export default function Mascot({
         <path d="m203 43 3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" />
         <path d="m30 85 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z" />
       </g>
-      {touched && (
+      {(touched || celebrating) && (
         <g className="pet-hearts" fill="#d796aa">
           <path d="M82 46q-12-14-17-3-4 11 17 20 20-13 16-21-5-11-16 4" />
           <path d="M177 29q-8-9-11-2-2 7 11 13 14-8 10-14-3-6-10 3" />

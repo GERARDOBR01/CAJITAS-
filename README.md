@@ -12,9 +12,13 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
 
+## Pasada visual v0.6
+
+Inicio con mascota protagonista, cajitas y un botón de creación; colores vivos, tema oscuro según el dispositivo y CSS consolidado. Descarga, tutorial y visitas se encuentran en Más. [Comparativas, conteo de CSS y verificación de contraste](docs/design/V0.6.md).
+
 ## Tutorial animado e interactivo
 
-[▷ Abrir el tutorial de Cajitas](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Inicio → Ver tutorial interactivo y Más → Tutorial interactivo.
+[▷ Abrir el tutorial de Cajitas](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Más → Tutorial interactivo.
 
 Ocho pasos: espacio personal, crear meta, registrar ahorro, candado/retiro/celebración, mascota, herramientas, instalación y repaso. Incluye ejercicios con dinero de ejemplo, elección de mascota y accesorios, calculadora con tasa capturada, explicación de correos y respaldos, y guía Android/iPhone. No consulta APIs ni guarda datos de práctica. Al salir o recargar se reinicia; las cajitas reales permanecen intactas. El botón final solo abre el formulario para crear una cajita real, que requiere guardarse explícitamente.
 
@@ -39,7 +43,7 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 ### La nueva experiencia
 
 - **Comprobantes sin conexión a Gmail:** Más → Conexiones permite abrir `.eml`/`.txt` o pegar texto en el celular. Revisión obligatoria de cajita, monto y fecha antes de sumar. El archivo se procesa en el dispositivo; no se guarda su contenido ni se ejecuta su HTML. Huella de importación y posibles coincidencias con movimientos existentes, incluso archivados. También accesible al registrar ahorro en una cajita.
-- **Tu siguiente pasito:** el inicio destaca la siguiente meta y propone un monto editable; una fecha vencida invita a ajustar el plan. Siempre requiere registrar lo que ya apartaste en tu app externa.
+- **Tu siguiente pasito:** Más destaca la siguiente meta y propone un monto editable; una fecha vencida invita a ajustar el plan. Siempre requiere registrar lo que ya apartaste en tu app externa.
 - **Gmail directo preparado:** la web de Pages puede conectarse a un backend HTTPS configurado. Setup guiado y diagnóstico de variables, sin secretos en cliente. **La publicación actual no tiene backend ni OAuth configurados**; usa la importación local. [Guía completa](docs/GMAIL-SETUP.md).
 - Metas, comprobantes, conexiones, rendimiento y respaldos en módulos separados; verificación automática en cada PR. Un fallo al guardar un respaldo conserva los datos actuales y la revisión abierta.
 - Vista previa del aporte semanal o cada 15/30 días antes de crear o editar una meta; muestra cuánto falta y ofrece montos rápidos editables. Ninguna sugerencia crea un depósito por sí sola.

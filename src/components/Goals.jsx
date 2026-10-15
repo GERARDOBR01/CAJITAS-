@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CommitmentNotice from "./CommitmentNotice.jsx";
 import {
   money,
   today,
@@ -107,7 +108,11 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
     >
       <p className="muted">Ponle nombre. Dale tiempo. Tú puedes.</p>
       {!goal && (
-        <div className="goal-templates" aria-label="Ideas para tu cajita">
+        <div
+          className="goal-templates"
+          role="group"
+          aria-label="Ideas para tu cajita"
+        >
           {templates.map((t) => (
             <button
               type="button"
@@ -337,7 +342,11 @@ export function MovementForm({
               />
             </label>
             {!withdraw && (
-              <div className="quick-amounts" aria-label="Montos rápidos">
+              <div
+                className="quick-amounts"
+                role="group"
+                aria-label="Montos rápidos"
+              >
                 {[5000, 10000, 20000].map((value) => (
                   <button
                     type="button"
@@ -371,10 +380,14 @@ export function MovementForm({
             </label>
           </>
         )}
-        <p className="notice">
-          Tu dinero sigue disponible en {goal.provider}. Cajitas solo lleva el
-          registro; no realiza transferencias.
-        </p>
+        {withdraw ? (
+          <CommitmentNotice provider={goal.provider} />
+        ) : (
+          <p className="notice">
+            Tu dinero sigue disponible en {goal.provider}. Cajitas solo lleva el
+            registro; no realiza transferencias.
+          </p>
+        )}
         {error && (
           <p className="error" role="alert">
             {error}
@@ -457,6 +470,7 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
           <span>Tu compromiso · {dateLabel(goal.unlockDate)}</span>
         </div>
       </div>
+      <CommitmentNotice provider={goal.provider} />
       {progress >= 1 ? (
         <div className="complete-scene">
           <Illustration kind="complete" />
