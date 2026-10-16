@@ -190,7 +190,7 @@ test("un patrón validado con cajita recordada se registra automáticamente una 
 }) => {
   await page.addInitScript(() =>
     localStorage.setItem(
-      "cajitas:v1",
+      "guardadito:v1",
       JSON.stringify({
         version: 1,
         goals: [
@@ -247,7 +247,7 @@ test("datos locales dañados no se sobrescriben al intentar crear una meta", asy
   page,
 }) => {
   await page.addInitScript(() =>
-    localStorage.setItem("cajitas:v1", '{"datos":"incompletos"}'),
+    localStorage.setItem("guardadito:v1", '{"datos":"incompletos"}'),
   );
   await page.goto("/");
   await expect(
@@ -259,7 +259,7 @@ test("datos locales dañados no se sobrescriben al intentar crear una meta", asy
   await page.getByLabel("Nombre de tu meta").fill("Prueba");
   await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("10");
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  expect(await page.evaluate(() => localStorage.getItem("cajitas:v1"))).toBe(
+  expect(await page.evaluate(() => localStorage.getItem("guardadito:v1"))).toBe(
     '{"datos":"incompletos"}',
   );
 });

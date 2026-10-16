@@ -1,6 +1,6 @@
-# Aplicaciones de Cajitas para Android y iPhone
+# Aplicaciones de Guardadito para Android y iPhone
 
-La misma interfaz web se empaqueta dentro de proyectos Capacitor 8.5.3. El contenido de `dist` está incluido en la aplicación: no se depende de una página remota para abrir Cajitas. Identificador: `mx.cajitas.ahorro`. Nombre: **Cajitas**.
+La misma interfaz web se empaqueta dentro de proyectos Capacitor 8.5.3. El contenido de `dist` está incluido en la aplicación: no se depende de una página remota para abrir Guardadito. Identificador: `mx.guardadito.ahorro`. Nombre: **Guardadito**.
 
 ## Android: APK de prueba
 
@@ -39,7 +39,7 @@ En Xcode seleccionar el equipo de Apple Developer en **Signing & Capabilities**,
 
 ## Conexiones y funciones nativas
 
-Android sirve los recursos internos como `https://localhost`; iOS usa `capacitor://localhost`. El retorno de autorización abre `cajitas://auth`, registrado en ambos proyectos. Las credenciales de Google, Banxico y Bitso permanecen en el servidor.
+Android sirve los recursos internos como `https://localhost`; iOS usa `capacitor://localhost`. El retorno de autorización abre `guardadito://auth`, registrado en ambos proyectos. Las credenciales de Google, Banxico y Bitso permanecen en el servidor.
 
 Si se necesitan conexiones remotas, compilar con `VITE_API_ORIGIN` apuntando a un servidor HTTPS público, y permitir los orígenes nativos mediante `NATIVE_APP_ORIGINS` en ese servidor. Seguir las instrucciones de conexiones del README para configurar las credenciales del servidor. La [guía de Gmail y comprobantes](GMAIL-SETUP.md) explica el backend y el intercambio OAuth. Sin ese origen la aplicación funciona localmente, incluyendo archivos `.eml` y texto pegado con revisión; no se debe configurar `server.url` de Capacitor para producción.
 

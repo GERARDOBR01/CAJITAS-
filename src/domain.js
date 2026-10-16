@@ -1,5 +1,15 @@
 import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
-export const STORAGE_KEY = "cajitas:v1";
+export const STORAGE_KEY = "guardadito:v1";
+// Before the rename the app saved under this key; copy it once so nobody
+// loses their cajitas. The old copy stays as a fallback.
+export const LEGACY_STORAGE_KEY = "cajitas:v1";
+export function migrateStorageKey(storage) {
+  if (storage.getItem(STORAGE_KEY) !== null) return false;
+  const legacy = storage.getItem(LEGACY_STORAGE_KEY);
+  if (legacy === null) return false;
+  storage.setItem(STORAGE_KEY, legacy);
+  return true;
+}
 export const money = (cents) =>
   new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -249,7 +259,7 @@ export function validateBackup(data) {
     typeof data.assignments !== "object" ||
     Array.isArray(data.assignments)
   )
-    throw new Error("Este archivo no es un respaldo compatible de Cajitas.");
+    throw new Error("Este archivo no es un respaldo compatible de Guardadito.");
   if (
     data.preferences !== undefined &&
     (!data.preferences ||

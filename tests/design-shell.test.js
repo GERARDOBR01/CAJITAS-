@@ -31,7 +31,9 @@ describe("descarga en Más según la plataforma", () => {
             onEdit: vi.fn(),
           }),
         );
-        expect(html.includes('aria-label="Descargar Cajitas"')).toBe(!native);
+        expect(html.includes('aria-label="Descargar Guardadito"')).toBe(
+          !native,
+        );
         expect(html).toContain("Tutorial interactivo");
         expect(html).toContain("Un ratito para ti y tus sueños");
         expect(onSave).not.toHaveBeenCalled();

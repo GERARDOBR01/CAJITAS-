@@ -23,7 +23,7 @@ function fixture() {
 }
 async function open(page, seed = fixture()) {
   await page.addInitScript(
-    (data) => localStorage.setItem("cajitas:v1", JSON.stringify(data)),
+    (data) => localStorage.setItem("guardadito:v1", JSON.stringify(data)),
     seed,
   );
   await page.route("**/api/status", (r) =>
@@ -43,7 +43,7 @@ async function more(page, name) {
   await page.getByRole("button", { name, exact: true }).click();
 }
 const saved = (page) =>
-  page.evaluate(() => JSON.parse(localStorage.getItem("cajitas:v1")));
+  page.evaluate(() => JSON.parse(localStorage.getItem("guardadito:v1")));
 const review = (page) =>
   page.getByRole("region", { name: "Importar comprobante local" });
 const confirm = (page) =>
@@ -262,7 +262,7 @@ test("el siguiente pasito prellena sin registrar y una fecha vencida propone edi
   const expired = fixture();
   expired.goals[0].unlockDate = "2026-10-01";
   await page.addInitScript(
-    (data) => localStorage.setItem("cajitas:v1", JSON.stringify(data)),
+    (data) => localStorage.setItem("guardadito:v1", JSON.stringify(data)),
     expired,
   );
   await page.reload();

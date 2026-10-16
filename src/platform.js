@@ -3,10 +3,10 @@ import { Preferences } from "@capacitor/preferences";
 import { STORAGE_KEY, validateBackup } from "./domain.js";
 export const isNative = Capacitor.isNativePlatform();
 export const platform = Capacitor.getPlatform();
-const nativeSessionKey = "cajitas:native-session";
-const nativeProofKey = "cajitas:native-oauth";
-const webSessionKey = "cajitas:web-session:";
-const webProofKey = "cajitas:web-oauth:";
+const nativeSessionKey = "guardadito:native-session";
+const nativeProofKey = "guardadito:native-oauth";
+const webSessionKey = "guardadito:web-session:";
+const webProofKey = "guardadito:web-oauth:";
 let connectionResult;
 export function consumeConnectionResult() {
   const result = connectionResult;
@@ -15,7 +15,7 @@ export function consumeConnectionResult() {
 }
 function announceConnection(detail) {
   connectionResult = detail;
-  window.dispatchEvent(new CustomEvent("cajitas:connection", { detail }));
+  window.dispatchEvent(new CustomEvent("guardadito:connection", { detail }));
 }
 let nativeSession;
 let installPrompt;
@@ -23,7 +23,7 @@ if (typeof window !== "undefined" && !isNative)
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     installPrompt = event;
-    window.dispatchEvent(new Event("cajitas:install"));
+    window.dispatchEvent(new Event("guardadito:install"));
   });
 export const getInstallPrompt = () => installPrompt;
 export const clearInstallPrompt = () => {
@@ -295,7 +295,7 @@ export async function setupNativeEvents() {
     } catch {
       return;
     }
-    if (url.protocol !== "cajitas:" || url.hostname !== "auth") return;
+    if (url.protocol !== "guardadito:" || url.hostname !== "auth") return;
     try {
       const proofRaw = (await Preferences.get({ key: nativeProofKey })).value;
       const proof = proofRaw ? JSON.parse(proofRaw) : null;
@@ -328,7 +328,7 @@ export async function setupNativeEvents() {
     const dialog = document.querySelector("dialog[open]");
     if (dialog) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
     else if (canGoBack) history.back();
-    else window.dispatchEvent(new Event("cajitas:back"));
+    else window.dispatchEvent(new Event("guardadito:back"));
   });
 }
 const LEGACY_REMINDER_ID = 71401;
@@ -444,9 +444,9 @@ export function reminderCalendar(reminder, now = new Date()) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Cajitas//Ahorro//ES",
+    "PRODID:-//Guardadito//Ahorro//ES",
     "BEGIN:VEVENT",
-    `UID:cajitas-${frequency}-reminder@mx.cajitas.ahorro`,
+    `UID:guardadito-${frequency}-reminder@mx.guardadito.ahorro`,
     `DTSTAMP:${now
       .toISOString()
       .replace(/[-:]/g, "")
@@ -455,7 +455,7 @@ export function reminderCalendar(reminder, now = new Date()) {
     rule,
     "DURATION:PT10M",
     `SUMMARY:${summary}`,
-    "DESCRIPTION:Abre Cajitas y registra lo que apartaste. Sin transferencias automaticas.",
+    "DESCRIPTION:Abre Guardadito y registra lo que apartaste. Sin transferencias automaticas.",
     "END:VEVENT",
     "END:VCALENDAR",
     "",

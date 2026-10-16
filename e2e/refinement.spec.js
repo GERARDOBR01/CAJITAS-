@@ -39,7 +39,7 @@ function fixture() {
 }
 async function mockReceipt(page, data) {
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.route("**/api/status", (r) =>
@@ -75,7 +75,7 @@ async function mockReceipt(page, data) {
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
 }
 async function saved(page) {
-  return page.evaluate(() => JSON.parse(localStorage.getItem("cajitas:v1")));
+  return page.evaluate(() => JSON.parse(localStorage.getItem("guardadito:v1")));
 }
 async function dismiss(page) {
   const close = page.getByRole("button", { name: "Cerrar aviso", exact: true });
@@ -188,7 +188,7 @@ test("corregir y eliminar errores conserva saldo histórico válido; gráfico y 
     source: "manual",
   });
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.goto("/");
@@ -256,7 +256,7 @@ test("una segunda pestaña actualiza la vista y cierra una captura que quedó de
   const data = fixture();
   data.goals.pop();
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.goto("/");
@@ -292,7 +292,7 @@ test("un retiro cumplido no entristece y un retiro histórico anticipado sí pid
   deposit.setHours(10, 0, 0, 0);
   data.goals[0].entries[0].at = deposit.toISOString();
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.goto("/");
@@ -334,7 +334,7 @@ test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async
   });
   let requested = false;
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.route("**/api/status", (r) =>

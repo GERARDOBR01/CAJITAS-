@@ -1,6 +1,6 @@
 {
-  "appId": "mx.cajitas.ahorro",
-  "appName": "Cajitas",
+  "appId": "mx.guardadito.ahorro",
+  "appName": "Guardadito",
   "webDir": "dist",
   "backgroundColor": "#fff7ef",
   "server": {

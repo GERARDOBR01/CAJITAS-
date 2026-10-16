@@ -24,10 +24,10 @@ export default function Install({ notify }) {
         setPrompt(null);
         clearInstallPrompt();
       };
-    window.addEventListener("cajitas:install", before);
+    window.addEventListener("guardadito:install", before);
     window.addEventListener("appinstalled", done);
     return () => {
-      window.removeEventListener("cajitas:install", before);
+      window.removeEventListener("guardadito:install", before);
       window.removeEventListener("appinstalled", done);
     };
   }, []);
@@ -38,7 +38,7 @@ export default function Install({ notify }) {
     setPrompt(null);
     clearInstallPrompt();
     if (choice.outcome === "accepted")
-      notify("Cajitas se está instalando. ¡Nos vemos en tu inicio!");
+      notify("Guardadito se está instalando. ¡Nos vemos en tu inicio!");
   }
   const apk = ANDROID_DOWNLOAD_URL;
   return (
@@ -56,7 +56,7 @@ export default function Install({ notify }) {
         <Illustration kind="welcome" className="install-illustration" />
         <span className="badge">
           {installed
-            ? "Cajitas ya está en tu dispositivo"
+            ? "Guardadito ya está en tu dispositivo"
             : "Sin costo · sin anuncios"}
         </span>
         <h2>
@@ -70,7 +70,7 @@ export default function Install({ notify }) {
         </p>
         {prompt && !installed && (
           <button className="primary" onClick={install}>
-            Instalar Cajitas
+            Instalar Guardadito
           </button>
         )}
         {isNative ? (
@@ -86,7 +86,7 @@ export default function Install({ notify }) {
               <ol>
                 {ios ? (
                   <>
-                    <li>Abre Cajitas en Safari.</li>
+                    <li>Abre Guardadito en Safari.</li>
                     <li>
                       Toca Compartir y elige “Agregar a pantalla de inicio”.
                     </li>

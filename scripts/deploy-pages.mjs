@@ -42,7 +42,7 @@ try {
     project,
   );
   const source = await git(["rev-parse", "--short", "HEAD"], project);
-  staging = await mkdtemp(join(tmpdir(), "cajitas-pages-"));
+  staging = await mkdtemp(join(tmpdir(), "guardadito-pages-"));
   await git(["init", "--initial-branch", branch], staging);
   await git(["remote", "add", "origin", remote], staging);
   if (existing) {
@@ -68,7 +68,7 @@ try {
         "user.email=codex@openai.com",
         "commit",
         "-m",
-        `deploy: Cajitas Pages from ${source}`,
+        `deploy: Guardadito Pages from ${source}`,
       ],
       staging,
     );

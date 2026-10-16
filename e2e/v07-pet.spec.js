@@ -48,7 +48,7 @@ async function open(page, data, colorScheme = "light") {
   await page.emulateMedia({ colorScheme });
   await page.addInitScript((raw) => {
     if (!sessionStorage.getItem("seeded")) {
-      localStorage.setItem("cajitas:v1", raw);
+      localStorage.setItem("guardadito:v1", raw);
       sessionStorage.setItem("seeded", "1");
     }
   }, JSON.stringify(data));
@@ -72,13 +72,13 @@ for (const theme of ["light", "dark"])
     ).toEqual([]);
     await page.screenshot({ path: `${shots}/waiting-${theme}.png` });
     const before = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("cajitas:v1")),
+      JSON.parse(localStorage.getItem("guardadito:v1")),
     );
     await home.getByRole("button", { name: "Ahora no" }).click();
     await expect(page.getByRole("status")).toContainText("Aquí sigo");
     await expect(mascot(home)).toHaveAttribute("data-mood", "idle");
     const after = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("cajitas:v1")),
+      JSON.parse(localStorage.getItem("guardadito:v1")),
     );
     expect(after.checkins).toEqual(before.checkins);
     expect(after.goals.map((g) => g.entries)).toEqual(
@@ -186,7 +186,8 @@ test("Mi mascota: recordatorio quincenal con vista previa y sin horario nocturno
   await page.getByRole("button", { name: "Guardar recordatorio" }).click();
   await expect(page.getByRole("status")).toContainText("compañía está lista");
   const saved = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("cajitas:v1")).preferences.reminder,
+    () =>
+      JSON.parse(localStorage.getItem("guardadito:v1")).preferences.reminder,
   );
   expect(saved).toMatchObject({
     enabled: true,

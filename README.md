@@ -1,8 +1,10 @@
-# Cajitas ✦
+# Guardadito ✦
+
+> **Antes se llamaba Cajitas.** En la web tus datos se pasan solos al nuevo nombre. En Android la app nueva tiene otro identificador (`mx.guardadito.ahorro`) y se instala aparte: en Cajitas descarga tu respaldo (Más → Respaldo), instala Guardadito y restáuralo ahí. El APK publicado de la 0.8 todavía se llama Cajitas; el próximo ya saldrá como Guardadito.
 
 ## [⬇️ Descargar la app para Android](https://gerardobr01.github.io/CAJITAS-/descargas/Cajitas-0.8.0-android.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.8.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.8.** [Abrir Guardadito en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
 
 > **¿Tienes instalada la 0.5?** Las dos versiones están firmadas con llaves de prueba distintas, así que Android no deja actualizar encima. En la 0.5 ve a Más → Respaldo y descarga tu respaldo; desinstala, instala la 0.8 y restaura el respaldo. Los datos viven en el teléfono: sin respaldo se pierden al desinstalar.
 
@@ -16,7 +18,7 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 ## Cookie, el gatito v0.8 🐱
 
-Cajitas se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
+Guardadito se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
 
 - Mueve la cola, mueve las orejas, parpadea, inclina la cabeza, se le mueven los bigotes y se balancea la placa. Saluda con la patita cuando espera tu actualización.
 - **Cada 9 a 16 segundos dice “¡BECHO!”, alternando con “BECHO BECHO”**, con un globito, boquita de beso y corazones.
@@ -43,7 +45,7 @@ Inicio con mascota protagonista, cajitas y un botón de creación; colores vivos
 
 ## Tutorial animado e interactivo
 
-[▷ Abrir el tutorial de Cajitas](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Más → Tutorial interactivo.
+[▷ Abrir el tutorial de Guardadito](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Más → Tutorial interactivo.
 
 Ocho pasos: espacio personal, crear meta, registrar ahorro, candado/retiro/celebración, mascota, herramientas, instalación y repaso. Incluye ejercicios con dinero de ejemplo, elección de mascota y accesorios, calculadora con tasa capturada, explicación de correos y respaldos, y guía Android/iPhone. No consulta APIs ni guarda datos de práctica. Al salir o recargar se reinicia; las cajitas reales permanecen intactas. El botón final solo abre el formulario para crear una cajita real, que requiere guardarse explícitamente.
 
@@ -86,7 +88,7 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 - Barra de navegación inferior, zonas seguras y compartir archivos desde el teléfono. En la app nativa se replica el registro local en Preferences; se recupera la copia válida más reciente al abrir.
 - Backups v2 incluyen mascota, visitas, frecuencia y archivo; se migran los respaldos v1 sin perder movimientos. Cada instalación tiene sus propios datos: utiliza el respaldo para trasladarlos.
 
-La revisión del [mercado mexicano](docs/research/mexico-market-2026-10.md) compara documentación oficial de Nu, Mercado Pago, BBVA, Banorte, ScotiaMóvil, Fintual y Spendee. Metas y apartados ya existen: no se afirma exclusividad ni superioridad comercial. [Conciliación estudiada con REA](docs/research/rea-matching.md) documenta el patrón de revisión de registros manuales/importados de YNAB, con sus límites y las decisiones propias de Cajitas.
+La revisión del [mercado mexicano](docs/research/mexico-market-2026-10.md) compara documentación oficial de Nu, Mercado Pago, BBVA, Banorte, ScotiaMóvil, Fintual y Spendee. Metas y apartados ya existen: no se afirma exclusividad ni superioridad comercial. [Conciliación estudiada con REA](docs/research/rea-matching.md) documenta el patrón de revisión de registros manuales/importados de YNAB, con sus límites y las decisiones propias de Guardadito.
 
 La investigación usó **REA 6.5.0** para observar artículos públicos oficiales de Qapital, Monarch y Finch. [Patrones y decisiones](docs/research/reference-patterns.md), [evidencia y límites](docs/research/rea-evidence.md). Se adaptaron comportamientos con código y arte originales; no se copiaron recursos de esas apps ni se accedió a sus cuentas privadas.
 
@@ -134,7 +136,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 5. De tus comprobantes reales, toma los remitentes exactos y configura `GMAIL_NU_SENDERS` y `GMAIL_MP_SENDERS`, separados por comas. **No hay direcciones adivinadas.** No uses los remitentes `.example.invalid` de los fixtures en producción.
 6. Reinicia y entra en Conexiones → Conectar Gmail. Se solicita únicamente `https://www.googleapis.com/auth/gmail.readonly`. “Buscar depósitos” consulta los últimos 90 días, sin spam/papelera, en páginas de 20 mensajes. “Consultar más comprobantes” continúa la paginación.
 
-El scope permite leer el buzón, aunque Cajitas filtra comprobantes por remitente. Google clasifica `gmail.readonly` como restringido; publicar para usuarios externos puede requerir su proceso de verificación. Consulta los [scopes oficiales](https://developers.google.com/workspace/gmail/api/auth/scopes) y [OAuth de servidor](https://developers.google.com/workspace/gmail/api/auth/web-server).
+El scope permite leer el buzón, aunque Guardadito filtra comprobantes por remitente. Google clasifica `gmail.readonly` como restringido; publicar para usuarios externos puede requerir su proceso de verificación. Consulta los [scopes oficiales](https://developers.google.com/workspace/gmail/api/auth/scopes) y [OAuth de servidor](https://developers.google.com/workspace/gmail/api/auth/web-server).
 
 OAuth usa state ligado al navegador, PKCE y cookies HttpOnly/SameSite con ID opaco. Los tokens viven cifrados en el servidor; no llegan a localStorage, respaldos ni JSON del cliente. En desarrollo se guardan en `.local/` (ignorado por Git). Producción requiere Redis REST. Desconectar borra los tokens de la sesión y solicita su revocación en Google.
 
@@ -144,7 +146,7 @@ OAuth usa state ligado al navegador, PKCE y cookies HttpOnly/SameSite con ID opa
 
 Para ajustar patrones, hacen falta 3 o 4 correos de Nu y Mercado Pago anonimizados, conservando asunto, estructura MIME/HTML, etiquetas, separadores del monto y dominio del remitente. Sustituye nombres, CLABE, cuentas, referencias y cantidades por datos ficticios con el mismo formato. Agrega fixtures y pruebas antes de cambiar `validated` a `true`. Mientras estén pendientes, recordar una cajita solo preselecciona el destino: no elimina la revisión.
 
-Cada correo aceptado, vinculado o ignorado deja un ID hash persistente para no contarlo de nuevo. La consulta es manual, sin lectura de fondo. Un correo demuestra un depósito, **no el saldo actual**. Si hay registros manuales con el mismo monto, proveedor y día local, Cajitas suspende el registro automático y pide revisión. Puedes vincular el correo a un registro existente, incluso archivado, sin cambiar su monto/fecha/ID ni sumar dinero; si es otro depósito, se requiere confirmación explícita. La coincidencia es una sugerencia, no una identidad demostrada. Fechas distintas o montos capturados incorrectamente pueden no producir sugerencias: revisa siempre el comprobante.
+Cada correo aceptado, vinculado o ignorado deja un ID hash persistente para no contarlo de nuevo. La consulta es manual, sin lectura de fondo. Un correo demuestra un depósito, **no el saldo actual**. Si hay registros manuales con el mismo monto, proveedor y día local, Guardadito suspende el registro automático y pide revisión. Puedes vincular el correo a un registro existente, incluso archivado, sin cambiar su monto/fecha/ID ni sumar dinero; si es otro depósito, se requiere confirmación explícita. La coincidencia es una sugerencia, no una identidad demostrada. Fechas distintas o montos capturados incorrectamente pueden no producir sugerencias: revisa siempre el comprobante.
 
 ## Bitso: llave de solo balances
 

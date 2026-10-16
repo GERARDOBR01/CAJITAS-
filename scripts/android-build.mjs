@@ -12,7 +12,7 @@ const destinationIndex = args.indexOf("--output");
 const output = resolve(
   destinationIndex >= 0
     ? args[destinationIndex + 1]
-    : join(project, "..", "artifacts", "cajitas-android-test.apk"),
+    : join(project, "..", "artifacts", "guardadito-android-test.apk"),
 );
 const sdk =
   process.env.ANDROID_HOME ||

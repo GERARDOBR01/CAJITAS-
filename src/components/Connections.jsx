@@ -245,7 +245,7 @@ export default function Connections({
             </p>
           )}
           <p className="small-text muted">
-            El permiso gmail.readonly permite leer el correo. Cajitas filtra
+            El permiso gmail.readonly permite leer el correo. Guardadito filtra
             comprobantes y no guarda su contenido. La consulta se ejecuta cuando
             presionas el botón.
           </p>

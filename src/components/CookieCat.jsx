@@ -11,7 +11,7 @@ import {
   registerTap,
 } from "../pet/state.js";
 
-// Cookie, el gatito café: la mascota principal de Cajitas. Original art,
+// Cookie, el gatito café: la mascota principal de Guardadito. Original art,
 // drawn as layered SVG so each part (ears, tail, paws, face) can move.
 const FUR = "#c98b5b",
   FUR_DARK = "#9c6239",

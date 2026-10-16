@@ -21,7 +21,7 @@ const lessons = [
   [
     "Tu espacio",
     "Un sueño, una cajita",
-    "Cajitas es tu diario de ahorro. Tu dinero se queda en la app donde lo guardas; aquí organizas metas y registras tus pasitos.",
+    "Guardadito es tu diario de ahorro. Tu dinero se queda en la app donde lo guardas; aquí organizas metas y registras tus pasitos.",
   ],
   [
     "Tu meta",
@@ -31,12 +31,12 @@ const lessons = [
   [
     "Ahorrar",
     "Primero aparta. Después registra",
-    "En tu app externa apartas el dinero. En Cajitas tocas Registrar ahorro y capturas lo que ya apartaste, con su fecha real.",
+    "En tu app externa apartas el dinero. En Guardadito tocas Registrar ahorro y capturas lo que ya apartaste, con su fecha real.",
   ],
   [
     "El candado",
     "Un compromiso contigo",
-    "La cuenta regresiva te recuerda tu fecha. El candado es de compromiso, no bancario: tu dinero sigue disponible fuera de Cajitas.",
+    "La cuenta regresiva te recuerda tu fecha. El candado es de compromiso, no bancario: tu dinero sigue disponible fuera de Guardadito.",
   ],
   [
     "Tu mascota",
@@ -51,7 +51,7 @@ const lessons = [
   [
     "Tu app",
     "Llévanos contigo",
-    "Instala Cajitas y úsala sin conexión para tus metas y registros. Las conexiones necesitan internet y estar configuradas.",
+    "Instala Guardadito y úsala sin conexión para tus metas y registros. Las conexiones necesitan internet y estar configuradas.",
   ],
   [
     "A tu ritmo",
@@ -62,7 +62,7 @@ const lessons = [
 const questions = [
   {
     title: "¿Dónde está tu dinero?",
-    options: ["En mi app externa", "Dentro de Cajitas"],
+    options: ["En mi app externa", "Dentro de Guardadito"],
     correct: 0,
   },
   {
@@ -282,14 +282,14 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
     <section
       ref={section}
       className={`tutorial ${paused ? "tutorial-paused" : ""}`}
-      aria-label="Tutorial interactivo de Cajitas"
+      aria-label="Tutorial interactivo de Guardadito"
     >
       <div
         className={`section-heading tutorial-heading ${step === 0 ? "tutorial-with-art" : ""}`}
       >
         <div>
           <p className="eyebrow">APRENDE JUGANDO, A TU RITMO</p>
-          <h1>Un paseíto por Cajitas</h1>
+          <h1>Un paseíto por Guardadito</h1>
           <p className="muted">
             Toca, prueba y descubre. Puedes volver cuando quieras.
           </p>
@@ -925,8 +925,8 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                     Android lo pide.
                   </li>
                   <li>
-                    Abre Cajitas. También puedes instalar la versión web desde
-                    el menú de tu navegador.
+                    Abre Guardadito. También puedes instalar la versión web
+                    desde el menú de tu navegador.
                   </li>
                 </ol>
                 {!isNative && (
@@ -945,9 +945,9 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
               <>
                 <h3>iPhone: desde Safari</h3>
                 <ol className="tutorial-instructions">
-                  <li>Abre la web publicada de Cajitas en Safari.</li>
+                  <li>Abre la web publicada de Guardadito en Safari.</li>
                   <li>Toca Compartir → Agregar a pantalla de inicio.</li>
-                  <li>Confirma Agregar. Abre Cajitas desde su icono.</li>
+                  <li>Confirma Agregar. Abre Guardadito desde su icono.</li>
                 </ol>
                 <p className="tutorial-tip">
                   La versión nativa de iPhone todavía requiere compilación y
@@ -1077,7 +1077,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
           </p>
           <p className="notice">
             En la app real, el dinero sigue disponible en {goal.provider}.
-            Cajitas solo registra el retiro.
+            Guardadito solo registra el retiro.
           </p>
           <button
             className="danger full"

@@ -40,7 +40,7 @@ function ServiceWorkerNotices() {
     <>
       {ready && (
         <p className="offline" role="status">
-          Cajitas está lista para usarse sin conexión.
+          Guardadito está lista para usarse sin conexión.
         </p>
       )}
       {refresh && (
@@ -301,13 +301,13 @@ export default function App() {
       }
     };
     const back = () => changeTab("goals");
-    window.addEventListener("cajitas:connection", connected);
+    window.addEventListener("guardadito:connection", connected);
     const pending = consumeConnectionResult();
     if (pending) connected({ detail: pending });
-    window.addEventListener("cajitas:back", back);
+    window.addEventListener("guardadito:back", back);
     return () => {
-      window.removeEventListener("cajitas:connection", connected);
-      window.removeEventListener("cajitas:back", back);
+      window.removeEventListener("guardadito:connection", connected);
+      window.removeEventListener("guardadito:back", back);
     };
   }, []);
   const pet = data.preferences;

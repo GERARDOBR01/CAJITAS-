@@ -354,7 +354,7 @@ export default function PetRoom({ data, onSave, notify }) {
           seguidos se quedan sin respuesta, te escribirá menos seguido.
           {isNative
             ? " La entrega puede variar por batería y ajustes del teléfono."
-            : " En la web te espera al abrir Cajitas; para avisos con la app cerrada, agrégalo a tu calendario o instala la app de Android."}
+            : " En la web te espera al abrir Guardadito; para avisos con la app cerrada, agrégalo a tu calendario o instala la app de Android."}
         </p>
         {!isNative && (
           <button

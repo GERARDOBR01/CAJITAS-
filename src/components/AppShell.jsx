@@ -42,7 +42,7 @@ export default function AppShell({
         <a
           className="brand"
           href={import.meta.env.BASE_URL}
-          aria-label="Cajitas inicio"
+          aria-label="Guardadito inicio"
         >
           <span className="brand-icon" aria-hidden="true">
             ▣

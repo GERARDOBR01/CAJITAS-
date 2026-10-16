@@ -37,7 +37,7 @@ test("elegir mascotas, accesorios, visita sin dinero y persistencia", async ({
     page.getByRole("button", { name: "♡ Ya nos acompañamos hoy" }),
   ).toBeDisabled();
   let state = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("cajitas:v1")),
+    JSON.parse(localStorage.getItem("guardadito:v1")),
   );
   expect(state.checkins).toHaveLength(1);
   expect(state.goals).toHaveLength(0);
@@ -157,11 +157,11 @@ test("la oferta de instalación se conserva aunque llegue antes de abrir la pant
   });
   await more(page, "Instalar app");
   await expect(
-    page.getByRole("button", { name: "Instalar Cajitas", exact: true }),
+    page.getByRole("button", { name: "Instalar Guardadito", exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: "docs/screenshots/v2-06-instalar-mobile.png" });
   await page
-    .getByRole("button", { name: "Instalar Cajitas", exact: true })
+    .getByRole("button", { name: "Instalar Guardadito", exact: true })
     .click();
   expect(await page.evaluate(() => window.installPromptUsed)).toBe(true);
 });

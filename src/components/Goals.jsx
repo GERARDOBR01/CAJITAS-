@@ -384,8 +384,8 @@ export function MovementForm({
           <CommitmentNotice provider={goal.provider} />
         ) : (
           <p className="notice">
-            Tu dinero sigue disponible en {goal.provider}. Cajitas solo lleva el
-            registro; no realiza transferencias.
+            Tu dinero sigue disponible en {goal.provider}. Guardadito solo lleva
+            el registro; no realiza transferencias.
           </p>
         )}
         {error && (

@@ -38,7 +38,7 @@ export default function More({
       <div className="section-heading">
         <div>
           <p className="eyebrow">TUS HERRAMIENTAS</p>
-          <h1>Un poquito más de Cajitas</h1>
+          <h1>Un poquito más de Guardadito</h1>
           <p className="muted">Elige por dónde seguimos.</p>
         </div>
       </div>
@@ -58,7 +58,12 @@ export default function More({
             "Importa y revisa tus comprobantes.",
           ],
           ["backup", "☁", "Respaldo", "Lleva tus cajitas contigo."],
-          ["install", "↓", "Instalar app", "Cajitas en tu pantalla de inicio."],
+          [
+            "install",
+            "↓",
+            "Instalar app",
+            "Guardadito en tu pantalla de inicio.",
+          ],
         ].map(([key, icon, title, description]) => (
           <button
             className="panel more-card"
@@ -76,7 +81,7 @@ export default function More({
         ))}
       </div>
       {!isNative && (
-        <aside className="download-banner" aria-label="Descargar Cajitas">
+        <aside className="download-banner" aria-label="Descargar Guardadito">
           <span className="download-mascot" aria-hidden="true">
             🐷
           </span>

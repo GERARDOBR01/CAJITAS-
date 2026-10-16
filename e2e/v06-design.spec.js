@@ -283,7 +283,7 @@ for (const theme of ["light", "dark"]) {
     await page.goto("/");
     await more(page);
     await expect(
-      page.getByRole("complementary", { name: "Descargar Cajitas" }),
+      page.getByRole("complementary", { name: "Descargar Guardadito" }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Un ratito para ti y tus sueños" }),

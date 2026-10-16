@@ -1,4 +1,4 @@
-package mx.cajitas.ahorro;
+package mx.guardadito.ahorro;
 
 import com.getcapacitor.BridgeActivity;
 
