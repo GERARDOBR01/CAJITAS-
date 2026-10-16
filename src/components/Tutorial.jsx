@@ -148,7 +148,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
     [reviewed, setReviewed] = useState(false),
     [paused, setPaused] = useState(!preferences.animations),
     [withdrawOpen, setWithdrawOpen] = useState(false),
-    [sad, setSad] = useState(false),
     [celebrating, setCelebrating] = useState(false),
     [now, setNow] = useState(Date.now());
   const heading = useRef(),
@@ -181,7 +180,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
   function go(index) {
     setStep(index);
     setFeedback("");
-    setSad(false);
     setWithdrawOpen(false);
   }
   function deposit(value, at = new Date().toISOString()) {
@@ -237,7 +235,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
   }
   function celebrate() {
     if (!complete) deposit(goal.targetCents - saved);
-    setSad(false);
     setCelebrating(true);
     clearTimeout(celebrationTimer.current);
     celebrationTimer.current = setTimeout(() => setCelebrating(false), 5000);
@@ -544,7 +541,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                 pet={pet}
                 accessory={accessory}
                 progress={saved / goal.targetCents}
-                sad={sad}
                 celebrating={celebrating}
                 small
               />
@@ -592,7 +588,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
             <div className="tutorial-action-grid">
               <button
                 className="secondary"
-                disabled={!saved || goal.unlockDate <= today()}
+                disabled={!saved}
                 onClick={() => setWithdrawOpen(true)}
               >
                 Probar retiro de {money(withdrawCents)}
@@ -613,10 +609,10 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
               </div>
             )}
             <p className="tutorial-tip">
-              Antes de la fecha pedimos confirmación y tu compañero se pone
-              triste un ratito, sin culpas. Después del compromiso, el retiro no
-              lo entristece. Llegar al monto celebra tu progreso; no mueve
-              dinero.
+              Puedes registrar un retiro cuando lo necesites, antes o después de
+              la fecha: usar tu ahorro para una emergencia también es cumplir su
+              propósito. Tu compañero sigue tranquilo contigo. Llegar al monto
+              celebra tu progreso; no mueve dinero.
             </p>
           </>
         )}
@@ -1067,26 +1063,26 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
       </div>
       {withdrawOpen && (
         <Modal
-          title="¿Retirar antes de tu compromiso?"
+          title="Registrar un retiro de práctica"
           onClose={() => setWithdrawOpen(false)}
         >
-          <Mascot pet={pet} accessory={accessory} small sad />
+          <Mascot pet={pet} accessory={accessory} small />
           <p>
-            Estás probando un retiro de <strong>{money(withdrawCents)}</strong>{" "}
-            antes de la fecha. Es dinero de ejemplo.
+            Estás probando un retiro de <strong>{money(withdrawCents)}</strong>.
+            Es dinero de ejemplo. Usar tu ahorro cuando lo necesitas también es
+            cumplir su propósito.
           </p>
           <p className="notice">
             En la app real, el dinero sigue disponible en {goal.provider}.
             Guardadito solo registra el retiro.
           </p>
           <button
-            className="danger full"
+            className="primary full"
             onClick={() => {
               deposit(-withdrawCents);
               setWithdrawOpen(false);
-              setSad(true);
               setFeedback(
-                "Retiro de práctica registrado. Los planes cambian; tu compañero te acompaña.",
+                "Retiro de práctica registrado. Tu ahorro cumplió su propósito.",
               );
             }}
           >

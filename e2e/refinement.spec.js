@@ -275,7 +275,7 @@ test("una segunda pestaña actualiza la vista y cierra una captura que quedó de
   expect((await saved(page)).goals[0].entries).toHaveLength(1);
   await second.close();
 });
-test("un retiro cumplido no entristece y un retiro histórico anticipado sí pide confirmar", async ({
+test("ningún retiro entristece ni pide confirmar, antes o después de la fecha", async ({
   page,
 }) => {
   const data = fixture();
@@ -301,25 +301,25 @@ test("un retiro cumplido no entristece y un retiro histórico anticipado sí pid
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
   await page.getByLabel("Monto (MXN)").fill("50");
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(
-    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
-  ).toHaveCount(0);
+  await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
   await card
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
   await page.getByLabel("Monto (MXN)").fill("25");
   await page.getByLabel("Fecha del movimiento").fill(local(daysAgo(2)));
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
-  await expect(
-    page.getByRole("button", { name: "Sí, registrar retiro" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(card.locator(".saved")).toContainText("$175.00");
-  await expect(
-    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
-  ).toBeVisible();
+  await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
+  await expect(page.locator(".toast")).toContainText("cumplir su propósito");
 });
 test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async ({
   page,

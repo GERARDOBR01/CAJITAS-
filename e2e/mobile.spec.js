@@ -7,7 +7,7 @@ async function openTab(page, name) {
   await page.getByRole("button", { name, exact: true }).click();
 }
 
-test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390×844", async ({
+test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×844", async ({
   page,
 }) => {
   await mkdir("docs/screenshots", { recursive: true });
@@ -45,21 +45,23 @@ test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390�
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
   await page.getByLabel("Monto (MXN)").fill("100");
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
-  await expect(
-    page.getByText(
-      "Los planes cambian. Puedes ajustar tu meta y seguir después.",
-    ),
-  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText(
+    "también es cumplir su propósito",
+  );
   await page.screenshot({
     path: "docs/screenshots/03-retiro-confirmacion-mobile.png",
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
   await expect(card.locator(".saved")).toContainText("$500.00");
-  await expect(
-    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
-  ).toBeVisible();
+  await expect(page.locator(".toast")).toContainText("cumplir su propósito");
+  await expect(page.locator(".home .mascot").first()).not.toHaveAttribute(
+    "data-mood",
+    "sad",
+  );
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("500");
   await page

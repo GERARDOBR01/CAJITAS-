@@ -23,17 +23,18 @@ Guardadito se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatit
 - Mueve la cola, mueve las orejas, parpadea, inclina la cabeza, se le mueven los bigotes y se balancea la placa. Saluda con la patita cuando espera tu actualización.
 - **Cada 9 a 16 segundos dice “¡BECHO!”, alternando con “BECHO BECHO”**, con un globito, boquita de beso y corazones.
 - **Al tocarlo dice “¡Te amo Jade!”**: ojos de corazón, salto, una explosión de corazones y un letrero grande con lluvia de corazones en toda la pantalla. Si lo mantienes presionado, ronronea.
-- Tiene todos los estados de la mascota (feliz, emocionado, triste con orejitas caídas, dormido, esperando, celebración), el brote que crece y los accesorios (moñito, bufanda, estrella). Con movimiento reducido cambian las caras y el mensaje sigue apareciendo, pero sin animación.
+- Tiene todos los estados de la mascota (feliz, emocionado, dormido, esperando, celebración), el brote que crece y los accesorios (moñito, bufanda, estrella). Con movimiento reducido cambian las caras y el mensaje sigue apareciendo, pero sin animación.
 - Es la mascota por defecto; las demás (Pipo, Mila, Luna y Caji) siguen en Mi mascota.
 
 [Capturas](docs/screenshots/v08/).
 
 ## Mascota viva y recordatorios v0.7
 
-- **La mascota tiene siete estados** (SVG + CSS, sin librerías de animación): tranquila (respira y parpadea), feliz (al tocarla o acariciarla), emocionada (salta al registrar ahorro), celebración (meta cumplida), triste (retiro anticipado, **se le pasa sola en 8 s**), dormida (7 días sin visitas ni depósitos; al tocarla despierta) y esperando (cuando toca actualizar el ahorro). Lógica pura y probada en `src/pet/state.js`.
+- **La mascota tiene seis estados** (SVG + CSS, sin librerías de animación): tranquila (respira y parpadea), feliz (al tocarla o acariciarla), emocionada (salta al registrar ahorro), celebración (meta cumplida), dormida (7 días sin visitas ni depósitos; al tocarla despierta) y esperando (cuando toca actualizar el ahorro). Lógica pura y probada en `src/pet/state.js`.
 - **Interacción:** tocar = rebote y frase; mantener presionado = caricia; **cinco toques rápidos = truco secreto**; los ojos siguen el dedo o el cursor. Vibración ligera en la app nativa.
 - **El brote crece con tu avance:** semilla → brote → hojitas → botón → flor.
 - **Recordatorios semanales, quincenales (día 15 y fin de mes) o mensuales (fin de mes)**, con hora entre 8:00 y 21:59. En Android son notificaciones con mensajes que rotan (24 textos en `src/pet/reminders.js`, sin repetir entre los últimos cinco); al tocarla se abre el registro de esa cajita; “Ahora no” solo la descarta. En la web, la mascota te espera dentro de la app y puedes agregar el evento a tu calendario (`.ics` con la regla quincenal).
+- **Retiros sin culpa:** registrar un retiro, antes o después de la fecha, no entristece a la mascota ni pide confirmaciones extra. Usar un ahorro para una emergencia también es cumplir su propósito.
 - **Sin presión:** registrar o decir “Ahora no” nunca baja la amistad. Si dos avisos seguidos se quedan sin respuesta, escribe menos seguido (semanal → quincenal → mensual) y lo avisa una vez. Solo propone ahorrar más (“¿y si probamos $X más?”) si cumpliste tu plan tres periodos seguidos sin retiros, y nunca más de +10 % redondeado a $10. Un test revisa que ningún mensaje culpe, avergüence, compare ni meta urgencia.
 - Los respaldos de versiones anteriores se migran: un recordatorio nocturno se mueve al horario permitido más cercano.
 
@@ -96,7 +97,7 @@ La [última revisión con REA](docs/research/final-rea-review.md) contrasta la e
 
 - Metas con nombre, monto MXN, fecha de desbloqueo y proveedor: Nu, Mercado Pago, Bitso u Otra.
 - Registro en centavos, historial, progreso, racha de días consecutivos y confeti al cruzar el 100%.
-- Mascota Caji que crece con el progreso agregado. Retiro anticipado con confirmación, tristeza temporal y mensaje sin culpa. Solo registra movimientos, no los realiza.
+- Mascota Caji que crece con el progreso agregado. Retiros con tono neutral: la mascota no se pone triste. Solo registra movimientos, no los realiza.
 - Plan del ahorro restante por semana o cada 15 días. Permite ampliar la fecha cuando el plan resulte pesado. Desbloqueo a medianoche en la zona horaria del dispositivo.
 - “Ir a apartar” abre el sitio oficial del proveedor, compatible con dispositivos; el usuario accede a su app y aparta allí. No se usan deep links privados ni operaciones automatizadas.
 - Simulador con Banxico, fecha de publicación por serie y comparación con la tasa capturada. Interés simple, base 365, tasa constante, antes de impuestos/comisiones, sin reinversión. TIIE es referencia interbancaria, no un producto de ahorro.
@@ -207,7 +208,7 @@ Validación de la versión 0.7: **95 tests unitarios** (17 nuevos de mascota y r
 
 Validación de la versión 0.5: **76 tests unitarios**, **26 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
-Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro anticipado, confirmación, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
+Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
 
 **Llamadas autenticadas reales pendientes:** Banxico, Gmail y Bitso requieren credenciales del dueño. Las capturas de conexiones usan datos sintéticos, no cuentas reales.
 
@@ -215,7 +216,7 @@ Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear me
 | --- | --- |
 | [Inicio](docs/screenshots/01-inicio-mobile.png) | Primera cajita |
 | [Meta y countdown](docs/screenshots/02-meta-countdown-mobile.png) | Plan semanal |
-| [Retiro anticipado](docs/screenshots/03-retiro-confirmacion-mobile.png) | Confirmación |
+| [Retiro](docs/screenshots/03-retiro-confirmacion-mobile.png) | Registro neutral |
 | [Meta alcanzada](docs/screenshots/04-meta-alcanzada-mobile.png) | Celebración |
 | [Simulador](docs/screenshots/05-simulador-mobile.png) | Token pendiente y tasa capturada |
 | [Conexiones](docs/screenshots/06-conexiones-mobile.png) | Depósito sintético por revisar |

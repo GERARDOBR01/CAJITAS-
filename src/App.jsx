@@ -19,13 +19,12 @@ import {
   consumeConnectionResult,
 } from "./platform.js";
 import { answerCheckIn, dueCheckIn, easeReminders } from "./pet/reminders.js";
-import { EXCITED_MS, SAD_MS } from "./pet/state.js";
+import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
 import {
   STORAGE_KEY,
   balance,
   initialData,
   validateBackup,
-  unlockTime,
 } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
@@ -84,7 +83,6 @@ export default function App() {
     [toast, setToast] = useState(""),
     [now, setNow] = useState(Date.now()),
     [confetti, setConfetti] = useState(false),
-    [sad, setSad] = useState(false),
     [excited, setExcited] = useState(false),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
@@ -101,7 +99,6 @@ export default function App() {
   latestData.current = data;
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
-    sadTimer = useRef(),
     excitedTimer = useRef();
   function notify(message) {
     clearTimeout(toastTimer.current);
@@ -152,8 +149,6 @@ export default function App() {
     }
   }
   function celebrate() {
-    setSad(false);
-    clearTimeout(sadTimer.current);
     clearTimeout(celebrationTimer.current);
     setConfetti(true);
     haptic(true);
@@ -171,7 +166,6 @@ export default function App() {
       window.removeEventListener("offline", on);
       clearTimeout(toastTimer.current);
       clearTimeout(celebrationTimer.current);
-      clearTimeout(sadTimer.current);
       clearTimeout(excitedTimer.current);
     };
   }, []);
@@ -245,17 +239,8 @@ export default function App() {
     )
       return;
     setModal(null);
-    if (value < 0) {
-      const earlyWithdrawal = Date.parse(at) < unlockTime(g.unlockDate);
-      setSad(earlyWithdrawal);
-      clearTimeout(sadTimer.current);
-      if (earlyWithdrawal)
-        sadTimer.current = setTimeout(() => setSad(false), SAD_MS);
-      notify("Retiro registrado. Los planes cambian; puedes seguir después.");
-    } else if (
-      balance(g) < g.targetCents &&
-      balance(g) + value >= g.targetCents
-    )
+    if (value < 0) notify(WITHDRAWAL_NOTE);
+    else if (balance(g) < g.targetCents && balance(g) + value >= g.targetCents)
       celebrate();
     else {
       haptic();
@@ -364,7 +349,6 @@ export default function App() {
             filter={goalFilter}
             onFilter={setGoalFilter}
             now={now}
-            sad={sad}
             cheering={excited}
             celebrating={confetti}
             checkIn={dueCheckIn(data, new Date(now))}

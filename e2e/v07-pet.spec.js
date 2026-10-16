@@ -121,20 +121,19 @@ test("tocar, acariciar y el truco de cinco toques", async ({ page }) => {
   await expect(home.locator(".home-speech")).toContainText("truco secreto");
 });
 
-test("retiro anticipado: triste unos segundos y vuelve sola", async ({
+test("retiro antes de la fecha: la mascota sigue tranquila", async ({
   page,
 }) => {
   const home = await open(page, seed({ reminder: { enabled: false } }));
   await home.getByRole("button", { name: "Registrar retiro" }).click();
   await page.getByLabel("Monto (MXN)").fill("100");
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
-  await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
-  await expect(mascot(home)).toHaveAttribute("data-mood", "sad");
-  await expect(home.locator(".pet-tear")).toHaveCount(1);
-  await page.screenshot({ path: `${shots}/sad.png` });
-  await expect(mascot(home)).not.toHaveAttribute("data-mood", "sad", {
-    timeout: 10000,
-  });
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
+  await expect(page.locator(".toast")).toContainText("cumplir su propósito");
+  await expect(mascot(home)).not.toHaveAttribute("data-mood", "sad");
+  await expect(home.locator(".pet-tear")).toHaveCount(0);
 });
 
 test("una semana sin visitas: siesta; el brote crece hasta florecer", async ({

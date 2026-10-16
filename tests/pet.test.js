@@ -13,13 +13,18 @@ import {
 } from "../src/pet/reminders.js";
 import { allowedTime, normalizeReminder } from "../src/pet/reminderSettings.js";
 import {
-  SAD_MS,
+  MOODS,
+  MOOD_LABEL,
+  WITHDRAWAL_NOTE,
   daysAway,
   eyeOffset,
   growthStage,
   petMood,
   registerTap,
 } from "../src/pet/state.js";
+
+const GUILT =
+  /culpa|fallaste|decepcion|decepción|vergüenza|olvidaste|abandon|urgente|última oportunidad|otros ahorran|los demás|deberías|me pones triste|triste|antes de tu compromiso/i;
 
 const local = (s) => new Date(s);
 function dataWith(reminder, entries = [], extra = {}) {
@@ -46,9 +51,8 @@ function dataWith(reminder, entries = [], extra = {}) {
 }
 
 describe("estados de la mascota", () => {
-  it("la celebración manda, la tristeza va después y los estados quietos al final", () => {
-    expect(petMood({ celebrating: true, sad: true })).toBe("celebrate");
-    expect(petMood({ sad: true, excited: true })).toBe("sad");
+  it("la celebración manda y los estados quietos van al final", () => {
+    expect(petMood({ celebrating: true, excited: true })).toBe("celebrate");
     expect(petMood({ excited: true, waiting: true })).toBe("excited");
     expect(petMood({ happy: true, waiting: true })).toBe("happy");
     expect(petMood({ waiting: true, daysAway: 30 })).toBe("waiting");
@@ -56,9 +60,18 @@ describe("estados de la mascota", () => {
     expect(petMood({ daysAway: 6 })).toBe("idle");
     expect(petMood()).toBe("idle");
   });
-  it("la tristeza siempre se va sola en menos de 10 segundos", () => {
-    expect(SAD_MS).toBeGreaterThan(0);
-    expect(SAD_MS).toBeLessThanOrEqual(10000);
+  it("un retiro no pone triste a la mascota: no existe ese estado", () => {
+    expect(MOODS).not.toContain("sad");
+    expect(Object.keys(MOOD_LABEL)).toEqual(MOODS);
+    // An old caller passing sad gets the calm pet, not a sad one.
+    expect(petMood({ sad: true })).toBe("idle");
+    expect(petMood({ sad: true, waiting: true })).toBe("waiting");
+    for (const label of Object.values(MOOD_LABEL))
+      expect(label).not.toMatch(GUILT);
+  });
+  it("el aviso de retiro es neutral y reconoce el propósito del ahorro", () => {
+    expect(WITHDRAWAL_NOTE).not.toMatch(GUILT);
+    expect(WITHDRAWAL_NOTE).toMatch(/cumplir su propósito/);
   });
   it("el brote crece en 5 etapas según el avance", () => {
     expect([0, 0.1, 0.4, 0.7, 1, 2].map(growthStage)).toEqual([
@@ -195,10 +208,8 @@ describe("mensajes de la mascota", () => {
     expect(ids.length).toBe(8);
   });
   it("ningún mensaje culpa, avergüenza, compara ni mete urgencia", () => {
-    const banned =
-      /culpa|fallaste|decepcion|decepción|vergüenza|olvidaste|abandon|urgente|última oportunidad|otros ahorran|los demás|deberías|me pones triste/i;
     for (const bank of Object.values(MESSAGES))
-      for (const [, text] of bank) expect(text).not.toMatch(banned);
+      for (const [, text] of bank) expect(text).not.toMatch(GUILT);
     for (const bank of Object.values(MESSAGES))
       expect(bank.length).toBeGreaterThanOrEqual(8);
   });

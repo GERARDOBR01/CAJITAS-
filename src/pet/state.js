@@ -6,29 +6,26 @@ export const MOODS = [
   "happy",
   "excited",
   "celebrate",
-  "sad",
   "sleepy",
   "waiting",
 ];
-export const SAD_MS = 8000; // sadness always fades on its own, under 10 s
 export const EXCITED_MS = 2600;
 export const HAPPY_MS = 1800;
 export const SLEEPY_DAYS = 7;
 export const TRICK_TAPS = 5;
 export const TRICK_WINDOW_MS = 2000;
 
-/** Priority: a celebration beats everything, sadness is brief, and the quiet
- * moods (waiting, sleepy) only show when nothing else is happening. */
+/** Priority: a celebration beats everything and the quiet moods (waiting,
+ * sleepy) only show when nothing else is happening. There is no sad mood:
+ * using savings, even before the date, never upsets the pet. */
 export function petMood({
   celebrating = false,
-  sad = false,
   excited = false,
   happy = false,
   waiting = false,
   daysAway = 0,
 } = {}) {
   if (celebrating) return "celebrate";
-  if (sad) return "sad";
   if (excited) return "excited";
   if (happy) return "happy";
   if (waiting) return "waiting";
@@ -102,7 +99,10 @@ export const MOOD_LABEL = {
   happy: "está feliz",
   excited: "salta de gusto por tu ahorro",
   celebrate: "celebra tu meta",
-  sad: "se puso triste un momento y te acompaña",
   sleepy: "está tomando una siesta",
   waiting: "espera tu actualización de ahorro",
 };
+
+/** What the app says after a withdrawal: neutral, never guilt. */
+export const WITHDRAWAL_NOTE =
+  "Retiro registrado. Usar tu ahorro cuando lo necesitas también es cumplir su propósito.";

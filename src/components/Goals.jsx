@@ -12,7 +12,6 @@ import {
   unlockTime,
 } from "../domain.js";
 import { isNative, openExternal } from "../platform.js";
-import Mascot from "./Mascot.jsx";
 import Illustration from "./Illustration.jsx";
 import Modal from "./Modal.jsx";
 
@@ -265,7 +264,6 @@ export function MovementForm({
   withdraw,
   onSave,
   onClose,
-  preferences,
   initialCents,
   onImport,
 }) {
@@ -273,19 +271,13 @@ export function MovementForm({
       initialCents ? (initialCents / 100).toFixed(2) : "",
     ),
     [date, setDate] = useState(today()),
-    [confirm, setConfirm] = useState(false),
     [error, setError] = useState("");
-  const early = withdraw && unlockTime(goal.unlockDate) > unlockTime(date);
   function submit(e) {
     e.preventDefault();
     try {
       const value = cents(amount);
       if (withdraw && value > balance(goal))
         throw new Error("El retiro supera lo registrado en esta cajita.");
-      if (early && !confirm) {
-        setConfirm(true);
-        return;
-      }
       if (!date || date > today())
         throw new Error(
           "Elige la fecha en que ocurrió el movimiento, hasta hoy.",
@@ -304,82 +296,61 @@ export function MovementForm({
       title={withdraw ? "Registrar un retiro" : "Un poquito más cerca"}
       onClose={onClose}
     >
-      {confirm ? (
-        <>
-          <Mascot
-            sad
-            small
-            pet={preferences.pet}
-            name={preferences.petName}
-            accessory={preferences.accessory}
-          />
-          <p>Los planes cambian. Puedes ajustar tu meta y seguir después.</p>
-          <p>
-            Registrarás un retiro de <strong>{money(cents(amount))}</strong>{" "}
-            antes del {dateLabel(goal.unlockDate)}.
-          </p>
-        </>
-      ) : (
-        <p className="muted">
-          {withdraw
-            ? "Registra lo que retiraste en tu app externa."
-            : "Primero aparta el dinero en tu app externa; después regístralo aquí."}
-        </p>
-      )}
+      <p className="muted">
+        {withdraw
+          ? "Registra lo que usaste de tu ahorro en tu app externa. Usarlo cuando lo necesitas también es cumplir su propósito."
+          : "Primero aparta el dinero en tu app externa; después regístralo aquí."}
+      </p>
       <form onSubmit={submit}>
-        {!confirm && (
-          <>
-            <label>
-              Monto (MXN)
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                required
-                autoFocus
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </label>
-            {!withdraw && (
-              <div
-                className="quick-amounts"
-                role="group"
-                aria-label="Montos rápidos"
+        <label>
+          Monto (MXN)
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            autoFocus
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+        </label>
+        {!withdraw && (
+          <div
+            className="quick-amounts"
+            role="group"
+            aria-label="Montos rápidos"
+          >
+            {[5000, 10000, 20000].map((value) => (
+              <button
+                type="button"
+                key={value}
+                onClick={() => setAmount(String(value / 100))}
               >
-                {[5000, 10000, 20000].map((value) => (
-                  <button
-                    type="button"
-                    key={value}
-                    onClick={() => setAmount(String(value / 100))}
-                  >
-                    {money(value)}
-                  </button>
-                ))}
-                {plan(goal, goal.frequency) > 0 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAmount((plan(goal, goal.frequency) / 100).toFixed(2))
-                    }
-                  >
-                    Mi siguiente pasito
-                  </button>
-                )}
-              </div>
+                {money(value)}
+              </button>
+            ))}
+            {plan(goal, goal.frequency) > 0 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setAmount((plan(goal, goal.frequency) / 100).toFixed(2))
+                }
+              >
+                Mi siguiente pasito
+              </button>
             )}
-            <label>
-              Fecha del movimiento
-              <input
-                type="date"
-                value={date}
-                max={today()}
-                required
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </label>
-          </>
+          </div>
         )}
+        <label>
+          Fecha del movimiento
+          <input
+            type="date"
+            value={date}
+            max={today()}
+            required
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
         {withdraw ? (
           <CommitmentNotice provider={goal.provider} />
         ) : (
@@ -393,12 +364,8 @@ export function MovementForm({
             {error}
           </p>
         )}
-        <button className={withdraw ? "danger full" : "primary full"}>
-          {confirm
-            ? "Sí, registrar retiro"
-            : withdraw
-              ? "Continuar con el retiro"
-              : "Registrar ahorro"}
+        <button className={withdraw ? "secondary full" : "primary full"}>
+          {withdraw ? "Registrar retiro" : "Registrar ahorro"}
         </button>
         {!withdraw && onImport && (
           <button
@@ -407,11 +374,6 @@ export function MovementForm({
             onClick={() => onImport(goal)}
           >
             Usar un correo de depósito
-          </button>
-        )}
-        {confirm && (
-          <button type="button" className="secondary full" onClick={onClose}>
-            Seguir ahorrando
           </button>
         )}
       </form>
