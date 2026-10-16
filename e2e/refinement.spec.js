@@ -117,6 +117,32 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   expect(entry.cents).toBe(10000);
   expect(entry.at.slice(0, 10)).toBe(date);
 });
+test("una meta sin fecha se crea, se guarda como null y se ahorra a tu ritmo", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "+ Nueva cajita", exact: true })
+    .click();
+  await page.getByLabel("Nombre de tu meta").fill("Mi colchoncito");
+  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("3000");
+  await page.getByLabel("Sin fecha").check();
+  await expect(page.getByLabel("Fecha objetivo")).toBeDisabled();
+  await expect(page.locator(".plan-preview")).toContainText(
+    "Sin fecha objetivo",
+  );
+  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
+  const card = page.locator(".goal-card");
+  await expect(card).toContainText("Sin fecha objetivo");
+  await expect(card.locator(".plan")).toContainText("A tu ritmo");
+  expect((await saved(page)).goals[0].unlockDate).toBeNull();
+  const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
+  await next.getByRole("button", { name: "Registrar mi pasito" }).click();
+  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("");
+  await expect(
+    page.getByRole("button", { name: "Mi siguiente pasito", exact: true }),
+  ).toHaveCount(0);
+});
 test("un correo validado con coincidencias requiere elección y puede vincular una cajita archivada sin sumar dinero", async ({
   page,
 }) => {

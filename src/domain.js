@@ -31,10 +31,20 @@ export function cents(value) {
 export function balance(goal) {
   return goal.entries.reduce((sum, e) => sum + e.cents, 0);
 }
+/** A goal without a target date never "arrives": it sorts last and is never
+ * past due. */
 export function unlockTime(date) {
+  if (!date) return Infinity;
   return new Date(`${date}T00:00:00`).getTime();
 }
+/** Nearest target date first; goals without a date go last. */
+export function byTargetDate(a, b) {
+  const ta = unlockTime(a.unlockDate),
+    tb = unlockTime(b.unlockDate);
+  return ta === tb ? 0 : ta < tb ? -1 : 1;
+}
 export function countdown(date, now = Date.now()) {
+  if (!date) return "Sin fecha objetivo";
   const seconds = Math.max(0, Math.ceil((unlockTime(date) - now) / 1000));
   if (!seconds) return "¡Compromiso cumplido!";
   const days = Math.floor(seconds / 86400),
@@ -42,7 +52,10 @@ export function countdown(date, now = Date.now()) {
     mins = Math.floor((seconds % 3600) / 60);
   return `${days} días · ${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
+/** Suggested amount per period, or null for a goal without a target date:
+ * there are no periods to split the rest into. */
 export function plan(goal, frequency = 7, now = Date.now()) {
+  if (!goal.unlockDate) return null;
   const days = Math.max(
     0,
     Math.ceil((unlockTime(goal.unlockDate) - now) / 86400000),
@@ -125,7 +138,7 @@ export function activeGoals(data) {
 export function nextGoal(data) {
   return activeGoals(data)
     .filter((goal) => balance(goal) < goal.targetCents)
-    .sort((a, b) => unlockTime(a.unlockDate) - unlockTime(b.unlockDate))[0];
+    .sort(byTargetDate)[0];
 }
 export function companionship(data) {
   const dates = new Set([
@@ -169,6 +182,7 @@ export function activity(data, { goalId = "", month = "" } = {}) {
         goalId: g.id,
         goalName: g.name,
         provider: g.provider,
+        unlockDate: g.unlockDate,
       })),
     )
     .filter((e) => !month || localDate(new Date(e.at)).startsWith(month))
@@ -203,7 +217,7 @@ export function activityCSV(data, filters) {
     String(value).replaceAll('"', '""') +
     '"';
   return (
-    "\ufeffFecha,Cajita,App,Tipo,Monto MXN,Origen\r\n" +
+    "\ufeffFecha,Cajita,App,Tipo,Monto MXN,Origen,Fecha objetivo\r\n" +
     activity(data, filters)
       .map((e) =>
         [
@@ -213,11 +227,14 @@ export function activityCSV(data, filters) {
           text(e.cents > 0 ? "Depósito" : "Retiro"),
           (e.cents / 100).toFixed(2),
           text(e.source === "gmail" ? "Correo" : "Manual"),
+          text(e.unlockDate ?? ""),
         ].join(","),
       )
       .join("\r\n")
   );
 }
+// The target date is optional; older backups always carry one.
+const noDate = (value) => value === undefined || value === null || value === "";
 function validDate(value) {
   return (
     /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -306,7 +323,7 @@ export function validateBackup(data) {
       !Number.isSafeInteger(g.targetCents) ||
       g.targetCents <= 0 ||
       g.targetCents > 1e11 ||
-      !validDate(g.unlockDate) ||
+      (!noDate(g.unlockDate) && !validDate(g.unlockDate)) ||
       !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(g.provider) ||
       !Array.isArray(g.entries) ||
       g.entries.length > 10000 ||
@@ -356,7 +373,7 @@ export function validateBackup(data) {
       id: g.id,
       name: g.name,
       targetCents: g.targetCents,
-      unlockDate: g.unlockDate,
+      unlockDate: noDate(g.unlockDate) ? null : g.unlockDate,
       provider: g.provider,
       icon: g.icon,
       frequency: g.frequency ?? 7,

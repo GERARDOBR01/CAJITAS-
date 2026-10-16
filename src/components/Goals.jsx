@@ -60,10 +60,13 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
     amount: goal ? String(goal.targetCents / 100) : "",
     date: goal?.unlockDate ?? localDate(tomorrow),
     frequency: goal?.frequency ?? 7,
+    noDate: Boolean(goal && !goal.unlockDate),
   });
-  let preview = null;
+  let preview = null,
+    openPreview = false;
   try {
-    if (draftPlan.date >= today())
+    if (draftPlan.noDate) openPreview = cents(draftPlan.amount) > 0;
+    else if (draftPlan.date >= today())
       preview = plan(
         {
           targetCents: cents(draftPlan.amount),
@@ -81,9 +84,12 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
     try {
       const targetCents = cents(form.get("amount")),
         name = form.get("name").trim(),
-        unlockDate = form.get("date");
-      if (!name || unlockDate < today())
-        throw new Error("Elige un nombre y una fecha de hoy en adelante.");
+        unlockDate = draftPlan.noDate ? null : form.get("date");
+      if (!name) throw new Error("Ponle un nombre a tu meta.");
+      if (!draftPlan.noDate && !(unlockDate >= today()))
+        throw new Error(
+          "Elige una fecha objetivo de hoy en adelante, o marca Sin fecha.",
+        );
       onSave({
         ...goal,
         id: goal?.id ?? crypto.randomUUID(),
@@ -157,19 +163,32 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
           />
         </label>
         <div className="form-row">
-          <label>
-            Fecha de desbloqueo
-            <input
-              name="date"
-              type="date"
-              min={today()}
-              value={draftPlan.date}
-              onChange={(e) =>
-                setDraftPlan({ ...draftPlan, date: e.target.value })
-              }
-              required
-            />
-          </label>
+          <div className="target-date">
+            <label>
+              Fecha objetivo
+              <input
+                name="date"
+                type="date"
+                min={today()}
+                value={draftPlan.noDate ? "" : draftPlan.date}
+                onChange={(e) =>
+                  setDraftPlan({ ...draftPlan, date: e.target.value })
+                }
+                disabled={draftPlan.noDate}
+                required={!draftPlan.noDate}
+              />
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={draftPlan.noDate}
+                onChange={(e) =>
+                  setDraftPlan({ ...draftPlan, noDate: e.target.checked })
+                }
+              />
+              Sin fecha
+            </label>
+          </div>
           <label>
             ¿Dónde lo guardas?
             <select name="provider" defaultValue={goal?.provider ?? "Nu"}>
@@ -194,6 +213,18 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
             <option value={30}>Cada 30 días</option>
           </select>
         </label>
+        {openPreview && (
+          <div className="plan-preview" role="status">
+            <span aria-hidden="true">🌱</span>
+            <div>
+              <strong>Sin fecha objetivo</strong>
+              <p>
+                Aporta lo que te acomode, a tu ritmo. Si después quieres una
+                guía, ponle una fecha y te sugerimos un monto.
+              </p>
+            </div>
+          </div>
+        )}
         {preview !== null && (
           <div className="plan-preview" role="status">
             <span aria-hidden="true">🌱</span>
@@ -329,7 +360,7 @@ export function MovementForm({
                 {money(value)}
               </button>
             ))}
-            {plan(goal, goal.frequency) > 0 && (
+            {(plan(goal, goal.frequency) ?? 0) > 0 && (
               <button
                 type="button"
                 onClick={() =>
@@ -429,7 +460,11 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
         </span>
         <div>
           <strong>{countdown(goal.unlockDate, now)}</strong>
-          <span>Tu compromiso · {dateLabel(goal.unlockDate)}</span>
+          <span>
+            {goal.unlockDate
+              ? `Fecha objetivo · ${dateLabel(goal.unlockDate)}`
+              : "A tu ritmo, sin prisa"}
+          </span>
         </div>
       </div>
       <CommitmentNotice provider={goal.provider} />
@@ -441,7 +476,9 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
       ) : (
         <div className="plan">
           <span>Tu siguiente pasito</span>
-          <strong>{money(plan(goal, frequency, now))}</strong>
+          <strong>
+            {goal.unlockDate ? money(plan(goal, frequency, now)) : "A tu ritmo"}
+          </strong>
           <select
             aria-label={`Frecuencia de ${goal.name}`}
             value={frequency}

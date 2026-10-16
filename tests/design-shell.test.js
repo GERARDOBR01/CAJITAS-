@@ -107,3 +107,25 @@ describe("el siguiente aporte vive en Inicio", () => {
     expect(html).not.toContain("Tu siguiente pasito");
   });
 });
+
+describe("una meta sin fecha en Inicio", () => {
+  it("muestra Sin fecha objetivo y un pasito sin monto", () => {
+    const html = renderToStaticMarkup(
+      createElement(Home, {
+        data: { ...withGoal, goals: [{ ...goal, unlockDate: null }] },
+        filter: "active",
+        onFilter: vi.fn(),
+        now: Date.parse("2026-10-16T12:00:00"),
+        onCreate: vi.fn(),
+        onMove: vi.fn(),
+        onEdit: vi.fn(),
+        onRecord: vi.fn(),
+        onFrequency: vi.fn(),
+      }),
+    );
+    expect(html).toContain("Sin fecha objetivo");
+    expect(html).toContain("A tu ritmo");
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("Infinity");
+  });
+});

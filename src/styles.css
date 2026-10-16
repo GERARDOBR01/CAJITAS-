@@ -1022,6 +1022,14 @@ legend {
   gap: 12px;
   min-height: 48px;
 }
+.target-date {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+.target-date .checkbox {
+  min-height: 40px;
+}
 .checkbox input {
   flex: 0 0 24px;
   width: 24px;

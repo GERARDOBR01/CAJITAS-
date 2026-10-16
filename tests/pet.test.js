@@ -332,3 +332,27 @@ describe("Cookie", () => {
     });
   });
 });
+
+describe("avisos con metas sin fecha", () => {
+  it("nunca sugieren ahorrar más y la meta con fecha va primero", () => {
+    const when = local("2026-10-31T09:00:00");
+    const kept = [5, 20, 35].map((d, i) => ({
+      id: `e${i}`,
+      cents: 200000,
+      at: new Date(when.getTime() - d * 86400000).toISOString(),
+      source: "manual",
+    }));
+    const base = dataWith({ enabled: true, frequency: "biweekly" }, kept);
+    const open = { ...base.goals[0], id: "g0", unlockDate: null };
+    expect(suggestedExtra(open, "biweekly", when)).toBe(0);
+    const message = composeMessage(base, open, when);
+    expect(message.kind).not.toBe("nudge");
+    expect(message.extra).toBe(0);
+    const { items } = upcomingNotifications(
+      { ...base, goals: [open, base.goals[0]] },
+      local("2026-10-15T12:00:00"),
+      2,
+    );
+    expect(items.map((i) => i.goalId)).toEqual(["g1", "g0"]);
+  });
+});

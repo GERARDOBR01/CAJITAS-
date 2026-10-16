@@ -27,7 +27,7 @@ test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×
   const future = new Date();
   future.setDate(future.getDate() + 30);
   const local = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, "0")}-${String(future.getDate()).padStart(2, "0")}`;
-  await page.getByLabel("Fecha de desbloqueo").fill(local);
+  await page.getByLabel("Fecha objetivo").fill(local);
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
   const card = page.locator(".goal-card");
   await expect(card).toContainText("días ·");

@@ -14,6 +14,8 @@ export default function NextStep({ goal, onRecord, onEdit }) {
         <p>
           {status.pastDue ? (
             `La fecha de ${goal.name} ya llegó. Puedes cambiarla y seguir a tu ritmo.`
+          ) : amount === null ? (
+            "Sin fecha objetivo: aporta lo que te acomode. Si ya lo apartaste, regístralo aquí."
           ) : (
             <>
               <strong>{money(amount)}</strong>{" "}
@@ -27,7 +29,9 @@ export default function NextStep({ goal, onRecord, onEdit }) {
       </div>
       <button
         className={status.pastDue ? "secondary" : "primary"}
-        onClick={() => (status.pastDue ? onEdit(goal) : onRecord(goal, amount))}
+        onClick={() =>
+          status.pastDue ? onEdit(goal) : onRecord(goal, amount ?? undefined)
+        }
       >
         {status.pastDue ? "Revisar mi plan" : "Registrar mi pasito"}
       </button>

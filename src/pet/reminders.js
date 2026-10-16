@@ -1,6 +1,6 @@
 // Reminder schedule and the pet's message bank. Pure functions: the platform
 // layer turns the result into native notifications or an in-app check-in.
-import { balance, plan, money, unlockTime } from "../domain.js";
+import { balance, byTargetDate, plan, money } from "../domain.js";
 import {
   FREQUENCIES,
   FREQUENCY_DAYS,
@@ -128,7 +128,7 @@ export function nextOccurrences(reminder, from, count = 6) {
 function openGoals(data) {
   return data.goals
     .filter((g) => !g.archived && balance(g) < g.targetCents)
-    .sort((a, b) => unlockTime(a.unlockDate) - unlockTime(b.unlockDate));
+    .sort(byTargetDate);
 }
 
 function lastDeposit(data) {
@@ -167,7 +167,8 @@ export function goalRhythm(goal, frequency, when) {
  * withdrawals. Never more than +10 % of the plan, rounded down to $10. */
 export function suggestedExtra(goal, frequency, when) {
   const step = plan(goal, FREQUENCY_DAYS[frequency], new Date(when).getTime());
-  if (step <= 0) return 0;
+  // No target date (null) or nothing left: never suggest saving more.
+  if (!(step > 0)) return 0;
   const { periods } = goalRhythm(goal, frequency, when);
   const kept = periods.slice(0, 3).every((p) => !p.withdrew && p.saved >= step);
   if (!kept) return 0;

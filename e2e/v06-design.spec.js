@@ -180,7 +180,7 @@ for (const theme of ["light", "dark"]) {
     const future = new Date();
     future.setDate(future.getDate() + 30);
     await page
-      .getByLabel("Fecha de desbloqueo")
+      .getByLabel("Fecha objetivo")
       .fill(
         `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, "0")}-${String(future.getDate()).padStart(2, "0")}`,
       );
