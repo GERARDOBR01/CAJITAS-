@@ -9,6 +9,9 @@ import {
   balanceHistory,
   goalStatus,
   activeGoals,
+  LEGACY_STORAGE_KEY,
+  STORAGE_KEY,
+  migrateStorageKey,
 } from "../src/domain.js";
 import { reminderCalendar } from "../src/platform.js";
 const goal = {
@@ -109,5 +112,31 @@ describe("hábitos, mascotas y registros honestos", () => {
     expect(calendar).toContain("RRULE:FREQ=WEEKLY;BYDAY=FR");
     expect(calendar).toContain("DTSTART:20261016T180000");
     expect(calendar).toContain("END:VCALENDAR");
+  });
+});
+
+describe("cambio de nombre a Guardadito", () => {
+  const memory = (values) => ({
+    values: new Map(Object.entries(values)),
+    getItem(key) {
+      return this.values.has(key) ? this.values.get(key) : null;
+    },
+    setItem(key, value) {
+      this.values.set(key, value);
+    },
+  });
+  it("copia los datos guardados como Cajitas a la clave nueva una sola vez", () => {
+    const raw = JSON.stringify(initialData());
+    const storage = memory({ [LEGACY_STORAGE_KEY]: raw });
+    expect(migrateStorageKey(storage)).toBe(true);
+    expect(storage.getItem(STORAGE_KEY)).toBe(raw);
+    expect(storage.getItem(LEGACY_STORAGE_KEY)).toBe(raw);
+    expect(
+      validateBackup(JSON.parse(storage.getItem(STORAGE_KEY))),
+    ).toBeTruthy();
+    storage.setItem(STORAGE_KEY, "nuevo");
+    expect(migrateStorageKey(storage)).toBe(false);
+    expect(storage.getItem(STORAGE_KEY)).toBe("nuevo");
+    expect(migrateStorageKey(memory({}))).toBe(false);
   });
 });

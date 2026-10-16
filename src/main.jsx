@@ -3,7 +3,13 @@ import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./styles.css";
 import { setupNativeEvents, hydrateSavings } from "./platform.js";
+import { migrateStorageKey } from "./domain.js";
 async function start() {
+  try {
+    migrateStorageKey(localStorage);
+  } catch {
+    /* Without storage access there is nothing to carry over. */
+  }
   try {
     await hydrateSavings();
   } catch {

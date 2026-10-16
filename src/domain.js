@@ -1,5 +1,16 @@
 import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
-export const STORAGE_KEY = "cajitas:v1";
+import { DEFAULT_WEEKDAY, countScheduleDays } from "./calendar.js";
+export const STORAGE_KEY = "guardadito:v1";
+// Before the rename the app saved under this key; copy it once so nobody
+// loses their cajitas. The old copy stays as a fallback.
+export const LEGACY_STORAGE_KEY = "cajitas:v1";
+export function migrateStorageKey(storage) {
+  if (storage.getItem(STORAGE_KEY) !== null) return false;
+  const legacy = storage.getItem(LEGACY_STORAGE_KEY);
+  if (legacy === null) return false;
+  storage.setItem(STORAGE_KEY, legacy);
+  return true;
+}
 export const money = (cents) =>
   new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -21,10 +32,20 @@ export function cents(value) {
 export function balance(goal) {
   return goal.entries.reduce((sum, e) => sum + e.cents, 0);
 }
+/** A goal without a target date never "arrives": it sorts last and is never
+ * past due. */
 export function unlockTime(date) {
+  if (!date) return Infinity;
   return new Date(`${date}T00:00:00`).getTime();
 }
+/** Nearest target date first; goals without a date go last. */
+export function byTargetDate(a, b) {
+  const ta = unlockTime(a.unlockDate),
+    tb = unlockTime(b.unlockDate);
+  return ta === tb ? 0 : ta < tb ? -1 : 1;
+}
 export function countdown(date, now = Date.now()) {
+  if (!date) return "Sin fecha objetivo";
   const seconds = Math.max(0, Math.ceil((unlockTime(date) - now) / 1000));
   if (!seconds) return "¡Compromiso cumplido!";
   const days = Math.floor(seconds / 86400),
@@ -32,12 +53,21 @@ export function countdown(date, now = Date.now()) {
     mins = Math.floor((seconds % 3600) / 60);
   return `${days} días · ${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
-export function plan(goal, frequency = 7, now = Date.now()) {
-  const days = Math.max(
-    0,
-    Math.ceil((unlockTime(goal.unlockDate) - now) / 86400000),
+/** Suggested amount per period, or null for a goal without a target date:
+ * there are no periods to split the rest into. Periods are the same calendar
+ * dates the reminders use (src/calendar.js), from today until the target day.
+ * `weekday` is the reminder's weekday for a weekly rhythm. */
+export function plan(
+  goal,
+  frequency = 7,
+  now = Date.now(),
+  weekday = DEFAULT_WEEKDAY,
+) {
+  if (!goal.unlockDate) return null;
+  const periods = Math.max(
+    1,
+    countScheduleDays(frequency, now, unlockTime(goal.unlockDate), weekday),
   );
-  const periods = Math.max(1, Math.ceil(days / frequency));
   return Math.ceil(Math.max(0, goal.targetCents - balance(goal)) / periods);
 }
 export function streak(goals, now = new Date()) {
@@ -111,6 +141,12 @@ export function defaultPreferences() {
 export function activeGoals(data) {
   return data.goals.filter((g) => !g.archived);
 }
+/** The goal the "siguiente pasito" points at: active, unfinished, nearest date. */
+export function nextGoal(data) {
+  return activeGoals(data)
+    .filter((goal) => balance(goal) < goal.targetCents)
+    .sort(byTargetDate)[0];
+}
 export function companionship(data) {
   const dates = new Set([
     ...data.checkins,
@@ -153,6 +189,7 @@ export function activity(data, { goalId = "", month = "" } = {}) {
         goalId: g.id,
         goalName: g.name,
         provider: g.provider,
+        unlockDate: g.unlockDate,
       })),
     )
     .filter((e) => !month || localDate(new Date(e.at)).startsWith(month))
@@ -187,7 +224,7 @@ export function activityCSV(data, filters) {
     String(value).replaceAll('"', '""') +
     '"';
   return (
-    "\ufeffFecha,Cajita,App,Tipo,Monto MXN,Origen\r\n" +
+    "\ufeffFecha,Cajita,App,Tipo,Monto MXN,Origen,Fecha objetivo\r\n" +
     activity(data, filters)
       .map((e) =>
         [
@@ -197,11 +234,14 @@ export function activityCSV(data, filters) {
           text(e.cents > 0 ? "Depósito" : "Retiro"),
           (e.cents / 100).toFixed(2),
           text(e.source === "gmail" ? "Correo" : "Manual"),
+          text(e.unlockDate ?? ""),
         ].join(","),
       )
       .join("\r\n")
   );
 }
+// The target date is optional; older backups always carry one.
+const noDate = (value) => value === undefined || value === null || value === "";
 function validDate(value) {
   return (
     /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -249,7 +289,7 @@ export function validateBackup(data) {
     typeof data.assignments !== "object" ||
     Array.isArray(data.assignments)
   )
-    throw new Error("Este archivo no es un respaldo compatible de Cajitas.");
+    throw new Error("Este archivo no es un respaldo compatible de Guardadito.");
   if (
     data.preferences !== undefined &&
     (!data.preferences ||
@@ -290,7 +330,7 @@ export function validateBackup(data) {
       !Number.isSafeInteger(g.targetCents) ||
       g.targetCents <= 0 ||
       g.targetCents > 1e11 ||
-      !validDate(g.unlockDate) ||
+      (!noDate(g.unlockDate) && !validDate(g.unlockDate)) ||
       !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(g.provider) ||
       !Array.isArray(g.entries) ||
       g.entries.length > 10000 ||
@@ -340,7 +380,7 @@ export function validateBackup(data) {
       id: g.id,
       name: g.name,
       targetCents: g.targetCents,
-      unlockDate: g.unlockDate,
+      unlockDate: noDate(g.unlockDate) ? null : g.unlockDate,
       provider: g.provider,
       icon: g.icon,
       frequency: g.frequency ?? 7,

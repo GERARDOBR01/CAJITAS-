@@ -1,4 +1,4 @@
-name: Verificar Cajitas
+name: Verificar Guardadito
 on:
   pull_request:
   push:

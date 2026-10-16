@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       {
-        name: "cajitas-local-api",
+        name: "guardadito-local-api",
         configureServer(server) {
           server.middlewares.use("/api", (req, res) => {
             req.url = "/api" + req.url;
@@ -24,8 +24,8 @@ export default defineConfig(({ mode }) => {
         registerType: "prompt",
         includeAssets: ["mascot.svg", "icon-192.png", "icon-512.png"],
         manifest: {
-          name: "Cajitas · Poquito a poquito",
-          short_name: "Cajitas",
+          name: "Guardadito · Poquito a poquito",
+          short_name: "Guardadito",
           lang: "es-MX",
           description: "Tu ahorro, un sueño a la vez.",
           theme_color: "#f8f6f1",

@@ -137,7 +137,7 @@ describe("API y aislamiento de sesiones con proveedores mockeados", () => {
       { headers: { Cookie: `cajitas_oauth=${state}` } },
     );
     const target = new URL(callback.headers.get("location"));
-    expect(target.protocol).toBe("cajitas:");
+    expect(target.protocol).toBe("guardadito:");
     expect(target.hostname).toBe("auth");
     const code = target.searchParams.get("code");
     expect(code).toMatch(/^[a-f0-9]{64}$/);

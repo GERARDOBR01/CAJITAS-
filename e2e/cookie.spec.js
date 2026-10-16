@@ -42,7 +42,7 @@ async function open(page, data) {
   if (data)
     await page.addInitScript((raw) => {
       if (!sessionStorage.getItem("seeded")) {
-        localStorage.setItem("cajitas:v1", raw);
+        localStorage.setItem("guardadito:v1", raw);
         sessionStorage.setItem("seeded", "1");
       }
     }, JSON.stringify(data));

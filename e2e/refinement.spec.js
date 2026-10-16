@@ -39,7 +39,7 @@ function fixture() {
 }
 async function mockReceipt(page, data) {
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.route("**/api/status", (r) =>
@@ -75,7 +75,7 @@ async function mockReceipt(page, data) {
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
 }
 async function saved(page) {
-  return page.evaluate(() => JSON.parse(localStorage.getItem("cajitas:v1")));
+  return page.evaluate(() => JSON.parse(localStorage.getItem("guardadito:v1")));
 }
 async function dismiss(page) {
   const close = page.getByRole("button", { name: "Cerrar aviso", exact: true });
@@ -91,9 +91,14 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   await page.getByLabel("Nombre de tu meta").fill("Mi fondo bonito");
   await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
   await page.getByLabel("Mi ritmo de ahorro").selectOption("15");
+  // Same dates as the reminders: the 15th and the last day of the month.
+  // How many fall in the default 30 days depends on today.
   await expect(page.locator(".plan-preview")).toContainText(
-    "$500.00 cada 15 días",
+    /\$[\d,.]+ por quincena \(15 y fin de mes\)/,
   );
+  const step = (await page.locator(".plan-preview strong").innerText())
+    .match(/\$([\d,.]+)/)[1]
+    .replace(",", "");
   await page.screenshot({ path: "docs/screenshots/v3-01-plan-mobile.png" });
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
   const card = page.locator(".goal-card");
@@ -102,7 +107,7 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   await page
     .getByRole("button", { name: "Mi siguiente pasito", exact: true })
     .click();
-  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("500.00");
+  await expect(page.getByLabel("Monto (MXN)")).toHaveValue(step);
   expect((await saved(page)).goals[0].entries).toHaveLength(0);
   await page.getByRole("button", { name: "$100.00", exact: true }).click();
   const yesterday = new Date();
@@ -116,6 +121,32 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   const entry = (await saved(page)).goals[0].entries[0];
   expect(entry.cents).toBe(10000);
   expect(entry.at.slice(0, 10)).toBe(date);
+});
+test("una meta sin fecha se crea, se guarda como null y se ahorra a tu ritmo", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "+ Nueva cajita", exact: true })
+    .click();
+  await page.getByLabel("Nombre de tu meta").fill("Mi colchoncito");
+  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("3000");
+  await page.getByLabel("Sin fecha").check();
+  await expect(page.getByLabel("Fecha objetivo")).toBeDisabled();
+  await expect(page.locator(".plan-preview")).toContainText(
+    "Sin fecha objetivo",
+  );
+  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
+  const card = page.locator(".goal-card");
+  await expect(card).toContainText("Sin fecha objetivo");
+  await expect(card.locator(".plan")).toContainText("A tu ritmo");
+  expect((await saved(page)).goals[0].unlockDate).toBeNull();
+  const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
+  await next.getByRole("button", { name: "Registrar mi pasito" }).click();
+  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("");
+  await expect(
+    page.getByRole("button", { name: "Mi siguiente pasito", exact: true }),
+  ).toHaveCount(0);
 });
 test("un correo validado con coincidencias requiere elección y puede vincular una cajita archivada sin sumar dinero", async ({
   page,
@@ -188,7 +219,7 @@ test("corregir y eliminar errores conserva saldo histórico válido; gráfico y 
     source: "manual",
   });
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.goto("/");
@@ -256,7 +287,7 @@ test("una segunda pestaña actualiza la vista y cierra una captura que quedó de
   const data = fixture();
   data.goals.pop();
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.goto("/");
@@ -275,7 +306,7 @@ test("una segunda pestaña actualiza la vista y cierra una captura que quedó de
   expect((await saved(page)).goals[0].entries).toHaveLength(1);
   await second.close();
 });
-test("un retiro cumplido no entristece y un retiro histórico anticipado sí pide confirmar", async ({
+test("ningún retiro entristece ni pide confirmar, antes o después de la fecha", async ({
   page,
 }) => {
   const data = fixture();
@@ -292,7 +323,7 @@ test("un retiro cumplido no entristece y un retiro histórico anticipado sí pid
   deposit.setHours(10, 0, 0, 0);
   data.goals[0].entries[0].at = deposit.toISOString();
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.goto("/");
@@ -301,25 +332,25 @@ test("un retiro cumplido no entristece y un retiro histórico anticipado sí pid
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
   await page.getByLabel("Monto (MXN)").fill("50");
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(
-    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
-  ).toHaveCount(0);
+  await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
   await card
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
   await page.getByLabel("Monto (MXN)").fill("25");
   await page.getByLabel("Fecha del movimiento").fill(local(daysAgo(2)));
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
-  await expect(
-    page.getByRole("button", { name: "Sí, registrar retiro" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(card.locator(".saved")).toContainText("$175.00");
-  await expect(
-    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
-  ).toBeVisible();
+  await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
+  await expect(page.locator(".toast")).toContainText("cumplir su propósito");
 });
 test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async ({
   page,
@@ -334,7 +365,7 @@ test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async
   });
   let requested = false;
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     data,
   );
   await page.route("**/api/status", (r) =>

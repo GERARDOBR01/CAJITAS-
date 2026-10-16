@@ -11,8 +11,8 @@ import {
   goalStatus,
   unlockTime,
 } from "../domain.js";
+import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
-import Mascot from "./Mascot.jsx";
 import Illustration from "./Illustration.jsx";
 import Modal from "./Modal.jsx";
 
@@ -28,7 +28,7 @@ const dateLabel = (date) =>
     month: "short",
     year: "numeric",
   });
-export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
+export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
   const [error, setError] = useState("");
   const [icon, setIcon] = useState(goal?.icon ?? "star");
   const [template, setTemplate] = useState(null);
@@ -61,10 +61,13 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
     amount: goal ? String(goal.targetCents / 100) : "",
     date: goal?.unlockDate ?? localDate(tomorrow),
     frequency: goal?.frequency ?? 7,
+    noDate: Boolean(goal && !goal.unlockDate),
   });
-  let preview = null;
+  let preview = null,
+    openPreview = false;
   try {
-    if (draftPlan.date >= today())
+    if (draftPlan.noDate) openPreview = cents(draftPlan.amount) > 0;
+    else if (draftPlan.date >= today())
       preview = plan(
         {
           targetCents: cents(draftPlan.amount),
@@ -72,6 +75,8 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
           entries: goal?.entries ?? [],
         },
         Number(draftPlan.frequency),
+        Date.now(),
+        weekday,
       );
   } catch {
     /* The preview appears once the amount is valid. */
@@ -82,9 +87,12 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
     try {
       const targetCents = cents(form.get("amount")),
         name = form.get("name").trim(),
-        unlockDate = form.get("date");
-      if (!name || unlockDate < today())
-        throw new Error("Elige un nombre y una fecha de hoy en adelante.");
+        unlockDate = draftPlan.noDate ? null : form.get("date");
+      if (!name) throw new Error("Ponle un nombre a tu meta.");
+      if (!draftPlan.noDate && !(unlockDate >= today()))
+        throw new Error(
+          "Elige una fecha objetivo de hoy en adelante, o marca Sin fecha.",
+        );
       onSave({
         ...goal,
         id: goal?.id ?? crypto.randomUUID(),
@@ -158,19 +166,32 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
           />
         </label>
         <div className="form-row">
-          <label>
-            Fecha de desbloqueo
-            <input
-              name="date"
-              type="date"
-              min={today()}
-              value={draftPlan.date}
-              onChange={(e) =>
-                setDraftPlan({ ...draftPlan, date: e.target.value })
-              }
-              required
-            />
-          </label>
+          <div className="target-date">
+            <label>
+              Fecha objetivo
+              <input
+                name="date"
+                type="date"
+                min={today()}
+                value={draftPlan.noDate ? "" : draftPlan.date}
+                onChange={(e) =>
+                  setDraftPlan({ ...draftPlan, date: e.target.value })
+                }
+                disabled={draftPlan.noDate}
+                required={!draftPlan.noDate}
+              />
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={draftPlan.noDate}
+                onChange={(e) =>
+                  setDraftPlan({ ...draftPlan, noDate: e.target.checked })
+                }
+              />
+              Sin fecha
+            </label>
+          </div>
           <label>
             ¿Dónde lo guardas?
             <select name="provider" defaultValue={goal?.provider ?? "Nu"}>
@@ -190,20 +211,29 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
               setDraftPlan({ ...draftPlan, frequency: e.target.value })
             }
           >
-            <option value={7}>Por semana</option>
-            <option value={15}>Cada 15 días</option>
-            <option value={30}>Cada 30 días</option>
+            <option value={7}>{RHYTHM_LABEL.weekly}</option>
+            <option value={15}>{RHYTHM_LABEL.biweekly}</option>
+            <option value={30}>{RHYTHM_LABEL.monthly}</option>
           </select>
         </label>
+        {openPreview && (
+          <div className="plan-preview" role="status">
+            <span aria-hidden="true">🌱</span>
+            <div>
+              <strong>Sin fecha objetivo</strong>
+              <p>
+                Aporta lo que te acomode, a tu ritmo. Si después quieres una
+                guía, ponle una fecha y te sugerimos un monto.
+              </p>
+            </div>
+          </div>
+        )}
         {preview !== null && (
           <div className="plan-preview" role="status">
             <span aria-hidden="true">🌱</span>
             <div>
               <strong>
-                {money(preview)}{" "}
-                {Number(draftPlan.frequency) === 7
-                  ? "por semana"
-                  : `cada ${draftPlan.frequency} días`}
+                {money(preview)} {rhythmLabel(Number(draftPlan.frequency))}
               </strong>
               <p>
                 Para llegar a tu meta. Si se siente pesado, cambia el monto o la
@@ -265,27 +295,21 @@ export function MovementForm({
   withdraw,
   onSave,
   onClose,
-  preferences,
   initialCents,
   onImport,
+  weekday,
 }) {
   const [amount, setAmount] = useState(
       initialCents ? (initialCents / 100).toFixed(2) : "",
     ),
     [date, setDate] = useState(today()),
-    [confirm, setConfirm] = useState(false),
     [error, setError] = useState("");
-  const early = withdraw && unlockTime(goal.unlockDate) > unlockTime(date);
   function submit(e) {
     e.preventDefault();
     try {
       const value = cents(amount);
       if (withdraw && value > balance(goal))
         throw new Error("El retiro supera lo registrado en esta cajita.");
-      if (early && !confirm) {
-        setConfirm(true);
-        return;
-      }
       if (!date || date > today())
         throw new Error(
           "Elige la fecha en que ocurrió el movimiento, hasta hoy.",
@@ -304,88 +328,71 @@ export function MovementForm({
       title={withdraw ? "Registrar un retiro" : "Un poquito más cerca"}
       onClose={onClose}
     >
-      {confirm ? (
-        <>
-          <Mascot
-            sad
-            small
-            pet={preferences.pet}
-            name={preferences.petName}
-            accessory={preferences.accessory}
-          />
-          <p>Los planes cambian. Puedes ajustar tu meta y seguir después.</p>
-          <p>
-            Registrarás un retiro de <strong>{money(cents(amount))}</strong>{" "}
-            antes del {dateLabel(goal.unlockDate)}.
-          </p>
-        </>
-      ) : (
-        <p className="muted">
-          {withdraw
-            ? "Registra lo que retiraste en tu app externa."
-            : "Primero aparta el dinero en tu app externa; después regístralo aquí."}
-        </p>
-      )}
+      <p className="muted">
+        {withdraw
+          ? "Registra lo que usaste de tu ahorro en tu app externa. Usarlo cuando lo necesitas también es cumplir su propósito."
+          : "Primero aparta el dinero en tu app externa; después regístralo aquí."}
+      </p>
       <form onSubmit={submit}>
-        {!confirm && (
-          <>
-            <label>
-              Monto (MXN)
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                required
-                autoFocus
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </label>
-            {!withdraw && (
-              <div
-                className="quick-amounts"
-                role="group"
-                aria-label="Montos rápidos"
+        <label>
+          Monto (MXN)
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            autoFocus
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+        </label>
+        {!withdraw && (
+          <div
+            className="quick-amounts"
+            role="group"
+            aria-label="Montos rápidos"
+          >
+            {[5000, 10000, 20000].map((value) => (
+              <button
+                type="button"
+                key={value}
+                onClick={() => setAmount(String(value / 100))}
               >
-                {[5000, 10000, 20000].map((value) => (
-                  <button
-                    type="button"
-                    key={value}
-                    onClick={() => setAmount(String(value / 100))}
-                  >
-                    {money(value)}
-                  </button>
-                ))}
-                {plan(goal, goal.frequency) > 0 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAmount((plan(goal, goal.frequency) / 100).toFixed(2))
-                    }
-                  >
-                    Mi siguiente pasito
-                  </button>
-                )}
-              </div>
+                {money(value)}
+              </button>
+            ))}
+            {(plan(goal, goal.frequency, Date.now(), weekday) ?? 0) > 0 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setAmount(
+                    (
+                      plan(goal, goal.frequency, Date.now(), weekday) / 100
+                    ).toFixed(2),
+                  )
+                }
+              >
+                Mi siguiente pasito
+              </button>
             )}
-            <label>
-              Fecha del movimiento
-              <input
-                type="date"
-                value={date}
-                max={today()}
-                required
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </label>
-          </>
+          </div>
         )}
+        <label>
+          Fecha del movimiento
+          <input
+            type="date"
+            value={date}
+            max={today()}
+            required
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
         {withdraw ? (
           <CommitmentNotice provider={goal.provider} />
         ) : (
           <p className="notice">
-            Tu dinero sigue disponible en {goal.provider}. Cajitas solo lleva el
-            registro; no realiza transferencias.
+            Tu dinero sigue disponible en {goal.provider}. Guardadito solo lleva
+            el registro; no realiza transferencias.
           </p>
         )}
         {error && (
@@ -393,12 +400,8 @@ export function MovementForm({
             {error}
           </p>
         )}
-        <button className={withdraw ? "danger full" : "primary full"}>
-          {confirm
-            ? "Sí, registrar retiro"
-            : withdraw
-              ? "Continuar con el retiro"
-              : "Registrar ahorro"}
+        <button className={withdraw ? "secondary full" : "primary full"}>
+          {withdraw ? "Registrar retiro" : "Registrar ahorro"}
         </button>
         {!withdraw && onImport && (
           <button
@@ -409,16 +412,11 @@ export function MovementForm({
             Usar un correo de depósito
           </button>
         )}
-        {confirm && (
-          <button type="button" className="secondary full" onClick={onClose}>
-            Seguir ahorrando
-          </button>
-        )}
       </form>
     </Modal>
   );
 }
-export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
+export function GoalCard({ goal, onMove, onEdit, now, onFrequency, weekday }) {
   const saved = balance(goal),
     progress = Math.min(1, saved / goal.targetCents);
   const frequency = goal.frequency;
@@ -467,7 +465,11 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
         </span>
         <div>
           <strong>{countdown(goal.unlockDate, now)}</strong>
-          <span>Tu compromiso · {dateLabel(goal.unlockDate)}</span>
+          <span>
+            {goal.unlockDate
+              ? `Fecha objetivo · ${dateLabel(goal.unlockDate)}`
+              : "A tu ritmo, sin prisa"}
+          </span>
         </div>
       </div>
       <CommitmentNotice provider={goal.provider} />
@@ -479,15 +481,19 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
       ) : (
         <div className="plan">
           <span>Tu siguiente pasito</span>
-          <strong>{money(plan(goal, frequency, now))}</strong>
+          <strong>
+            {goal.unlockDate
+              ? money(plan(goal, frequency, now, weekday))
+              : "A tu ritmo"}
+          </strong>
           <select
             aria-label={`Frecuencia de ${goal.name}`}
             value={frequency}
             onChange={(e) => onFrequency(goal.id, Number(e.target.value))}
           >
-            <option value={7}>por semana</option>
-            <option value={15}>cada 15 días</option>
-            <option value={30}>cada 30 días</option>
+            <option value={7}>{RHYTHM_LABEL.weekly}</option>
+            <option value={15}>{RHYTHM_LABEL.biweekly}</option>
+            <option value={30}>{RHYTHM_LABEL.monthly}</option>
           </select>
         </div>
       )}

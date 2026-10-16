@@ -48,7 +48,7 @@ async function open(page, data, colorScheme = "light") {
   await page.emulateMedia({ colorScheme });
   await page.addInitScript((raw) => {
     if (!sessionStorage.getItem("seeded")) {
-      localStorage.setItem("cajitas:v1", raw);
+      localStorage.setItem("guardadito:v1", raw);
       sessionStorage.setItem("seeded", "1");
     }
   }, JSON.stringify(data));
@@ -72,13 +72,13 @@ for (const theme of ["light", "dark"])
     ).toEqual([]);
     await page.screenshot({ path: `${shots}/waiting-${theme}.png` });
     const before = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("cajitas:v1")),
+      JSON.parse(localStorage.getItem("guardadito:v1")),
     );
     await home.getByRole("button", { name: "Ahora no" }).click();
     await expect(page.getByRole("status")).toContainText("Aquí sigo");
     await expect(mascot(home)).toHaveAttribute("data-mood", "idle");
     const after = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("cajitas:v1")),
+      JSON.parse(localStorage.getItem("guardadito:v1")),
     );
     expect(after.checkins).toEqual(before.checkins);
     expect(after.goals.map((g) => g.entries)).toEqual(
@@ -121,20 +121,19 @@ test("tocar, acariciar y el truco de cinco toques", async ({ page }) => {
   await expect(home.locator(".home-speech")).toContainText("truco secreto");
 });
 
-test("retiro anticipado: triste unos segundos y vuelve sola", async ({
+test("retiro antes de la fecha: la mascota sigue tranquila", async ({
   page,
 }) => {
   const home = await open(page, seed({ reminder: { enabled: false } }));
   await home.getByRole("button", { name: "Registrar retiro" }).click();
   await page.getByLabel("Monto (MXN)").fill("100");
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
-  await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
-  await expect(mascot(home)).toHaveAttribute("data-mood", "sad");
-  await expect(home.locator(".pet-tear")).toHaveCount(1);
-  await page.screenshot({ path: `${shots}/sad.png` });
-  await expect(mascot(home)).not.toHaveAttribute("data-mood", "sad", {
-    timeout: 10000,
-  });
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
+  await expect(page.locator(".toast")).toContainText("cumplir su propósito");
+  await expect(mascot(home)).not.toHaveAttribute("data-mood", "sad");
+  await expect(home.locator(".pet-tear")).toHaveCount(0);
 });
 
 test("una semana sin visitas: siesta; el brote crece hasta florecer", async ({
@@ -186,7 +185,8 @@ test("Mi mascota: recordatorio quincenal con vista previa y sin horario nocturno
   await page.getByRole("button", { name: "Guardar recordatorio" }).click();
   await expect(page.getByRole("status")).toContainText("compañía está lista");
   const saved = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("cajitas:v1")).preferences.reminder,
+    () =>
+      JSON.parse(localStorage.getItem("guardadito:v1")).preferences.reminder,
   );
   expect(saved).toMatchObject({
     enabled: true,

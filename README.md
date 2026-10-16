@@ -1,8 +1,10 @@
-# Cajitas ✦
+# Guardadito ✦
+
+> **Antes se llamaba Cajitas.** En la web tus datos se pasan solos al nuevo nombre. En Android la app nueva tiene otro identificador (`mx.guardadito.ahorro`) y se instala aparte: en Cajitas descarga tu respaldo (Más → Respaldo), instala Guardadito y restáuralo ahí. El APK publicado de la 0.8 todavía se llama Cajitas; el próximo ya saldrá como Guardadito.
 
 ## [⬇️ Descargar la app para Android](https://gerardobr01.github.io/CAJITAS-/descargas/Cajitas-0.8.0-android.apk)
 
-**Android 7.0 o posterior · APK de prueba, versión 0.8.** [Abrir Cajitas en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
+**Android 7.0 o posterior · APK de prueba, versión 0.8.** [Abrir Guardadito en la web](https://gerardobr01.github.io/CAJITAS-/) · [Versión 0.5 anterior](https://github.com/GERARDOBR01/CAJITAS-/releases/tag/v0.5.0-preview.1)
 
 > **¿Tienes instalada la 0.5?** Las dos versiones están firmadas con llaves de prueba distintas, así que Android no deja actualizar encima. En la 0.5 ve a Más → Respaldo y descarga tu respaldo; desinstala, instala la 0.8 y restaura el respaldo. Los datos viven en el teléfono: sin respaldo se pierden al desinstalar.
 
@@ -16,22 +18,23 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 ## Cookie, el gatito v0.8 🐱
 
-Cajitas se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
+Guardadito se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
 
 - Mueve la cola, mueve las orejas, parpadea, inclina la cabeza, se le mueven los bigotes y se balancea la placa. Saluda con la patita cuando espera tu actualización.
 - **Cada 9 a 16 segundos dice “¡BECHO!”, alternando con “BECHO BECHO”**, con un globito, boquita de beso y corazones.
 - **Al tocarlo dice “¡Te amo Jade!”**: ojos de corazón, salto, una explosión de corazones y un letrero grande con lluvia de corazones en toda la pantalla. Si lo mantienes presionado, ronronea.
-- Tiene todos los estados de la mascota (feliz, emocionado, triste con orejitas caídas, dormido, esperando, celebración), el brote que crece y los accesorios (moñito, bufanda, estrella). Con movimiento reducido cambian las caras y el mensaje sigue apareciendo, pero sin animación.
+- Tiene todos los estados de la mascota (feliz, emocionado, dormido, esperando, celebración), el brote que crece y los accesorios (moñito, bufanda, estrella). Con movimiento reducido cambian las caras y el mensaje sigue apareciendo, pero sin animación.
 - Es la mascota por defecto; las demás (Pipo, Mila, Luna y Caji) siguen en Mi mascota.
 
 [Capturas](docs/screenshots/v08/).
 
 ## Mascota viva y recordatorios v0.7
 
-- **La mascota tiene siete estados** (SVG + CSS, sin librerías de animación): tranquila (respira y parpadea), feliz (al tocarla o acariciarla), emocionada (salta al registrar ahorro), celebración (meta cumplida), triste (retiro anticipado, **se le pasa sola en 8 s**), dormida (7 días sin visitas ni depósitos; al tocarla despierta) y esperando (cuando toca actualizar el ahorro). Lógica pura y probada en `src/pet/state.js`.
+- **La mascota tiene seis estados** (SVG + CSS, sin librerías de animación): tranquila (respira y parpadea), feliz (al tocarla o acariciarla), emocionada (salta al registrar ahorro), celebración (meta cumplida), dormida (7 días sin visitas ni depósitos; al tocarla despierta) y esperando (cuando toca actualizar el ahorro). Lógica pura y probada en `src/pet/state.js`.
 - **Interacción:** tocar = rebote y frase; mantener presionado = caricia; **cinco toques rápidos = truco secreto**; los ojos siguen el dedo o el cursor. Vibración ligera en la app nativa.
 - **El brote crece con tu avance:** semilla → brote → hojitas → botón → flor.
 - **Recordatorios semanales, quincenales (día 15 y fin de mes) o mensuales (fin de mes)**, con hora entre 8:00 y 21:59. En Android son notificaciones con mensajes que rotan (24 textos en `src/pet/reminders.js`, sin repetir entre los últimos cinco); al tocarla se abre el registro de esa cajita; “Ahora no” solo la descarta. En la web, la mascota te espera dentro de la app y puedes agregar el evento a tu calendario (`.ics` con la regla quincenal).
+- **Retiros sin culpa:** registrar un retiro, antes o después de la fecha, no entristece a la mascota ni pide confirmaciones extra. Usar un ahorro para una emergencia también es cumplir su propósito.
 - **Sin presión:** registrar o decir “Ahora no” nunca baja la amistad. Si dos avisos seguidos se quedan sin respuesta, escribe menos seguido (semanal → quincenal → mensual) y lo avisa una vez. Solo propone ahorrar más (“¿y si probamos $X más?”) si cumpliste tu plan tres periodos seguidos sin retiros, y nunca más de +10 % redondeado a $10. Un test revisa que ningún mensaje culpe, avergüence, compare ni meta urgencia.
 - Los respaldos de versiones anteriores se migran: un recordatorio nocturno se mueve al horario permitido más cercano.
 
@@ -43,7 +46,7 @@ Inicio con mascota protagonista, cajitas y un botón de creación; colores vivos
 
 ## Tutorial animado e interactivo
 
-[▷ Abrir el tutorial de Cajitas](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Más → Tutorial interactivo.
+[▷ Abrir el tutorial de Guardadito](https://gerardobr01.github.io/CAJITAS-/?tutorial=1). También está en Más → Tutorial interactivo.
 
 Ocho pasos: espacio personal, crear meta, registrar ahorro, candado/retiro/celebración, mascota, herramientas, instalación y repaso. Incluye ejercicios con dinero de ejemplo, elección de mascota y accesorios, calculadora con tasa capturada, explicación de correos y respaldos, y guía Android/iPhone. No consulta APIs ni guarda datos de práctica. Al salir o recargar se reinicia; las cajitas reales permanecen intactas. El botón final solo abre el formulario para crear una cajita real, que requiere guardarse explícitamente.
 
@@ -71,7 +74,8 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 - **Tu siguiente pasito:** Más destaca la siguiente meta y propone un monto editable; una fecha vencida invita a ajustar el plan. Siempre requiere registrar lo que ya apartaste en tu app externa.
 - **Gmail directo preparado:** la web de Pages puede conectarse a un backend HTTPS configurado. Setup guiado y diagnóstico de variables, sin secretos en cliente. **La publicación actual no tiene backend ni OAuth configurados**; usa la importación local. [Guía completa](docs/GMAIL-SETUP.md).
 - Metas, comprobantes, conexiones, rendimiento y respaldos en módulos separados; verificación automática en cada PR. Un fallo al guardar un respaldo conserva los datos actuales y la revisión abierta.
-- Vista previa del aporte semanal o cada 15/30 días antes de crear o editar una meta; muestra cuánto falta y ofrece montos rápidos editables. Ninguna sugerencia crea un depósito por sí sola.
+- **Metas sin fecha:** la “Fecha objetivo” es opcional. Una meta sin fecha no tiene cuenta regresiva ni monto sugerido (se ahorra a tu ritmo), va al final del siguiente pasito y de los avisos, y nunca recibe la sugerencia de “+$X”. El CSV agrega la columna Fecha objetivo (vacía si no hay) y los respaldos anteriores restauran igual.
+- Vista previa del aporte por semana, por quincena (día 15 y fin de mes) o por mes (fin de mes) antes de crear o editar una meta; muestra cuánto falta y ofrece montos rápidos editables. Ninguna sugerencia crea un depósito por sí sola.
 - Registra la fecha real del movimiento. Corrige o elimina registros manuales equivocados desde Actividad, con confirmación antes de eliminar. Cada cambio valida saldos por orden de fecha; se rechaza una corrección que deje un saldo histórico negativo. Los registros vinculados a Gmail conservan su origen y no se editan como registros manuales.
 - El gráfico de 14 días y su total siguen la cajita seleccionada; el mes filtra la lista, métricas del periodo y CSV.
 - Protección contra consultas lentas y cambios desde otra pestaña que podrían sobrescribir datos más recientes. La vista se actualiza entre pestañas del mismo navegador; los dispositivos siguen siendo independientes.
@@ -86,7 +90,7 @@ Abre `http://localhost:5173`. Sin credenciales puedes usar las metas, los regist
 - Barra de navegación inferior, zonas seguras y compartir archivos desde el teléfono. En la app nativa se replica el registro local en Preferences; se recupera la copia válida más reciente al abrir.
 - Backups v2 incluyen mascota, visitas, frecuencia y archivo; se migran los respaldos v1 sin perder movimientos. Cada instalación tiene sus propios datos: utiliza el respaldo para trasladarlos.
 
-La revisión del [mercado mexicano](docs/research/mexico-market-2026-10.md) compara documentación oficial de Nu, Mercado Pago, BBVA, Banorte, ScotiaMóvil, Fintual y Spendee. Metas y apartados ya existen: no se afirma exclusividad ni superioridad comercial. [Conciliación estudiada con REA](docs/research/rea-matching.md) documenta el patrón de revisión de registros manuales/importados de YNAB, con sus límites y las decisiones propias de Cajitas.
+La revisión del [mercado mexicano](docs/research/mexico-market-2026-10.md) compara documentación oficial de Nu, Mercado Pago, BBVA, Banorte, ScotiaMóvil, Fintual y Spendee. Metas y apartados ya existen: no se afirma exclusividad ni superioridad comercial. [Conciliación estudiada con REA](docs/research/rea-matching.md) documenta el patrón de revisión de registros manuales/importados de YNAB, con sus límites y las decisiones propias de Guardadito.
 
 La investigación usó **REA 6.5.0** para observar artículos públicos oficiales de Qapital, Monarch y Finch. [Patrones y decisiones](docs/research/reference-patterns.md), [evidencia y límites](docs/research/rea-evidence.md). Se adaptaron comportamientos con código y arte originales; no se copiaron recursos de esas apps ni se accedió a sus cuentas privadas.
 
@@ -94,8 +98,8 @@ La [última revisión con REA](docs/research/final-rea-review.md) contrasta la e
 
 - Metas con nombre, monto MXN, fecha de desbloqueo y proveedor: Nu, Mercado Pago, Bitso u Otra.
 - Registro en centavos, historial, progreso, racha de días consecutivos y confeti al cruzar el 100%.
-- Mascota Caji que crece con el progreso agregado. Retiro anticipado con confirmación, tristeza temporal y mensaje sin culpa. Solo registra movimientos, no los realiza.
-- Plan del ahorro restante por semana o cada 15 días. Permite ampliar la fecha cuando el plan resulte pesado. Desbloqueo a medianoche en la zona horaria del dispositivo.
+- Mascota Caji que crece con el progreso agregado. Retiros con tono neutral: la mascota no se pone triste. Solo registra movimientos, no los realiza.
+- Plan del ahorro restante por semana, quincena o mes, contado con **las mismas fechas que los recordatorios** (`src/calendar.js`): el día de la semana del aviso, los días 15 y fin de mes, o el fin de mes. Permite ampliar la fecha cuando el plan resulte pesado. Desbloqueo a medianoche en la zona horaria del dispositivo.
 - “Ir a apartar” abre el sitio oficial del proveedor, compatible con dispositivos; el usuario accede a su app y aparta allí. No se usan deep links privados ni operaciones automatizadas.
 - Simulador con Banxico, fecha de publicación por serie y comparación con la tasa capturada. Interés simple, base 365, tasa constante, antes de impuestos/comisiones, sin reinversión. TIIE es referencia interbancaria, no un producto de ahorro.
 - Gmail OAuth de lectura, búsqueda por remitentes exactos, revisión, asignación recordada y deduplicación por ID de correo. Patrones actuales **pendientes de validar**; cada detección requiere revisión. El registro automático está implementado para patrones validados con cajita recordada del mismo proveedor, pero está desactivado para los fixtures actuales.
@@ -134,7 +138,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 5. De tus comprobantes reales, toma los remitentes exactos y configura `GMAIL_NU_SENDERS` y `GMAIL_MP_SENDERS`, separados por comas. **No hay direcciones adivinadas.** No uses los remitentes `.example.invalid` de los fixtures en producción.
 6. Reinicia y entra en Conexiones → Conectar Gmail. Se solicita únicamente `https://www.googleapis.com/auth/gmail.readonly`. “Buscar depósitos” consulta los últimos 90 días, sin spam/papelera, en páginas de 20 mensajes. “Consultar más comprobantes” continúa la paginación.
 
-El scope permite leer el buzón, aunque Cajitas filtra comprobantes por remitente. Google clasifica `gmail.readonly` como restringido; publicar para usuarios externos puede requerir su proceso de verificación. Consulta los [scopes oficiales](https://developers.google.com/workspace/gmail/api/auth/scopes) y [OAuth de servidor](https://developers.google.com/workspace/gmail/api/auth/web-server).
+El scope permite leer el buzón, aunque Guardadito filtra comprobantes por remitente. Google clasifica `gmail.readonly` como restringido; publicar para usuarios externos puede requerir su proceso de verificación. Consulta los [scopes oficiales](https://developers.google.com/workspace/gmail/api/auth/scopes) y [OAuth de servidor](https://developers.google.com/workspace/gmail/api/auth/web-server).
 
 OAuth usa state ligado al navegador, PKCE y cookies HttpOnly/SameSite con ID opaco. Los tokens viven cifrados en el servidor; no llegan a localStorage, respaldos ni JSON del cliente. En desarrollo se guardan en `.local/` (ignorado por Git). Producción requiere Redis REST. Desconectar borra los tokens de la sesión y solicita su revocación en Google.
 
@@ -144,7 +148,7 @@ OAuth usa state ligado al navegador, PKCE y cookies HttpOnly/SameSite con ID opa
 
 Para ajustar patrones, hacen falta 3 o 4 correos de Nu y Mercado Pago anonimizados, conservando asunto, estructura MIME/HTML, etiquetas, separadores del monto y dominio del remitente. Sustituye nombres, CLABE, cuentas, referencias y cantidades por datos ficticios con el mismo formato. Agrega fixtures y pruebas antes de cambiar `validated` a `true`. Mientras estén pendientes, recordar una cajita solo preselecciona el destino: no elimina la revisión.
 
-Cada correo aceptado, vinculado o ignorado deja un ID hash persistente para no contarlo de nuevo. La consulta es manual, sin lectura de fondo. Un correo demuestra un depósito, **no el saldo actual**. Si hay registros manuales con el mismo monto, proveedor y día local, Cajitas suspende el registro automático y pide revisión. Puedes vincular el correo a un registro existente, incluso archivado, sin cambiar su monto/fecha/ID ni sumar dinero; si es otro depósito, se requiere confirmación explícita. La coincidencia es una sugerencia, no una identidad demostrada. Fechas distintas o montos capturados incorrectamente pueden no producir sugerencias: revisa siempre el comprobante.
+Cada correo aceptado, vinculado o ignorado deja un ID hash persistente para no contarlo de nuevo. La consulta es manual, sin lectura de fondo. Un correo demuestra un depósito, **no el saldo actual**. Si hay registros manuales con el mismo monto, proveedor y día local, Guardadito suspende el registro automático y pide revisión. Puedes vincular el correo a un registro existente, incluso archivado, sin cambiar su monto/fecha/ID ni sumar dinero; si es otro depósito, se requiere confirmación explícita. La coincidencia es una sugerencia, no una identidad demostrada. Fechas distintas o montos capturados incorrectamente pueden no producir sugerencias: revisa siempre el comprobante.
 
 ## Bitso: llave de solo balances
 
@@ -205,7 +209,7 @@ Validación de la versión 0.7: **95 tests unitarios** (17 nuevos de mascota y r
 
 Validación de la versión 0.5: **76 tests unitarios**, **26 flujos en Chromium a 390 × 844**, compilaciones web/nativa, APK Android compilado y firma verificada, y sincronización/lectura del proyecto Xcode. Incluye migración v1/v2, check-ins sin dinero, archivo reversible, CSV, calendario, instalación y el intercambio OAuth nativo con Google mockeado. No hay prueba en un dispositivo físico ni una compilación iOS ejecutada en macOS.
 
-Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro anticipado, confirmación, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
+Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear meta, countdown, ahorro, retiro, meta alcanzada y confeti, persistencia tras recarga y exportar/restaurar respaldo. También simulador sin credenciales y Gmail mockeado. Las capturas se regeneran en `docs/screenshots/`.
 
 **Llamadas autenticadas reales pendientes:** Banxico, Gmail y Bitso requieren credenciales del dueño. Las capturas de conexiones usan datos sintéticos, no cuentas reales.
 
@@ -213,7 +217,7 @@ Playwright usa **Chromium a 390 × 844** y ejecuta `npm run dev`. Cubre crear me
 | --- | --- |
 | [Inicio](docs/screenshots/01-inicio-mobile.png) | Primera cajita |
 | [Meta y countdown](docs/screenshots/02-meta-countdown-mobile.png) | Plan semanal |
-| [Retiro anticipado](docs/screenshots/03-retiro-confirmacion-mobile.png) | Confirmación |
+| [Retiro](docs/screenshots/03-retiro-confirmacion-mobile.png) | Registro neutral |
 | [Meta alcanzada](docs/screenshots/04-meta-alcanzada-mobile.png) | Celebración |
 | [Simulador](docs/screenshots/05-simulador-mobile.png) | Token pendiente y tasa capturada |
 | [Conexiones](docs/screenshots/06-conexiones-mobile.png) | Depósito sintético por revisar |

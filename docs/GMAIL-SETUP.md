@@ -80,7 +80,7 @@ La descarga actual no lleva un backend configurado. Configurarlo requiere volver
 
 Los patrones Nu y Mercado Pago del lector directo siguen con `validated: false`: las muestras existentes son sintéticas. Revisa cada detección. Para validarlos hacen falta 3 o 4 comprobantes reales anonimizados que conserven asunto, estructura MIME/HTML, etiquetas de monto y dominio del remitente. Cambia nombres, cuentas, CLABE, referencias y cantidades manteniendo el formato. Agrega fixtures y pruebas antes de activar un patrón. Un remitente configurado no valida por sí solo el formato.
 
-`gmail.readonly` permite técnicamente leer el buzón; el filtro de Cajitas limita su consulta. Google lo clasifica como scope restringido. El modo Testing exige usuarios de prueba y puede requerir reconexiones por la expiración de sus autorizaciones. Distribuir la conexión para terceros puede requerir verificación de Google. La alternativa local no necesita OAuth.
+`gmail.readonly` permite técnicamente leer el buzón; el filtro de Guardadito limita su consulta. Google lo clasifica como scope restringido. El modo Testing exige usuarios de prueba y puede requerir reconexiones por la expiración de sus autorizaciones. Distribuir la conexión para terceros puede requerir verificación de Google. La alternativa local no necesita OAuth.
 
 ## Si algo falla
 
@@ -94,4 +94,4 @@ Los patrones Nu y Mercado Pago del lector directo siguen con `validated: false`:
 | Importación local sin monto o fecha | Captúralos al revisar; los datos ambiguos no se adivinan |
 | Correo que ya registraste a mano | Vincula al movimiento sugerido; no confirmes otro depósito si es el mismo |
 
-Banxico y Bitso son conexiones independientes; su setup sigue en el [README](../README.md). Cajitas no custodia ni mueve dinero.
+Banxico y Bitso son conexiones independientes; su setup sigue en el [README](../README.md). Guardadito no custodia ni mueve dinero.

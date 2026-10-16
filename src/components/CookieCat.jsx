@@ -11,7 +11,7 @@ import {
   registerTap,
 } from "../pet/state.js";
 
-// Cookie, el gatito café: la mascota principal de Cajitas. Original art,
+// Cookie, el gatito café: la mascota principal de Guardadito. Original art,
 // drawn as layered SVG so each part (ears, tail, paws, face) can move.
 const FUR = "#c98b5b",
   FUR_DARK = "#9c6239",
@@ -87,13 +87,7 @@ function CatEyes({ face, look }) {
   const big = face === "excited";
   return (
     <g className="cookie-eyes">
-      {face === "sad" && (
-        <g fill="none" stroke={LINE} strokeWidth="3" strokeLinecap="round">
-          <path d={`M${L - 12} ${Y - 13}l15 -6`} />
-          <path d={`M${R + 12} ${Y - 13}l-15 -6`} />
-        </g>
-      )}
-      <g transform={`translate(${look.x} ${face === "sad" ? 2 : look.y})`}>
+      <g transform={`translate(${look.x} ${look.y})`}>
         {[L, R].map((x) => (
           <g key={x}>
             <ellipse
@@ -139,16 +133,6 @@ function CatMouth({ face }) {
           strokeLinejoin="round"
         />
       </g>
-    );
-  if (face === "sad")
-    return (
-      <path
-        d="M112 132q8-7 16 0"
-        fill="none"
-        stroke={LINE}
-        strokeWidth="2.6"
-        strokeLinecap="round"
-      />
     );
   if (face === "sleepy")
     return (
@@ -253,7 +237,6 @@ export default function CookieCat({
   name,
   accessory = "leaf",
   progress = 0,
-  sad = false,
   small = false,
   interactive = false,
   celebrating = false,
@@ -280,7 +263,6 @@ export default function CookieCat({
     growth = 0.88 + Math.min(1, Math.max(0, progress)) * 0.12;
   const mood = petMood({
     celebrating: celebrating || moodProp === "celebrate",
-    sad: sad || moodProp === "sad",
     excited: moodProp === "excited",
     happy: happy || moodProp === "happy",
     waiting: moodProp === "waiting",
@@ -651,13 +633,6 @@ export default function CookieCat({
               <path d="M90 120 62 114M90 126l-29 1M92 131l-26 8" />
               <path d="m150 120 28-6M150 126l29 1M148 131l26 8" />
             </g>
-            {face === "sad" && (
-              <path
-                className="pet-tear"
-                d="M152 112q-7 11 0 14 7-3 0-14"
-                fill="#9dc8e5"
-              />
-            )}
             <Accessory accessory={accessory} stage={stage} />
           </g>
         </g>

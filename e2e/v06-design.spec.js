@@ -180,7 +180,7 @@ for (const theme of ["light", "dark"]) {
     const future = new Date();
     future.setDate(future.getDate() + 30);
     await page
-      .getByLabel("Fecha de desbloqueo")
+      .getByLabel("Fecha objetivo")
       .fill(
         `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, "0")}-${String(future.getDate()).padStart(2, "0")}`,
       );
@@ -226,21 +226,18 @@ for (const theme of ["light", "dark"]) {
       page.getByRole("dialog").locator(".commitment-note"),
     ).toBeVisible();
     await page.getByLabel("Monto (MXN)").fill("100");
-    await audit(page, theme, "withdraw-dialog");
-    await page.getByRole("button", { name: "Continuar con el retiro" }).click();
     await expect(
       page.getByRole("dialog").locator(".commitment-note"),
     ).toContainText("El candado es de compromiso, no bancario.");
     await snapshot(page, `flow-withdrawal-${theme}`);
-    await audit(page, theme, "early-withdrawal-confirmation");
-    await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
+    await audit(page, theme, "withdraw-dialog");
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Registrar retiro", exact: true })
+      .click();
     await expect(card.locator(".saved")).toContainText("$200.00");
-    await expect(
-      home.getByRole("img", {
-        name: /se puso triste un momento y te acompaña/,
-      }),
-    ).toBeVisible();
-    await expect(home.locator(".mascot")).toBeInViewport();
+    // A withdrawal is not a reaction: the pet stays calm and the page stays put.
+    await expect(home.locator('[data-mood="sad"]')).toHaveCount(0);
     await audit(page, theme, "withdrawal-recorded");
     await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
     await page.getByLabel("Monto (MXN)").fill("800");
@@ -283,7 +280,7 @@ for (const theme of ["light", "dark"]) {
     await page.goto("/");
     await more(page);
     await expect(
-      page.getByRole("complementary", { name: "Descargar Cajitas" }),
+      page.getByRole("complementary", { name: "Descargar Guardadito" }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Un ratito para ti y tus sueños" }),

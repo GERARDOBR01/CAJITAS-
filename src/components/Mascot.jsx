@@ -45,13 +45,7 @@ function Eyes({ left, right, y, color, mood, look }) {
     );
   return (
     <g className="pet-eyes">
-      {mood === "sad" && (
-        <g fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round">
-          <path d={`M${left - 9} ${y - 10}l12 -5`} />
-          <path d={`M${right + 9} ${y - 10}l-12 -5`} />
-        </g>
-      )}
-      <g transform={`translate(${look.x} ${mood === "sad" ? 2 : look.y})`}>
+      <g transform={`translate(${look.x} ${look.y})`}>
         <ellipse cx={left} cy={y} rx="5.5" ry="7.5" fill={color} />
         <ellipse cx={right} cy={y} rx="5.5" ry="7.5" fill={color} />
         <circle cx={left + 2} cy={y - 2.5} r="2" fill="white" />
@@ -62,16 +56,6 @@ function Eyes({ left, right, y, color, mood, look }) {
 }
 
 function Mouth({ x, y, color, mood, bunny }) {
-  if (mood === "sad")
-    return (
-      <path
-        d={`M${x - 11} ${y + 5}q11-11 22 0`}
-        fill="none"
-        stroke={color}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    );
   if (mood === "sleepy")
     return (
       <ellipse
@@ -128,7 +112,6 @@ function ClassicMascot({
   name,
   accessory = "leaf",
   progress = 0,
-  sad = false,
   small = false,
   interactive = false,
   celebrating = false,
@@ -154,7 +137,6 @@ function ClassicMascot({
     growth = 0.85 + Math.min(1, Math.max(0, progress)) * 0.15;
   const mood = petMood({
     celebrating: celebrating || moodProp === "celebrate",
-    sad: sad || moodProp === "sad",
     excited: moodProp === "excited",
     happy: happy || moodProp === "happy",
     waiting: moodProp === "waiting",
@@ -555,17 +537,6 @@ function ClassicMascot({
               fill="#f9dc8c"
               stroke="#bba168"
               strokeWidth="2"
-            />
-          )}
-          {mood === "sad" && (
-            <path
-              className="pet-tear"
-              d={
-                animal
-                  ? "M151 107q-7 11 0 14 7-3 0-14"
-                  : "M150 130q-7 11 0 14 7-3 0-14"
-              }
-              fill="#9dc8e5"
             />
           )}
         </g>

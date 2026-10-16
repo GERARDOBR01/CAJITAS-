@@ -13,7 +13,7 @@ async function step(page, n, label) {
   ).toHaveAttribute("aria-valuenow", String(n));
 }
 async function rawData(page) {
-  return page.evaluate(() => localStorage.getItem("cajitas:v1"));
+  return page.evaluate(() => localStorage.getItem("guardadito:v1"));
 }
 const realData = {
   version: 1,
@@ -44,13 +44,13 @@ test("recorrido animado practica meta, depósito, retiro, mascota y repaso sin t
 }) => {
   await mkdir("docs/screenshots", { recursive: true });
   await page.addInitScript(
-    (seed) => localStorage.setItem("cajitas:v1", JSON.stringify(seed)),
+    (seed) => localStorage.setItem("guardadito:v1", JSON.stringify(seed)),
     realData,
   );
   await page.goto("/?tutorial=1");
   const original = await rawData(page);
   await expect(
-    page.getByRole("heading", { name: "Un paseíto por Cajitas" }),
+    page.getByRole("heading", { name: "Un paseíto por Guardadito" }),
   ).toBeVisible();
   await expect(
     page.getByText("✿ Modo práctica · datos de ejemplo", { exact: true }),
@@ -74,8 +74,9 @@ test("recorrido animado practica meta, depósito, retiro, mascota y repaso sin t
   await page.getByLabel("Meta de práctica (MXN)").fill("1000");
   await page.getByLabel("App externa de práctica").selectOption("Mercado Pago");
   await page.getByLabel("Ritmo de práctica").selectOption("15");
+  // Same dates as the reminders: the 15th and the last day of the month.
   await expect(page.locator(".plan-preview")).toContainText(
-    "$500.00 cada 15 días",
+    /\$\d[\d,.]* por quincena \(15 y fin de mes\)/,
   );
   await page
     .getByRole("button", { name: "Crear cajita de práctica", exact: true })
@@ -296,10 +297,10 @@ test("acceso desde inicio y Más, pausa, reducción de movimiento, salida y rein
       exact: true,
     }),
   ).toHaveAttribute("aria-valuenow", "1");
-  await page.evaluate(() => window.dispatchEvent(new Event("cajitas:back")));
+  await page.evaluate(() => window.dispatchEvent(new Event("guardadito:back")));
   await expect(page).not.toHaveURL(/tutorial=1/);
   await expect(
-    page.getByRole("heading", { name: "Un paseíto por Cajitas" }),
+    page.getByRole("heading", { name: "Un paseíto por Guardadito" }),
   ).toHaveCount(0);
   expect(await rawData(page)).toBeNull();
 });
@@ -323,7 +324,7 @@ test("repaso indica el error y se puede corregir; Escape cancela retiro y recarg
     page.getByLabel("Cajita de práctica", { exact: true }),
   ).toContainText("$100.00");
   await step(page, 8, "A tu ritmo");
-  await page.getByLabel("Dentro de Cajitas", { exact: true }).check();
+  await page.getByLabel("Dentro de Guardadito", { exact: true }).check();
   await page.getByLabel("Sí, es un depósito", { exact: true }).check();
   await page.getByLabel("Lo vuelvo a sumar", { exact: true }).check();
   await page

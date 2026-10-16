@@ -7,7 +7,7 @@ async function openTab(page, name) {
   await page.getByRole("button", { name, exact: true }).click();
 }
 
-test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390×844", async ({
+test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×844", async ({
   page,
 }) => {
   await mkdir("docs/screenshots", { recursive: true });
@@ -27,7 +27,7 @@ test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390�
   const future = new Date();
   future.setDate(future.getDate() + 30);
   const local = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, "0")}-${String(future.getDate()).padStart(2, "0")}`;
-  await page.getByLabel("Fecha de desbloqueo").fill(local);
+  await page.getByLabel("Fecha objetivo").fill(local);
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
   const card = page.locator(".goal-card");
   await expect(card).toContainText("días ·");
@@ -45,21 +45,23 @@ test("crear meta, countdown, retiro anticipado, meta alcanzada y respaldo a 390�
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
   await page.getByLabel("Monto (MXN)").fill("100");
-  await page.getByRole("button", { name: "Continuar con el retiro" }).click();
-  await expect(
-    page.getByText(
-      "Los planes cambian. Puedes ajustar tu meta y seguir después.",
-    ),
-  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText(
+    "también es cumplir su propósito",
+  );
   await page.screenshot({
     path: "docs/screenshots/03-retiro-confirmacion-mobile.png",
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Sí, registrar retiro" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .click();
   await expect(card.locator(".saved")).toContainText("$500.00");
-  await expect(
-    page.getByRole("img", { name: /se puso triste un momento y te acompaña/ }),
-  ).toBeVisible();
+  await expect(page.locator(".toast")).toContainText("cumplir su propósito");
+  await expect(page.locator(".home .mascot").first()).not.toHaveAttribute(
+    "data-mood",
+    "sad",
+  );
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("500");
   await page
@@ -190,7 +192,7 @@ test("un patrón validado con cajita recordada se registra automáticamente una 
 }) => {
   await page.addInitScript(() =>
     localStorage.setItem(
-      "cajitas:v1",
+      "guardadito:v1",
       JSON.stringify({
         version: 1,
         goals: [
@@ -247,7 +249,7 @@ test("datos locales dañados no se sobrescriben al intentar crear una meta", asy
   page,
 }) => {
   await page.addInitScript(() =>
-    localStorage.setItem("cajitas:v1", '{"datos":"incompletos"}'),
+    localStorage.setItem("guardadito:v1", '{"datos":"incompletos"}'),
   );
   await page.goto("/");
   await expect(
@@ -259,7 +261,7 @@ test("datos locales dañados no se sobrescriben al intentar crear una meta", asy
   await page.getByLabel("Nombre de tu meta").fill("Prueba");
   await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("10");
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  expect(await page.evaluate(() => localStorage.getItem("cajitas:v1"))).toBe(
+  expect(await page.evaluate(() => localStorage.getItem("guardadito:v1"))).toBe(
     '{"datos":"incompletos"}',
   );
 });

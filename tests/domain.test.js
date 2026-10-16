@@ -9,6 +9,9 @@ import {
   cents,
   countdown,
   estimate,
+  activityCSV,
+  goalStatus,
+  nextGoal,
 } from "../src/domain.js";
 const goal = {
   id: "g1",
@@ -76,5 +79,67 @@ describe("registro de ahorro y recuperación", () => {
     expect(
       streak([{ ...goal, entries }], new Date("2026-10-14T12:00:00")),
     ).toBe(2);
+  });
+});
+
+describe("metas sin fecha objetivo", () => {
+  const open = { ...goal, id: "g2", name: "Colchoncito", unlockDate: null };
+  it("el respaldo acepta metas sin fecha y las guarda como null", () => {
+    for (const unlockDate of [null, undefined, ""]) {
+      const restored = validateBackup({
+        ...initialData(),
+        goals: [{ ...open, unlockDate }],
+      });
+      expect(restored.goals[0].unlockDate).toBeNull();
+    }
+    // A malformed date is still rejected.
+    for (const unlockDate of ["mañana", "2026-13-01", 20261101])
+      expect(() =>
+        validateBackup({ ...initialData(), goals: [{ ...open, unlockDate }] }),
+      ).toThrow();
+  });
+  it("los respaldos viejos, siempre con fecha, siguen restaurando igual", () => {
+    const v1 = {
+      version: 1,
+      goals: [goal],
+      importedIds: [],
+      assignments: {},
+    };
+    const restored = validateBackup(v1);
+    expect(restored.goals[0].unlockDate).toBe("2026-11-01");
+    expect(validateBackup(restored)).toEqual(restored);
+  });
+  it("sin fecha no hay plan, cuenta regresiva ni fecha vencida", () => {
+    const now = new Date("2030-01-01T00:00:00").getTime();
+    expect(plan(open, 7, now)).toBeNull();
+    expect(countdown(null, now)).toBe("Sin fecha objetivo");
+    expect(goalStatus(open, now)).toMatchObject({
+      pastDue: false,
+      remaining: 100000,
+    });
+  });
+  it("el siguiente pasito prefiere la meta con fecha más cercana", () => {
+    const later = { ...goal, id: "g3", unlockDate: "2027-01-01" };
+    const data = { ...initialData(), goals: [open, later, goal] };
+    expect(nextGoal(data).id).toBe("g1");
+    expect(nextGoal({ ...initialData(), goals: [open] }).id).toBe("g2");
+    const two = { ...open, id: "g4" };
+    expect(nextGoal({ ...initialData(), goals: [open, two] }).id).toBe("g2");
+  });
+  it("el CSV incluye la fecha objetivo y la deja vacía si no hay", () => {
+    const entry = { id: "e", cents: 100, at: "2026-10-01T12:00:00Z" };
+    const csv = activityCSV({
+      ...initialData(),
+      goals: [
+        { ...goal, entries: [entry] },
+        { ...open, entries: [{ ...entry, id: "f" }] },
+      ],
+    });
+    const [header, ...rows] = csv.replace("\ufeff", "").split("\r\n");
+    expect(header.split(",").at(-1)).toBe("Fecha objetivo");
+    expect(rows.map((row) => row.split(",").at(-1)).sort()).toEqual([
+      '""',
+      '"2026-11-01"',
+    ]);
   });
 });

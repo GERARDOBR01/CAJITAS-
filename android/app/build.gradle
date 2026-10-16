@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "mx.cajitas.ahorro"
+    namespace = "mx.guardadito.ahorro"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "mx.cajitas.ahorro"
+        applicationId "mx.guardadito.ahorro"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 8

@@ -1,6 +1,7 @@
 // Reminder schedule and the pet's message bank. Pure functions: the platform
 // layer turns the result into native notifications or an in-app check-in.
-import { balance, plan, money, unlockTime } from "../domain.js";
+import { balance, byTargetDate, plan, money } from "../domain.js";
+import { isScheduleDay, previousScheduleDays } from "../calendar.js";
 import {
   FREQUENCIES,
   FREQUENCY_DAYS,
@@ -74,15 +75,9 @@ export const MESSAGES = {
   ],
 };
 
-const lastDayOfMonth = (d) =>
-  new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-
+/** Reminders fall on the same calendar dates the plan counts. */
 export function isReminderDay(reminder, date) {
-  if (reminder.frequency === "weekly") return date.getDay() === reminder.day;
-  const last = lastDayOfMonth(date);
-  if (reminder.frequency === "biweekly")
-    return date.getDate() === 15 || date.getDate() === last;
-  return date.getDate() === last;
+  return isScheduleDay(reminder.frequency, date, reminder.day);
 }
 
 function at(reminder, day) {
@@ -128,7 +123,7 @@ export function nextOccurrences(reminder, from, count = 6) {
 function openGoals(data) {
   return data.goals
     .filter((g) => !g.archived && balance(g) < g.targetCents)
-    .sort((a, b) => unlockTime(a.unlockDate) - unlockTime(b.unlockDate));
+    .sort(byTargetDate);
 }
 
 function lastDeposit(data) {
@@ -140,15 +135,21 @@ function lastDeposit(data) {
   );
 }
 
-/** How the goal went in the last periods before `when`. */
-export function goalRhythm(goal, frequency, when) {
-  const days = FREQUENCY_DAYS[frequency],
-    span = days * 86400000,
-    end = new Date(when).getTime(),
+/** How the goal went in the last periods before `when`. A period runs from
+ * one reminder date to the next, at the same time of day as `when`. */
+export function goalRhythm(goal, frequency, when, weekday) {
+  const end = new Date(when),
+    bounds = [
+      end.getTime(),
+      ...previousScheduleDays(frequency, end, 6, weekday).map((day) => {
+        day.setHours(end.getHours(), end.getMinutes(), end.getSeconds(), 0);
+        return day.getTime();
+      }),
+    ],
     periods = [];
   for (let k = 0; k < 6; k++) {
-    const to = end - k * span,
-      from = to - span,
+    const to = bounds[k],
+      from = bounds[k + 1],
       inside = goal.entries.filter((e) => {
         const t = Date.parse(e.at);
         return t > from && t <= to;
@@ -165,19 +166,25 @@ export function goalRhythm(goal, frequency, when) {
 
 /** Suggest a bigger step only when the last 3 periods met the plan and had no
  * withdrawals. Never more than +10 % of the plan, rounded down to $10. */
-export function suggestedExtra(goal, frequency, when) {
-  const step = plan(goal, FREQUENCY_DAYS[frequency], new Date(when).getTime());
-  if (step <= 0) return 0;
-  const { periods } = goalRhythm(goal, frequency, when);
+export function suggestedExtra(goal, frequency, when, weekday) {
+  const step = plan(
+    goal,
+    FREQUENCY_DAYS[frequency],
+    new Date(when).getTime(),
+    weekday,
+  );
+  // No target date (null) or nothing left: never suggest saving more.
+  if (!(step > 0)) return 0;
+  const { periods } = goalRhythm(goal, frequency, when, weekday);
   const kept = periods.slice(0, 3).every((p) => !p.withdrew && p.saved >= step);
   if (!kept) return 0;
   return Math.floor((step * 0.1) / 1000) * 1000;
 }
 
-export function messageKind(goal, frequency, when) {
-  const extra = suggestedExtra(goal, frequency, when);
+export function messageKind(goal, frequency, when, weekday) {
+  const extra = suggestedExtra(goal, frequency, when, weekday);
   if (extra > 0) return { kind: "nudge", extra };
-  const { inRow } = goalRhythm(goal, frequency, when);
+  const { inRow } = goalRhythm(goal, frequency, when, weekday);
   if (inRow >= 2) return { kind: "cheer", n: inRow };
   return { kind: "checkin" };
 }
@@ -196,7 +203,7 @@ export function fill(text, values) {
 export function composeMessage(data, goal, when, avoid = []) {
   const reminder = data.preferences.reminder,
     period = PERIOD[reminder.frequency],
-    context = messageKind(goal, reminder.frequency, when),
+    context = messageKind(goal, reminder.frequency, when, reminder.day),
     seed = Math.floor(new Date(when).getTime() / 86400000),
     [id, text] = chooseMessage(context.kind, avoid, seed);
   return {

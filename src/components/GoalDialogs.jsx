@@ -19,6 +19,7 @@ export default function GoalDialogs({
     <>
       {modal?.type === "new" && (
         <GoalForm
+          weekday={data.preferences.reminder.day}
           onClose={() => setModal(null)}
           onSave={(goal) => {
             if (setData({ ...data, goals: [...data.goals, goal] })) {
@@ -30,6 +31,7 @@ export default function GoalDialogs({
       )}{" "}
       {modal?.type === "movement" && (
         <MovementForm
+          weekday={data.preferences.reminder.day}
           goal={data.goals.find((g) => g.id === modal.goal.id)}
           withdraw={modal.withdraw}
           onClose={() => setModal(null)}
@@ -85,6 +87,7 @@ export default function GoalDialogs({
       )}
       {modal?.type === "edit" && (
         <GoalForm
+          weekday={data.preferences.reminder.day}
           goal={data.goals.find((g) => g.id === modal.goal.id)}
           onClose={() => setModal(null)}
           onSave={(goal) => {

@@ -19,14 +19,8 @@ import {
   consumeConnectionResult,
 } from "./platform.js";
 import { answerCheckIn, dueCheckIn, easeReminders } from "./pet/reminders.js";
-import { EXCITED_MS, SAD_MS } from "./pet/state.js";
-import {
-  STORAGE_KEY,
-  balance,
-  initialData,
-  validateBackup,
-  unlockTime,
-} from "./domain.js";
+import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
+import { STORAGE_KEY, balance, initialData, validateBackup } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
@@ -40,7 +34,7 @@ function ServiceWorkerNotices() {
     <>
       {ready && (
         <p className="offline" role="status">
-          Cajitas está lista para usarse sin conexión.
+          Guardadito está lista para usarse sin conexión.
         </p>
       )}
       {refresh && (
@@ -84,7 +78,6 @@ export default function App() {
     [toast, setToast] = useState(""),
     [now, setNow] = useState(Date.now()),
     [confetti, setConfetti] = useState(false),
-    [sad, setSad] = useState(false),
     [excited, setExcited] = useState(false),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
@@ -101,7 +94,6 @@ export default function App() {
   latestData.current = data;
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
-    sadTimer = useRef(),
     excitedTimer = useRef();
   function notify(message) {
     clearTimeout(toastTimer.current);
@@ -152,8 +144,6 @@ export default function App() {
     }
   }
   function celebrate() {
-    setSad(false);
-    clearTimeout(sadTimer.current);
     clearTimeout(celebrationTimer.current);
     setConfetti(true);
     haptic(true);
@@ -171,7 +161,6 @@ export default function App() {
       window.removeEventListener("offline", on);
       clearTimeout(toastTimer.current);
       clearTimeout(celebrationTimer.current);
-      clearTimeout(sadTimer.current);
       clearTimeout(excitedTimer.current);
     };
   }, []);
@@ -245,17 +234,8 @@ export default function App() {
     )
       return;
     setModal(null);
-    if (value < 0) {
-      const earlyWithdrawal = Date.parse(at) < unlockTime(g.unlockDate);
-      setSad(earlyWithdrawal);
-      clearTimeout(sadTimer.current);
-      if (earlyWithdrawal)
-        sadTimer.current = setTimeout(() => setSad(false), SAD_MS);
-      notify("Retiro registrado. Los planes cambian; puedes seguir después.");
-    } else if (
-      balance(g) < g.targetCents &&
-      balance(g) + value >= g.targetCents
-    )
+    if (value < 0) notify(WITHDRAWAL_NOTE);
+    else if (balance(g) < g.targetCents && balance(g) + value >= g.targetCents)
       celebrate();
     else {
       haptic();
@@ -301,13 +281,13 @@ export default function App() {
       }
     };
     const back = () => changeTab("goals");
-    window.addEventListener("cajitas:connection", connected);
+    window.addEventListener("guardadito:connection", connected);
     const pending = consumeConnectionResult();
     if (pending) connected({ detail: pending });
-    window.addEventListener("cajitas:back", back);
+    window.addEventListener("guardadito:back", back);
     return () => {
-      window.removeEventListener("cajitas:connection", connected);
-      window.removeEventListener("cajitas:back", back);
+      window.removeEventListener("guardadito:connection", connected);
+      window.removeEventListener("guardadito:back", back);
     };
   }, []);
   const pet = data.preferences;
@@ -364,7 +344,6 @@ export default function App() {
             filter={goalFilter}
             onFilter={setGoalFilter}
             now={now}
-            sad={sad}
             cheering={excited}
             celebrating={confetti}
             checkIn={dueCheckIn(data, new Date(now))}
@@ -380,6 +359,14 @@ export default function App() {
               setModal({ type: "movement", goal, withdraw })
             }
             onEdit={(goal) => setModal({ type: "edit", goal })}
+            onRecord={(goal, initialCents) =>
+              setModal({
+                type: "movement",
+                goal,
+                withdraw: false,
+                initialCents,
+              })
+            }
             onFrequency={(id, frequency) =>
               setData({
                 ...data,
@@ -426,15 +413,6 @@ export default function App() {
             onSave={setData}
             notify={notify}
             onNavigate={changeTab}
-            onRecord={(goal, initialCents) =>
-              setModal({
-                type: "movement",
-                goal,
-                withdraw: false,
-                initialCents,
-              })
-            }
-            onEdit={(goal) => setModal({ type: "edit", goal })}
           />
         )}
         {tab === "simulator" && <Simulator />}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { initialData, validateBackup } from "../src/domain.js";
+import { initialData, plan, validateBackup } from "../src/domain.js";
 import {
   MESSAGES,
   answerCheckIn,
@@ -13,13 +13,18 @@ import {
 } from "../src/pet/reminders.js";
 import { allowedTime, normalizeReminder } from "../src/pet/reminderSettings.js";
 import {
-  SAD_MS,
+  MOODS,
+  MOOD_LABEL,
+  WITHDRAWAL_NOTE,
   daysAway,
   eyeOffset,
   growthStage,
   petMood,
   registerTap,
 } from "../src/pet/state.js";
+
+const GUILT =
+  /culpa|fallaste|decepcion|decepción|vergüenza|olvidaste|abandon|urgente|última oportunidad|otros ahorran|los demás|deberías|me pones triste|triste|antes de tu compromiso/i;
 
 const local = (s) => new Date(s);
 function dataWith(reminder, entries = [], extra = {}) {
@@ -46,9 +51,8 @@ function dataWith(reminder, entries = [], extra = {}) {
 }
 
 describe("estados de la mascota", () => {
-  it("la celebración manda, la tristeza va después y los estados quietos al final", () => {
-    expect(petMood({ celebrating: true, sad: true })).toBe("celebrate");
-    expect(petMood({ sad: true, excited: true })).toBe("sad");
+  it("la celebración manda y los estados quietos van al final", () => {
+    expect(petMood({ celebrating: true, excited: true })).toBe("celebrate");
     expect(petMood({ excited: true, waiting: true })).toBe("excited");
     expect(petMood({ happy: true, waiting: true })).toBe("happy");
     expect(petMood({ waiting: true, daysAway: 30 })).toBe("waiting");
@@ -56,9 +60,18 @@ describe("estados de la mascota", () => {
     expect(petMood({ daysAway: 6 })).toBe("idle");
     expect(petMood()).toBe("idle");
   });
-  it("la tristeza siempre se va sola en menos de 10 segundos", () => {
-    expect(SAD_MS).toBeGreaterThan(0);
-    expect(SAD_MS).toBeLessThanOrEqual(10000);
+  it("un retiro no pone triste a la mascota: no existe ese estado", () => {
+    expect(MOODS).not.toContain("sad");
+    expect(Object.keys(MOOD_LABEL)).toEqual(MOODS);
+    // An old caller passing sad gets the calm pet, not a sad one.
+    expect(petMood({ sad: true })).toBe("idle");
+    expect(petMood({ sad: true, waiting: true })).toBe("waiting");
+    for (const label of Object.values(MOOD_LABEL))
+      expect(label).not.toMatch(GUILT);
+  });
+  it("el aviso de retiro es neutral y reconoce el propósito del ahorro", () => {
+    expect(WITHDRAWAL_NOTE).not.toMatch(GUILT);
+    expect(WITHDRAWAL_NOTE).toMatch(/cumplir su propósito/);
   });
   it("el brote crece en 5 etapas según el avance", () => {
     expect([0, 0.1, 0.4, 0.7, 1, 2].map(growthStage)).toEqual([
@@ -195,10 +208,8 @@ describe("mensajes de la mascota", () => {
     expect(ids.length).toBe(8);
   });
   it("ningún mensaje culpa, avergüenza, compara ni mete urgencia", () => {
-    const banned =
-      /culpa|fallaste|decepcion|decepción|vergüenza|olvidaste|abandon|urgente|última oportunidad|otros ahorran|los demás|deberías|me pones triste/i;
     for (const bank of Object.values(MESSAGES))
-      for (const [, text] of bank) expect(text).not.toMatch(banned);
+      for (const [, text] of bank) expect(text).not.toMatch(GUILT);
     for (const bank of Object.values(MESSAGES))
       expect(bank.length).toBeGreaterThanOrEqual(8);
   });
@@ -214,12 +225,10 @@ describe("mensajes de la mascota", () => {
     const extra = suggestedExtra(goal, "biweekly", when);
     expect(extra).toBeGreaterThan(0);
     expect(extra % 1000).toBe(0);
-    // plan for this goal right now
-    const remaining = goal.targetCents - 600000,
-      periods = Math.ceil(
-        Math.ceil((new Date("2027-06-30T00:00:00") - when) / 86400000) / 15,
-      ),
-      step = Math.ceil(remaining / periods);
+    // The plan counts the same quincenas (15 and end of month) the reminders
+    // use: Oct 31 (today) through Jun 15, 2027 → 16 periods.
+    const step = Math.ceil((goal.targetCents - 600000) / 16);
+    expect(plan(goal, 15, when.getTime())).toBe(step);
     expect(extra).toBeLessThanOrEqual(step * 0.1);
     // A withdrawal or a missed period means no suggestion.
     const withdrew = [
@@ -319,5 +328,29 @@ describe("Cookie", () => {
       pet: "cat",
       petName: "Cookie",
     });
+  });
+});
+
+describe("avisos con metas sin fecha", () => {
+  it("nunca sugieren ahorrar más y la meta con fecha va primero", () => {
+    const when = local("2026-10-31T09:00:00");
+    const kept = [5, 20, 35].map((d, i) => ({
+      id: `e${i}`,
+      cents: 200000,
+      at: new Date(when.getTime() - d * 86400000).toISOString(),
+      source: "manual",
+    }));
+    const base = dataWith({ enabled: true, frequency: "biweekly" }, kept);
+    const open = { ...base.goals[0], id: "g0", unlockDate: null };
+    expect(suggestedExtra(open, "biweekly", when)).toBe(0);
+    const message = composeMessage(base, open, when);
+    expect(message.kind).not.toBe("nudge");
+    expect(message.extra).toBe(0);
+    const { items } = upcomingNotifications(
+      { ...base, goals: [open, base.goals[0]] },
+      local("2026-10-15T12:00:00"),
+      2,
+    );
+    expect(items.map((i) => i.goalId)).toEqual(["g1", "g0"]);
   });
 });

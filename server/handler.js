@@ -389,7 +389,7 @@ export default async function handler(req, res) {
         return redirect(
           res,
           transaction.nativeChallenge
-            ? "cajitas://auth?error=cancelled"
+            ? "guardadito://auth?error=cancelled"
             : callback
               ? `${callback.href}#cajitas-auth-error=cancelled`
               : `${origin()}/?gmail=cancelled`,
@@ -417,7 +417,7 @@ export default async function handler(req, res) {
           { challenge: transaction.nativeChallenge, tokens },
           60,
         );
-        return redirect(res, `cajitas://auth?code=${code}`);
+        return redirect(res, `guardadito://auth?code=${code}`);
       }
       const previous = await session(req),
         id = opaque();

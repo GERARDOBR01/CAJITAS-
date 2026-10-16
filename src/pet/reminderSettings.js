@@ -1,5 +1,6 @@
 // Reminder preferences live in the backup, so their shape is validated here
 // without importing the rest of the domain (domain.js depends on this file).
+import { DEFAULT_WEEKDAY } from "../calendar.js";
 export const FREQUENCIES = ["weekly", "biweekly", "monthly"];
 export const FREQUENCY_DAYS = { weekly: 7, biweekly: 15, monthly: 30 };
 export const FREQUENCY_LABEL = {
@@ -15,7 +16,7 @@ export function defaultReminder() {
   return {
     enabled: false,
     frequency: "biweekly",
-    day: 5,
+    day: DEFAULT_WEEKDAY,
     time: "09:00",
     since: null,
     ignored: 0,

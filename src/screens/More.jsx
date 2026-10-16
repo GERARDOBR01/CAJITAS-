@@ -1,28 +1,9 @@
-import NextStep from "../components/NextStep.jsx";
 import { ANDROID_DOWNLOAD_URL, ANDROID_VERSION } from "../downloads.js";
 import { haptic, isNative } from "../platform.js";
-import {
-  activeGoals,
-  balance,
-  checkIn,
-  companionship,
-  streak,
-  today,
-} from "../domain.js";
+import { balance, checkIn, companionship, streak, today } from "../domain.js";
 
-export default function More({
-  data,
-  onSave,
-  notify,
-  onNavigate,
-  onRecord,
-  onEdit,
-}) {
+export default function More({ data, onSave, notify, onNavigate }) {
   const friend = companionship(data),
-    active = activeGoals(data),
-    nextGoal = active
-      .filter((goal) => balance(goal) < goal.targetCents)
-      .sort((a, b) => a.unlockDate.localeCompare(b.unlockDate))[0],
     completed = data.goals.filter(
       (goal) => balance(goal) >= goal.targetCents,
     ).length,
@@ -38,7 +19,7 @@ export default function More({
       <div className="section-heading">
         <div>
           <p className="eyebrow">TUS HERRAMIENTAS</p>
-          <h1>Un poquito más de Cajitas</h1>
+          <h1>Un poquito más de Guardadito</h1>
           <p className="muted">Elige por dónde seguimos.</p>
         </div>
       </div>
@@ -58,7 +39,12 @@ export default function More({
             "Importa y revisa tus comprobantes.",
           ],
           ["backup", "☁", "Respaldo", "Lleva tus cajitas contigo."],
-          ["install", "↓", "Instalar app", "Cajitas en tu pantalla de inicio."],
+          [
+            "install",
+            "↓",
+            "Instalar app",
+            "Guardadito en tu pantalla de inicio.",
+          ],
         ].map(([key, icon, title, description]) => (
           <button
             className="panel more-card"
@@ -76,7 +62,7 @@ export default function More({
         ))}
       </div>
       {!isNative && (
-        <aside className="download-banner" aria-label="Descargar Cajitas">
+        <aside className="download-banner" aria-label="Descargar Guardadito">
           <span className="download-mascot" aria-hidden="true">
             🐷
           </span>
@@ -127,7 +113,6 @@ export default function More({
           ))}
         </ul>
       )}
-      <NextStep goal={nextGoal} onRecord={onRecord} onEdit={onEdit} />
     </section>
   );
 }

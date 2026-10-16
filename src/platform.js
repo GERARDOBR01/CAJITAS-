@@ -1,12 +1,13 @@
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { STORAGE_KEY, validateBackup } from "./domain.js";
+import { nextOccurrences, upcomingNotifications } from "./pet/reminders.js";
 export const isNative = Capacitor.isNativePlatform();
 export const platform = Capacitor.getPlatform();
-const nativeSessionKey = "cajitas:native-session";
-const nativeProofKey = "cajitas:native-oauth";
-const webSessionKey = "cajitas:web-session:";
-const webProofKey = "cajitas:web-oauth:";
+const nativeSessionKey = "guardadito:native-session";
+const nativeProofKey = "guardadito:native-oauth";
+const webSessionKey = "guardadito:web-session:";
+const webProofKey = "guardadito:web-oauth:";
 let connectionResult;
 export function consumeConnectionResult() {
   const result = connectionResult;
@@ -15,7 +16,7 @@ export function consumeConnectionResult() {
 }
 function announceConnection(detail) {
   connectionResult = detail;
-  window.dispatchEvent(new CustomEvent("cajitas:connection", { detail }));
+  window.dispatchEvent(new CustomEvent("guardadito:connection", { detail }));
 }
 let nativeSession;
 let installPrompt;
@@ -23,7 +24,7 @@ if (typeof window !== "undefined" && !isNative)
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     installPrompt = event;
-    window.dispatchEvent(new Event("cajitas:install"));
+    window.dispatchEvent(new Event("guardadito:install"));
   });
 export const getInstallPrompt = () => installPrompt;
 export const clearInstallPrompt = () => {
@@ -295,7 +296,7 @@ export async function setupNativeEvents() {
     } catch {
       return;
     }
-    if (url.protocol !== "cajitas:" || url.hostname !== "auth") return;
+    if (url.protocol !== "guardadito:" || url.hostname !== "auth") return;
     try {
       const proofRaw = (await Preferences.get({ key: nativeProofKey })).value;
       const proof = proofRaw ? JSON.parse(proofRaw) : null;
@@ -328,7 +329,7 @@ export async function setupNativeEvents() {
     const dialog = document.querySelector("dialog[open]");
     if (dialog) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
     else if (canGoBack) history.back();
-    else window.dispatchEvent(new Event("cajitas:back"));
+    else window.dispatchEvent(new Event("guardadito:back"));
   });
 }
 const LEGACY_REMINDER_ID = 71401;
@@ -350,7 +351,6 @@ export async function allowReminders() {
  * Each one is a single dated notification so quincenas and rotating messages
  * stay exact. Returns the ids of the messages used, to avoid repeats. */
 export async function syncReminders(data, now = new Date()) {
-  const { upcomingNotifications } = await import("./pet/reminders.js");
   const plan = upcomingNotifications(data, now);
   if (!isNative) return plan.recent;
   const { LocalNotifications } = await import("@capacitor/local-notifications");
@@ -401,34 +401,8 @@ export async function listenToReminders(onAction) {
 }
 export function reminderCalendar(reminder, now = new Date()) {
   const frequency = reminder.frequency ?? "weekly";
-  const [hours, minutes] = reminder.time.split(":").map(Number);
-  let date = new Date(now);
-  if (frequency === "weekly") {
-    date.setHours(hours, minutes, 0, 0);
-    date.setDate(date.getDate() + ((reminder.day - date.getDay() + 7) % 7));
-    if (date <= now) date.setDate(date.getDate() + 7);
-  } else {
-    // First 15th or last day of the month (or last day, monthly) still ahead.
-    date = new Date(now);
-    for (let i = 0; i < 70; i++) {
-      const last = new Date(
-        date.getFullYear(),
-        date.getMonth() + 1,
-        0,
-      ).getDate();
-      const day = date.getDate();
-      const candidate = new Date(date);
-      candidate.setHours(hours, minutes, 0, 0);
-      if (
-        (day === last || (frequency === "biweekly" && day === 15)) &&
-        candidate > now
-      ) {
-        date = candidate;
-        break;
-      }
-      date.setDate(date.getDate() + 1);
-    }
-  }
+  // The first event is the same next reminder the app and the plan use.
+  const [date] = nextOccurrences({ ...reminder, frequency }, now, 1);
   const stamp = (d) =>
     `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
   const rule = {
@@ -444,9 +418,9 @@ export function reminderCalendar(reminder, now = new Date()) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Cajitas//Ahorro//ES",
+    "PRODID:-//Guardadito//Ahorro//ES",
     "BEGIN:VEVENT",
-    `UID:cajitas-${frequency}-reminder@mx.cajitas.ahorro`,
+    `UID:guardadito-${frequency}-reminder@mx.guardadito.ahorro`,
     `DTSTAMP:${now
       .toISOString()
       .replace(/[-:]/g, "")
@@ -455,7 +429,7 @@ export function reminderCalendar(reminder, now = new Date()) {
     rule,
     "DURATION:PT10M",
     `SUMMARY:${summary}`,
-    "DESCRIPTION:Abre Cajitas y registra lo que apartaste. Sin transferencias automaticas.",
+    "DESCRIPTION:Abre Guardadito y registra lo que apartaste. Sin transferencias automaticas.",
     "END:VEVENT",
     "END:VCALENDAR",
     "",

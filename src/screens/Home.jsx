@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import Mascot from "../components/Mascot.jsx";
 import { GoalCard } from "../components/Goals.jsx";
-import { balance, money } from "../domain.js";
+import NextStep from "../components/NextStep.jsx";
+import { balance, money, nextGoal } from "../domain.js";
 import {
   STAGE_NAMES,
   daysAway,
@@ -23,12 +24,12 @@ export default function Home({
   filter,
   onFilter,
   now,
-  sad,
   cheering,
   celebrating,
   onCreate,
   onMove,
   onEdit,
+  onRecord,
   onFrequency,
   onPet,
   checkIn,
@@ -61,54 +62,49 @@ export default function Home({
     waiting = Boolean(checkIn),
     mood = petMood({
       celebrating,
-      sad,
       excited: cheering,
       waiting,
       daysAway: away,
     });
   const greeting = useRef();
   useEffect(() => {
-    if (sad || cheering || celebrating)
+    if (cheering || celebrating)
       greeting.current?.scrollIntoView({ block: "start", behavior: "instant" });
-  }, [sad, cheering, celebrating]);
+  }, [cheering, celebrating]);
   return (
     <section className="home" aria-label="Inicio">
       <header
         ref={greeting}
-        className={`home-greeting mood-${mood} ${empty ? "is-empty" : ""} ${sad ? "is-sad" : celebrating || cheering ? "is-cheering" : ""}`}
+        className={`home-greeting mood-${mood} ${empty ? "is-empty" : ""} ${celebrating || cheering ? "is-cheering" : ""}`}
       >
         <div className="home-speech">
           <p className="eyebrow">TU EQUIPO DE AHORRO</p>
           <h1>
-            {sad
-              ? "Aquí seguimos contigo."
-              : celebrating
-                ? "¡Lo lograste!"
-                : cheering
-                  ? "¡Ese ahorro se aplaude!"
-                  : waiting
-                    ? "¡Llegó tu ratito de ahorro!"
-                    : empty
-                      ? `¡Hola, soy ${pet.petName}!`
-                      : mood === "sleepy"
-                        ? `${pet.petName} toma una siesta`
-                        : "¡Vamos por ese sueño!"}
+            {celebrating
+              ? "¡Lo lograste!"
+              : cheering
+                ? "¡Ese ahorro se aplaude!"
+                : waiting
+                  ? "¡Llegó tu ratito de ahorro!"
+                  : empty
+                    ? `¡Hola, soy ${pet.petName}!`
+                    : mood === "sleepy"
+                      ? `${pet.petName} toma una siesta`
+                      : "¡Vamos por ese sueño!"}
           </h1>
           <p aria-live="polite">
             {line ||
-              (sad
-                ? "Los planes cambian. Vamos a tu ritmo."
-                : celebrating
-                  ? "Una meta cumplida. ¡Chócalas!"
-                  : cheering
-                    ? "Tu cajita ya tiene un pasito más."
-                    : waiting
-                      ? checkIn.message.body
-                      : empty
-                        ? "Hagamos espacio para lo que quieres."
-                        : mood === "sleepy"
-                          ? "Tócame para despertar. Te extrañaba 💤"
-                          : `${pet.petName} te echa porras.`)}
+              (celebrating
+                ? "Una meta cumplida. ¡Chócalas!"
+                : cheering
+                  ? "Tu cajita ya tiene un pasito más."
+                  : waiting
+                    ? checkIn.message.body
+                    : empty
+                      ? "Hagamos espacio para lo que quieres."
+                      : mood === "sleepy"
+                        ? "Tócame para despertar. Te extrañaba 💤"
+                        : `${pet.petName} te echa porras.`)}
           </p>
         </div>
         <div className="home-mascot">
@@ -130,7 +126,8 @@ export default function Home({
             onPet={(kind) => {
               onPet?.();
               if (Date.now() < trickUntil.current) return;
-              if (kind === "love") say(`${pet.petName} te dice: ¡Te amo Jade! 💖`);
+              if (kind === "love")
+                say(`${pet.petName} te dice: ¡Te amo Jade! 💖`);
               else if (kind === "cuddle")
                 say("Un abrazo para ti. Gracias por venir ♡");
               else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
@@ -154,6 +151,12 @@ export default function Home({
             </button>
           </div>
         )}
+        <NextStep
+          goal={nextGoal(data)}
+          onRecord={onRecord}
+          onEdit={onEdit}
+          weekday={data.preferences.reminder.day}
+        />
         {total > 0 && (
           <p className="home-total">
             <span>Ahorro registrado</span>
@@ -204,6 +207,7 @@ export default function Home({
                 goal={goal}
                 now={now}
                 onFrequency={onFrequency}
+                weekday={data.preferences.reminder.day}
                 onMove={onMove}
                 onEdit={onEdit}
               />

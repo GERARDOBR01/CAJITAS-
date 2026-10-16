@@ -14,6 +14,7 @@ import {
   today,
 } from "../domain.js";
 import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
+import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative } from "../platform.js";
 import "../tutorial.css";
 
@@ -21,7 +22,7 @@ const lessons = [
   [
     "Tu espacio",
     "Un sueño, una cajita",
-    "Cajitas es tu diario de ahorro. Tu dinero se queda en la app donde lo guardas; aquí organizas metas y registras tus pasitos.",
+    "Guardadito es tu diario de ahorro. Tu dinero se queda en la app donde lo guardas; aquí organizas metas y registras tus pasitos.",
   ],
   [
     "Tu meta",
@@ -31,12 +32,12 @@ const lessons = [
   [
     "Ahorrar",
     "Primero aparta. Después registra",
-    "En tu app externa apartas el dinero. En Cajitas tocas Registrar ahorro y capturas lo que ya apartaste, con su fecha real.",
+    "En tu app externa apartas el dinero. En Guardadito tocas Registrar ahorro y capturas lo que ya apartaste, con su fecha real.",
   ],
   [
     "El candado",
     "Un compromiso contigo",
-    "La cuenta regresiva te recuerda tu fecha. El candado es de compromiso, no bancario: tu dinero sigue disponible fuera de Cajitas.",
+    "La cuenta regresiva te recuerda tu fecha. El candado es de compromiso, no bancario: tu dinero sigue disponible fuera de Guardadito.",
   ],
   [
     "Tu mascota",
@@ -51,7 +52,7 @@ const lessons = [
   [
     "Tu app",
     "Llévanos contigo",
-    "Instala Cajitas y úsala sin conexión para tus metas y registros. Las conexiones necesitan internet y estar configuradas.",
+    "Instala Guardadito y úsala sin conexión para tus metas y registros. Las conexiones necesitan internet y estar configuradas.",
   ],
   [
     "A tu ritmo",
@@ -62,7 +63,7 @@ const lessons = [
 const questions = [
   {
     title: "¿Dónde está tu dinero?",
-    options: ["En mi app externa", "Dentro de Cajitas"],
+    options: ["En mi app externa", "Dentro de Guardadito"],
     correct: 0,
   },
   {
@@ -148,7 +149,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
     [reviewed, setReviewed] = useState(false),
     [paused, setPaused] = useState(!preferences.animations),
     [withdrawOpen, setWithdrawOpen] = useState(false),
-    [sad, setSad] = useState(false),
     [celebrating, setCelebrating] = useState(false),
     [now, setNow] = useState(Date.now());
   const heading = useRef(),
@@ -181,7 +181,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
   function go(index) {
     setStep(index);
     setFeedback("");
-    setSad(false);
     setWithdrawOpen(false);
   }
   function deposit(value, at = new Date().toISOString()) {
@@ -237,7 +236,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
   }
   function celebrate() {
     if (!complete) deposit(goal.targetCents - saved);
-    setSad(false);
     setCelebrating(true);
     clearTimeout(celebrationTimer.current);
     celebrationTimer.current = setTimeout(() => setCelebrating(false), 5000);
@@ -282,14 +280,14 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
     <section
       ref={section}
       className={`tutorial ${paused ? "tutorial-paused" : ""}`}
-      aria-label="Tutorial interactivo de Cajitas"
+      aria-label="Tutorial interactivo de Guardadito"
     >
       <div
         className={`section-heading tutorial-heading ${step === 0 ? "tutorial-with-art" : ""}`}
       >
         <div>
           <p className="eyebrow">APRENDE JUGANDO, A TU RITMO</p>
-          <h1>Un paseíto por Cajitas</h1>
+          <h1>Un paseíto por Guardadito</h1>
           <p className="muted">
             Toca, prueba y descubre. Puedes volver cuando quieras.
           </p>
@@ -449,9 +447,9 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
                 >
-                  <option value="7">Por semana</option>
-                  <option value="15">Cada 15 días</option>
-                  <option value="30">Cada 30 días</option>
+                  <option value="7">{RHYTHM_LABEL.weekly}</option>
+                  <option value="15">{RHYTHM_LABEL.biweekly}</option>
+                  <option value="30">{RHYTHM_LABEL.monthly}</option>
                 </select>
               </label>
               {preview !== null && (
@@ -459,10 +457,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                   <span aria-hidden="true">🌱</span>
                   <div>
                     <strong>
-                      {money(preview)}{" "}
-                      {frequency === "7"
-                        ? "por semana"
-                        : `cada ${frequency} días`}
+                      {money(preview)} {rhythmLabel(Number(frequency))}
                     </strong>
                     <p>
                       Una guía para la meta de ejemplo. Puedes ajustar fecha y
@@ -544,7 +539,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                 pet={pet}
                 accessory={accessory}
                 progress={saved / goal.targetCents}
-                sad={sad}
                 celebrating={celebrating}
                 small
               />
@@ -592,7 +586,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
             <div className="tutorial-action-grid">
               <button
                 className="secondary"
-                disabled={!saved || goal.unlockDate <= today()}
+                disabled={!saved}
                 onClick={() => setWithdrawOpen(true)}
               >
                 Probar retiro de {money(withdrawCents)}
@@ -613,10 +607,10 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
               </div>
             )}
             <p className="tutorial-tip">
-              Antes de la fecha pedimos confirmación y tu compañero se pone
-              triste un ratito, sin culpas. Después del compromiso, el retiro no
-              lo entristece. Llegar al monto celebra tu progreso; no mueve
-              dinero.
+              Puedes registrar un retiro cuando lo necesites, antes o después de
+              la fecha: usar tu ahorro para una emergencia también es cumplir su
+              propósito. Tu compañero sigue tranquilo contigo. Llegar al monto
+              celebra tu progreso; no mueve dinero.
             </p>
           </>
         )}
@@ -925,8 +919,8 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                     Android lo pide.
                   </li>
                   <li>
-                    Abre Cajitas. También puedes instalar la versión web desde
-                    el menú de tu navegador.
+                    Abre Guardadito. También puedes instalar la versión web
+                    desde el menú de tu navegador.
                   </li>
                 </ol>
                 {!isNative && (
@@ -945,9 +939,9 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
               <>
                 <h3>iPhone: desde Safari</h3>
                 <ol className="tutorial-instructions">
-                  <li>Abre la web publicada de Cajitas en Safari.</li>
+                  <li>Abre la web publicada de Guardadito en Safari.</li>
                   <li>Toca Compartir → Agregar a pantalla de inicio.</li>
-                  <li>Confirma Agregar. Abre Cajitas desde su icono.</li>
+                  <li>Confirma Agregar. Abre Guardadito desde su icono.</li>
                 </ol>
                 <p className="tutorial-tip">
                   La versión nativa de iPhone todavía requiere compilación y
@@ -1067,26 +1061,26 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
       </div>
       {withdrawOpen && (
         <Modal
-          title="¿Retirar antes de tu compromiso?"
+          title="Registrar un retiro de práctica"
           onClose={() => setWithdrawOpen(false)}
         >
-          <Mascot pet={pet} accessory={accessory} small sad />
+          <Mascot pet={pet} accessory={accessory} small />
           <p>
-            Estás probando un retiro de <strong>{money(withdrawCents)}</strong>{" "}
-            antes de la fecha. Es dinero de ejemplo.
+            Estás probando un retiro de <strong>{money(withdrawCents)}</strong>.
+            Es dinero de ejemplo. Usar tu ahorro cuando lo necesitas también es
+            cumplir su propósito.
           </p>
           <p className="notice">
             En la app real, el dinero sigue disponible en {goal.provider}.
-            Cajitas solo registra el retiro.
+            Guardadito solo registra el retiro.
           </p>
           <button
-            className="danger full"
+            className="primary full"
             onClick={() => {
               deposit(-withdrawCents);
               setWithdrawOpen(false);
-              setSad(true);
               setFeedback(
-                "Retiro de práctica registrado. Los planes cambian; tu compañero te acompaña.",
+                "Retiro de práctica registrado. Tu ahorro cumplió su propósito.",
               );
             }}
           >

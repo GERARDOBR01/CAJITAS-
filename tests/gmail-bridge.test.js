@@ -409,7 +409,7 @@ describe("puente OAuth para web externa con proveedores simulados", () => {
     );
     const result = new URL(callback.headers.get("location"));
     expect(result.origin).toBe("null");
-    expect(result.protocol + "//" + result.hostname).toBe("cajitas://auth");
+    expect(result.protocol + "//" + result.hostname).toBe("guardadito://auth");
     const exchange = await post(
       "/api/gmail/native-exchange",
       { code: result.searchParams.get("code"), verifier },
@@ -487,7 +487,7 @@ describe("cliente web y móvil del puente", () => {
     }));
     vi.stubGlobal("fetch", fetch);
     b.location.assign.mockImplementation(() =>
-      expect(b.values.has("cajitas:web-oauth:" + apiOrigin)).toBe(true),
+      expect(b.values.has("guardadito:web-oauth:" + apiOrigin)).toBe(true),
     );
     const client = await platform();
     await client.connectGmail();
@@ -496,7 +496,7 @@ describe("cliente web y móvil del puente", () => {
     expect(url).toBe(apiOrigin + "/api/gmail/app-start");
     expect(options.credentials).toBe("omit");
     expect(sent.callbackUrl).toBe(webBase);
-    const proof = JSON.parse(b.values.get("cajitas:web-oauth:" + apiOrigin));
+    const proof = JSON.parse(b.values.get("guardadito:web-oauth:" + apiOrigin));
     expect(sent.challenge).toBe(
       createHash("sha256").update(proof.verifier).digest("hex"),
     );
@@ -513,10 +513,10 @@ describe("cliente web y móvil del puente", () => {
       events = [];
     vi.stubEnv("VITE_API_ORIGIN", apiOrigin);
     b.values.set(
-      "cajitas:web-oauth:" + apiOrigin,
+      "guardadito:web-oauth:" + apiOrigin,
       JSON.stringify({ verifier, expires: Date.now() + 600000 }),
     );
-    b.win.addEventListener("cajitas:connection", (event) =>
+    b.win.addEventListener("guardadito:connection", (event) =>
       events.push(event.detail),
     );
     const fetch = vi.fn(async () => {
@@ -532,8 +532,8 @@ describe("cliente web y móvil del puente", () => {
     // Startup can finish before React attaches its event listener.
     expect(client.consumeConnectionResult()).toEqual({ connected: true });
     expect(client.consumeConnectionResult()).toBeNull();
-    expect(b.values.get("cajitas:web-session:" + apiOrigin)).toBe(sessionId);
-    expect(b.values.has("cajitas:web-oauth:" + apiOrigin)).toBe(false);
+    expect(b.values.get("guardadito:web-session:" + apiOrigin)).toBe(sessionId);
+    expect(b.values.has("guardadito:web-oauth:" + apiOrigin)).toBe(false);
     await client.api("status");
     expect(fetch.mock.calls[1][1].headers.Authorization).toBe(
       "Bearer " + sessionId,
@@ -546,7 +546,7 @@ describe("cliente web y móvil del puente", () => {
       fetch = vi.fn();
     vi.stubEnv("VITE_API_ORIGIN", "https://api.cajitas.app");
     vi.stubGlobal("fetch", fetch);
-    b.win.addEventListener("cajitas:connection", (event) =>
+    b.win.addEventListener("guardadito:connection", (event) =>
       events.push(event.detail),
     );
     await (await platform()).setupNativeEvents();
@@ -587,7 +587,7 @@ describe("cliente web y móvil del puente", () => {
     expect(b.location.assign).toHaveBeenCalledWith("/api/gmail/connect");
     state.native = true;
     vi.stubEnv("VITE_API_ORIGIN", "https://api.cajitas.app");
-    state.preferences.set("cajitas:native-session", "e".repeat(64));
+    state.preferences.set("guardadito:native-session", "e".repeat(64));
     await (await platform()).api("status");
     expect(fetch.mock.calls[1][1].headers.Authorization).toBe(
       "Bearer " + "e".repeat(64),
@@ -600,7 +600,7 @@ describe("cliente web y móvil del puente", () => {
       apiOrigin = "https://api.cajitas.app";
     state.native = true;
     vi.stubEnv("VITE_API_ORIGIN", apiOrigin);
-    b.win.addEventListener("cajitas:connection", (event) =>
+    b.win.addEventListener("guardadito:connection", (event) =>
       events.push(event.detail),
     );
     const fetch = vi.fn(async (url) => ({
@@ -613,7 +613,7 @@ describe("cliente web y móvil del puente", () => {
     vi.stubGlobal("fetch", fetch);
     const client = await platform();
     await client.connectGmail();
-    const proof = JSON.parse(state.preferences.get("cajitas:native-oauth"));
+    const proof = JSON.parse(state.preferences.get("guardadito:native-oauth"));
     expect(proof.verifier).toMatch(/^[a-f0-9]{64}$/);
     expect(state.browserOpen).toHaveBeenCalledWith({
       url: apiOrigin + "/api/gmail/connect?native=" + "a".repeat(64),
@@ -621,17 +621,17 @@ describe("cliente web y móvil del puente", () => {
     expect(b.values.size).toBe(0);
     await client.setupNativeEvents();
     await state.listeners.get("appUrlOpen")({
-      url: "cajitas://auth?code=" + "c".repeat(64),
+      url: "guardadito://auth?code=" + "c".repeat(64),
     });
     expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({
       code: "c".repeat(64),
       verifier: proof.verifier,
     });
     expect(events).toEqual([{ connected: true }]);
-    expect(state.preferences.get("cajitas:native-session")).toBe(
+    expect(state.preferences.get("guardadito:native-session")).toBe(
       "e".repeat(64),
     );
-    expect(state.preferences.has("cajitas:native-oauth")).toBe(false);
+    expect(state.preferences.has("guardadito:native-oauth")).toBe(false);
     expect(state.browserClose).toHaveBeenCalled();
   });
 });
