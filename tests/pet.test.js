@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { initialData, validateBackup } from "../src/domain.js";
+import { initialData, plan, validateBackup } from "../src/domain.js";
 import {
   MESSAGES,
   answerCheckIn,
@@ -225,12 +225,10 @@ describe("mensajes de la mascota", () => {
     const extra = suggestedExtra(goal, "biweekly", when);
     expect(extra).toBeGreaterThan(0);
     expect(extra % 1000).toBe(0);
-    // plan for this goal right now
-    const remaining = goal.targetCents - 600000,
-      periods = Math.ceil(
-        Math.ceil((new Date("2027-06-30T00:00:00") - when) / 86400000) / 15,
-      ),
-      step = Math.ceil(remaining / periods);
+    // The plan counts the same quincenas (15 and end of month) the reminders
+    // use: Oct 31 (today) through Jun 15, 2027 → 16 periods.
+    const step = Math.ceil((goal.targetCents - 600000) / 16);
+    expect(plan(goal, 15, when.getTime())).toBe(step);
     expect(extra).toBeLessThanOrEqual(step * 0.1);
     // A withdrawal or a missed period means no suggestion.
     const withdrew = [

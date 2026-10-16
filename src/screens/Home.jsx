@@ -151,7 +151,12 @@ export default function Home({
             </button>
           </div>
         )}
-        <NextStep goal={nextGoal(data)} onRecord={onRecord} onEdit={onEdit} />
+        <NextStep
+          goal={nextGoal(data)}
+          onRecord={onRecord}
+          onEdit={onEdit}
+          weekday={data.preferences.reminder.day}
+        />
         {total > 0 && (
           <p className="home-total">
             <span>Ahorro registrado</span>
@@ -202,6 +207,7 @@ export default function Home({
                 goal={goal}
                 now={now}
                 onFrequency={onFrequency}
+                weekday={data.preferences.reminder.day}
                 onMove={onMove}
                 onEdit={onEdit}
               />

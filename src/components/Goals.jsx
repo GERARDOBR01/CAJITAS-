@@ -11,6 +11,7 @@ import {
   goalStatus,
   unlockTime,
 } from "../domain.js";
+import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
 import Illustration from "./Illustration.jsx";
 import Modal from "./Modal.jsx";
@@ -27,7 +28,7 @@ const dateLabel = (date) =>
     month: "short",
     year: "numeric",
   });
-export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
+export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
   const [error, setError] = useState("");
   const [icon, setIcon] = useState(goal?.icon ?? "star");
   const [template, setTemplate] = useState(null);
@@ -74,6 +75,8 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
           entries: goal?.entries ?? [],
         },
         Number(draftPlan.frequency),
+        Date.now(),
+        weekday,
       );
   } catch {
     /* The preview appears once the amount is valid. */
@@ -208,9 +211,9 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
               setDraftPlan({ ...draftPlan, frequency: e.target.value })
             }
           >
-            <option value={7}>Por semana</option>
-            <option value={15}>Cada 15 días</option>
-            <option value={30}>Cada 30 días</option>
+            <option value={7}>{RHYTHM_LABEL.weekly}</option>
+            <option value={15}>{RHYTHM_LABEL.biweekly}</option>
+            <option value={30}>{RHYTHM_LABEL.monthly}</option>
           </select>
         </label>
         {openPreview && (
@@ -230,10 +233,7 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive }) {
             <span aria-hidden="true">🌱</span>
             <div>
               <strong>
-                {money(preview)}{" "}
-                {Number(draftPlan.frequency) === 7
-                  ? "por semana"
-                  : `cada ${draftPlan.frequency} días`}
+                {money(preview)} {rhythmLabel(Number(draftPlan.frequency))}
               </strong>
               <p>
                 Para llegar a tu meta. Si se siente pesado, cambia el monto o la
@@ -297,6 +297,7 @@ export function MovementForm({
   onClose,
   initialCents,
   onImport,
+  weekday,
 }) {
   const [amount, setAmount] = useState(
       initialCents ? (initialCents / 100).toFixed(2) : "",
@@ -360,11 +361,15 @@ export function MovementForm({
                 {money(value)}
               </button>
             ))}
-            {(plan(goal, goal.frequency) ?? 0) > 0 && (
+            {(plan(goal, goal.frequency, Date.now(), weekday) ?? 0) > 0 && (
               <button
                 type="button"
                 onClick={() =>
-                  setAmount((plan(goal, goal.frequency) / 100).toFixed(2))
+                  setAmount(
+                    (
+                      plan(goal, goal.frequency, Date.now(), weekday) / 100
+                    ).toFixed(2),
+                  )
                 }
               >
                 Mi siguiente pasito
@@ -411,7 +416,7 @@ export function MovementForm({
     </Modal>
   );
 }
-export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
+export function GoalCard({ goal, onMove, onEdit, now, onFrequency, weekday }) {
   const saved = balance(goal),
     progress = Math.min(1, saved / goal.targetCents);
   const frequency = goal.frequency;
@@ -477,16 +482,18 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency }) {
         <div className="plan">
           <span>Tu siguiente pasito</span>
           <strong>
-            {goal.unlockDate ? money(plan(goal, frequency, now)) : "A tu ritmo"}
+            {goal.unlockDate
+              ? money(plan(goal, frequency, now, weekday))
+              : "A tu ritmo"}
           </strong>
           <select
             aria-label={`Frecuencia de ${goal.name}`}
             value={frequency}
             onChange={(e) => onFrequency(goal.id, Number(e.target.value))}
           >
-            <option value={7}>por semana</option>
-            <option value={15}>cada 15 días</option>
-            <option value={30}>cada 30 días</option>
+            <option value={7}>{RHYTHM_LABEL.weekly}</option>
+            <option value={15}>{RHYTHM_LABEL.biweekly}</option>
+            <option value={30}>{RHYTHM_LABEL.monthly}</option>
           </select>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
+import { DEFAULT_WEEKDAY, countScheduleDays } from "./calendar.js";
 export const STORAGE_KEY = "guardadito:v1";
 // Before the rename the app saved under this key; copy it once so nobody
 // loses their cajitas. The old copy stays as a fallback.
@@ -53,14 +54,20 @@ export function countdown(date, now = Date.now()) {
   return `${days} días · ${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 /** Suggested amount per period, or null for a goal without a target date:
- * there are no periods to split the rest into. */
-export function plan(goal, frequency = 7, now = Date.now()) {
+ * there are no periods to split the rest into. Periods are the same calendar
+ * dates the reminders use (src/calendar.js), from today until the target day.
+ * `weekday` is the reminder's weekday for a weekly rhythm. */
+export function plan(
+  goal,
+  frequency = 7,
+  now = Date.now(),
+  weekday = DEFAULT_WEEKDAY,
+) {
   if (!goal.unlockDate) return null;
-  const days = Math.max(
-    0,
-    Math.ceil((unlockTime(goal.unlockDate) - now) / 86400000),
+  const periods = Math.max(
+    1,
+    countScheduleDays(frequency, now, unlockTime(goal.unlockDate), weekday),
   );
-  const periods = Math.max(1, Math.ceil(days / frequency));
   return Math.ceil(Math.max(0, goal.targetCents - balance(goal)) / periods);
 }
 export function streak(goals, now = new Date()) {

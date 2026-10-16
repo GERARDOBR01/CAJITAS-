@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { STORAGE_KEY, validateBackup } from "./domain.js";
+import { nextOccurrences, upcomingNotifications } from "./pet/reminders.js";
 export const isNative = Capacitor.isNativePlatform();
 export const platform = Capacitor.getPlatform();
 const nativeSessionKey = "guardadito:native-session";
@@ -350,7 +351,6 @@ export async function allowReminders() {
  * Each one is a single dated notification so quincenas and rotating messages
  * stay exact. Returns the ids of the messages used, to avoid repeats. */
 export async function syncReminders(data, now = new Date()) {
-  const { upcomingNotifications } = await import("./pet/reminders.js");
   const plan = upcomingNotifications(data, now);
   if (!isNative) return plan.recent;
   const { LocalNotifications } = await import("@capacitor/local-notifications");
@@ -401,34 +401,8 @@ export async function listenToReminders(onAction) {
 }
 export function reminderCalendar(reminder, now = new Date()) {
   const frequency = reminder.frequency ?? "weekly";
-  const [hours, minutes] = reminder.time.split(":").map(Number);
-  let date = new Date(now);
-  if (frequency === "weekly") {
-    date.setHours(hours, minutes, 0, 0);
-    date.setDate(date.getDate() + ((reminder.day - date.getDay() + 7) % 7));
-    if (date <= now) date.setDate(date.getDate() + 7);
-  } else {
-    // First 15th or last day of the month (or last day, monthly) still ahead.
-    date = new Date(now);
-    for (let i = 0; i < 70; i++) {
-      const last = new Date(
-        date.getFullYear(),
-        date.getMonth() + 1,
-        0,
-      ).getDate();
-      const day = date.getDate();
-      const candidate = new Date(date);
-      candidate.setHours(hours, minutes, 0, 0);
-      if (
-        (day === last || (frequency === "biweekly" && day === 15)) &&
-        candidate > now
-      ) {
-        date = candidate;
-        break;
-      }
-      date.setDate(date.getDate() + 1);
-    }
-  }
+  // The first event is the same next reminder the app and the plan use.
+  const [date] = nextOccurrences({ ...reminder, frequency }, now, 1);
   const stamp = (d) =>
     `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
   const rule = {

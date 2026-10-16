@@ -74,8 +74,9 @@ test("recorrido animado practica meta, depósito, retiro, mascota y repaso sin t
   await page.getByLabel("Meta de práctica (MXN)").fill("1000");
   await page.getByLabel("App externa de práctica").selectOption("Mercado Pago");
   await page.getByLabel("Ritmo de práctica").selectOption("15");
+  // Same dates as the reminders: the 15th and the last day of the month.
   await expect(page.locator(".plan-preview")).toContainText(
-    "$500.00 cada 15 días",
+    /\$\d[\d,.]* por quincena \(15 y fin de mes\)/,
   );
   await page
     .getByRole("button", { name: "Crear cajita de práctica", exact: true })

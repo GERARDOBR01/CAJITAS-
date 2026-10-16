@@ -20,12 +20,7 @@ import {
 } from "./platform.js";
 import { answerCheckIn, dueCheckIn, easeReminders } from "./pet/reminders.js";
 import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
-import {
-  STORAGE_KEY,
-  balance,
-  initialData,
-  validateBackup,
-} from "./domain.js";
+import { STORAGE_KEY, balance, initialData, validateBackup } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 

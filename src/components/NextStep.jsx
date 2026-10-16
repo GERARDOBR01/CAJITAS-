@@ -1,10 +1,11 @@
 import { goalStatus, money, plan } from "../domain.js";
+import { rhythmLabel } from "../calendar.js";
 import Illustration from "./Illustration.jsx";
 
-export default function NextStep({ goal, onRecord, onEdit }) {
+export default function NextStep({ goal, onRecord, onEdit, weekday }) {
   if (!goal) return null;
   const status = goalStatus(goal),
-    amount = plan(goal, goal.frequency);
+    amount = plan(goal, goal.frequency, Date.now(), weekday);
   return (
     <aside className="next-step" aria-label="Tu siguiente pasito">
       <Illustration kind="path" />
@@ -18,11 +19,8 @@ export default function NextStep({ goal, onRecord, onEdit }) {
             "Sin fecha objetivo: aporta lo que te acomode. Si ya lo apartaste, regístralo aquí."
           ) : (
             <>
-              <strong>{money(amount)}</strong>{" "}
-              {goal.frequency === 7
-                ? "por semana"
-                : `cada ${goal.frequency} días`}
-              . Si ya lo apartaste, regístralo aquí.
+              <strong>{money(amount)}</strong> {rhythmLabel(goal.frequency)}. Si
+              ya lo apartaste, regístralo aquí.
             </>
           )}
         </p>

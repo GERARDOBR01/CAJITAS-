@@ -91,9 +91,14 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   await page.getByLabel("Nombre de tu meta").fill("Mi fondo bonito");
   await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
   await page.getByLabel("Mi ritmo de ahorro").selectOption("15");
+  // Same dates as the reminders: the 15th and the last day of the month.
+  // How many fall in the default 30 days depends on today.
   await expect(page.locator(".plan-preview")).toContainText(
-    "$500.00 cada 15 días",
+    /\$[\d,.]+ por quincena \(15 y fin de mes\)/,
   );
+  const step = (await page.locator(".plan-preview strong").innerText())
+    .match(/\$([\d,.]+)/)[1]
+    .replace(",", "");
   await page.screenshot({ path: "docs/screenshots/v3-01-plan-mobile.png" });
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
   const card = page.locator(".goal-card");
@@ -102,7 +107,7 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   await page
     .getByRole("button", { name: "Mi siguiente pasito", exact: true })
     .click();
-  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("500.00");
+  await expect(page.getByLabel("Monto (MXN)")).toHaveValue(step);
   expect((await saved(page)).goals[0].entries).toHaveLength(0);
   await page.getByRole("button", { name: "$100.00", exact: true }).click();
   const yesterday = new Date();

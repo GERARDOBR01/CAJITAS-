@@ -14,6 +14,7 @@ import {
   today,
 } from "../domain.js";
 import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
+import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative } from "../platform.js";
 import "../tutorial.css";
 
@@ -446,9 +447,9 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
                 >
-                  <option value="7">Por semana</option>
-                  <option value="15">Cada 15 días</option>
-                  <option value="30">Cada 30 días</option>
+                  <option value="7">{RHYTHM_LABEL.weekly}</option>
+                  <option value="15">{RHYTHM_LABEL.biweekly}</option>
+                  <option value="30">{RHYTHM_LABEL.monthly}</option>
                 </select>
               </label>
               {preview !== null && (
@@ -456,10 +457,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                   <span aria-hidden="true">🌱</span>
                   <div>
                     <strong>
-                      {money(preview)}{" "}
-                      {frequency === "7"
-                        ? "por semana"
-                        : `cada ${frequency} días`}
+                      {money(preview)} {rhythmLabel(Number(frequency))}
                     </strong>
                     <p>
                       Una guía para la meta de ejemplo. Puedes ajustar fecha y
