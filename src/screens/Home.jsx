@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import Mascot from "../components/Mascot.jsx";
 import { GoalCard } from "../components/Goals.jsx";
-import { balance, money } from "../domain.js";
+import NextStep from "../components/NextStep.jsx";
+import { balance, money, nextGoal } from "../domain.js";
 import {
   STAGE_NAMES,
   daysAway,
@@ -29,6 +30,7 @@ export default function Home({
   onCreate,
   onMove,
   onEdit,
+  onRecord,
   onFrequency,
   onPet,
   checkIn,
@@ -154,6 +156,7 @@ export default function Home({
             </button>
           </div>
         )}
+        <NextStep goal={nextGoal(data)} onRecord={onRecord} onEdit={onEdit} />
         {total > 0 && (
           <p className="home-total">
             <span>Ahorro registrado</span>

@@ -380,6 +380,14 @@ export default function App() {
               setModal({ type: "movement", goal, withdraw })
             }
             onEdit={(goal) => setModal({ type: "edit", goal })}
+            onRecord={(goal, initialCents) =>
+              setModal({
+                type: "movement",
+                goal,
+                withdraw: false,
+                initialCents,
+              })
+            }
             onFrequency={(id, frequency) =>
               setData({
                 ...data,
@@ -426,15 +434,6 @@ export default function App() {
             onSave={setData}
             notify={notify}
             onNavigate={changeTab}
-            onRecord={(goal, initialCents) =>
-              setModal({
-                type: "movement",
-                goal,
-                withdraw: false,
-                initialCents,
-              })
-            }
-            onEdit={(goal) => setModal({ type: "edit", goal })}
           />
         )}
         {tab === "simulator" && <Simulator />}

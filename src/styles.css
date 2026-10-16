@@ -468,6 +468,11 @@ footer > span {
 .checkin-actions > button {
   flex: 1 1 160px;
 }
+/* The next step sits right under the mascot, across the whole greeting. */
+.home-greeting .next-step {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
 .sprout-stage {
   display: block;
   width: fit-content;

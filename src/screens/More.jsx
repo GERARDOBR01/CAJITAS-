@@ -1,28 +1,9 @@
-import NextStep from "../components/NextStep.jsx";
 import { ANDROID_DOWNLOAD_URL, ANDROID_VERSION } from "../downloads.js";
 import { haptic, isNative } from "../platform.js";
-import {
-  activeGoals,
-  balance,
-  checkIn,
-  companionship,
-  streak,
-  today,
-} from "../domain.js";
+import { balance, checkIn, companionship, streak, today } from "../domain.js";
 
-export default function More({
-  data,
-  onSave,
-  notify,
-  onNavigate,
-  onRecord,
-  onEdit,
-}) {
+export default function More({ data, onSave, notify, onNavigate }) {
   const friend = companionship(data),
-    active = activeGoals(data),
-    nextGoal = active
-      .filter((goal) => balance(goal) < goal.targetCents)
-      .sort((a, b) => a.unlockDate.localeCompare(b.unlockDate))[0],
     completed = data.goals.filter(
       (goal) => balance(goal) >= goal.targetCents,
     ).length,
@@ -132,7 +113,6 @@ export default function More({
           ))}
         </ul>
       )}
-      <NextStep goal={nextGoal} onRecord={onRecord} onEdit={onEdit} />
     </section>
   );
 }

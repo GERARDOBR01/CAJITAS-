@@ -121,6 +121,12 @@ export function defaultPreferences() {
 export function activeGoals(data) {
   return data.goals.filter((g) => !g.archived);
 }
+/** The goal the "siguiente pasito" points at: active, unfinished, nearest date. */
+export function nextGoal(data) {
+  return activeGoals(data)
+    .filter((goal) => balance(goal) < goal.targetCents)
+    .sort((a, b) => unlockTime(a.unlockDate) - unlockTime(b.unlockDate))[0];
+}
 export function companionship(data) {
   const dates = new Set([
     ...data.checkins,
