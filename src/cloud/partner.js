@@ -91,7 +91,7 @@ export async function unpair(pairId, uid) {
   await s.deleteDoc(s.doc(db, "pairs", pairId));
 }
 
-/** Before deleting an account: leave every couple. */
+/** Before deleting an account: my entries go, then I leave every couple. */
 export async function leaveAllPairs(uid) {
   const { db, storeLib: s } = await cloud();
   const pairs = await s.getDocs(
@@ -100,7 +100,16 @@ export async function leaveAllPairs(uid) {
       s.where("members", "array-contains", uid),
     ),
   );
-  for (const pair of pairs.docs) await unpair(pair.id, uid);
+  for (const pair of pairs.docs) {
+    const mine = await s.getDocs(
+      s.query(
+        s.collection(db, "pairs", pair.id, "entries"),
+        s.where("by", "==", uid),
+      ),
+    );
+    await Promise.all(mine.docs.map((d) => s.deleteDoc(d.ref)));
+    await unpair(pair.id, uid);
+  }
 }
 
 export async function watchGifts(pairId, callback, onError) {
@@ -147,4 +156,44 @@ export async function watchSummary(pairId, uid, callback, onError) {
     (snap) => callback(snap.exists() ? snap.data().goals : []),
     onError,
   );
+}
+
+/** Cajitas en pareja and their entries, live. */
+export async function watchShared(pairId, onGoals, onEntries, onError) {
+  const { db, storeLib: s } = await cloud();
+  const list = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const a = s.onSnapshot(
+    s.collection(db, "pairs", pairId, "goals"),
+    (snap) => onGoals(list(snap)),
+    onError,
+  );
+  const b = s.onSnapshot(
+    s.collection(db, "pairs", pairId, "entries"),
+    (snap) => onEntries(list(snap)),
+    onError,
+  );
+  return () => {
+    a();
+    b();
+  };
+}
+
+export async function saveSharedGoal(pairId, goal, id) {
+  const { db, storeLib: s } = await cloud();
+  const col = s.collection(db, "pairs", pairId, "goals");
+  if (id) await s.setDoc(s.doc(col, id), goal);
+  else await s.addDoc(col, goal);
+}
+
+export async function addSharedEntry(pairId, entry) {
+  const { db, storeLib: s } = await cloud();
+  await s.addDoc(s.collection(db, "pairs", pairId, "entries"), {
+    ...entry,
+    createdAt: Date.now(),
+  });
+}
+
+export async function deleteSharedEntry(pairId, id) {
+  const { db, storeLib: s } = await cloud();
+  await s.deleteDoc(s.doc(db, "pairs", pairId, "entries", id));
 }

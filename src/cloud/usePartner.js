@@ -6,6 +6,8 @@ import {
   specialFromGift,
   waitingRewards,
 } from "./surprises.js";
+import { checkEntry, splitFor, withEntries } from "./shared.js";
+import { money } from "../domain.js";
 
 const lib = () => import("./partner.js");
 const INVITE_KEY = "guardadito:invite";
@@ -38,8 +40,11 @@ export function usePartner({ user, data, update, notify }) {
     [reveal, setReveal] = useState(null),
     [saved, setSaved] = useState(0),
     [invite, setInvite] = useState(stored),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0),
+    [sharedGoals, setSharedGoals] = useState([]),
+    [sharedEntries, setSharedEntries] = useState(null);
   const shown = useRef(new Set()),
+    seenEntries = useRef(null),
     callbacks = useRef();
   callbacks.current = { update, notify };
   const uid = user?.uid ?? null;
@@ -64,6 +69,9 @@ export function usePartner({ user, data, update, notify }) {
   useEffect(() => {
     setGifts([]);
     setSummary([]);
+    setSharedGoals([]);
+    setSharedEntries(null);
+    seenEntries.current = null;
     if (!pair || !partnerUid) return;
     const stops = [];
     let alive = true,
@@ -75,7 +83,14 @@ export function usePartner({ user, data, update, notify }) {
       if (alive) timer = setTimeout(() => setRetry((n) => n + 1), 2000);
     };
     lib()
-      .then(async ({ watchGifts, watchSummary }) => {
+      .then(async ({ watchGifts, watchSummary, watchShared }) => {
+        const c = await watchShared(
+          pair.id,
+          (g) => alive && setSharedGoals(g),
+          (e) => alive && setSharedEntries(e),
+          again,
+        );
+        stops.push(c);
         const a = await watchGifts(pair.id, (g) => alive && setGifts(g), again);
         const b = await watchSummary(
           pair.id,
@@ -93,6 +108,29 @@ export function usePartner({ user, data, update, notify }) {
       stops.forEach((fn) => fn());
     };
   }, [pair?.id, partnerUid, retry]);
+
+  // A cheer when my partner records a saving in a cajita we share. The
+  // first list (null until it loads) is what was already there.
+  useEffect(() => {
+    if (!sharedEntries) return;
+    const ids = new Set(sharedEntries.map((e) => e.id));
+    if (seenEntries.current === null) {
+      seenEntries.current = ids;
+      return;
+    }
+    for (const e of sharedEntries)
+      if (
+        !seenEntries.current.has(e.id) &&
+        e.by === partnerUid &&
+        e.cents > 0
+      ) {
+        const goal = sharedGoals.find((g) => g.id === e.goalId);
+        callbacks.current.notify(
+          `${partnerName || "Tu pareja"} apartó ${money(e.cents)} para ${goal?.name ?? "su cajita"} 🎉`,
+        );
+      }
+    seenEntries.current = ids;
+  }, [sharedEntries]);
 
   // Once paired, the code I shared is no longer needed.
   useEffect(() => {
@@ -214,6 +252,45 @@ export function usePartner({ user, data, update, notify }) {
         message,
       ),
     remove: (id) => run((p) => p.deleteGift(pair.id, id)),
+    shared: withEntries(sharedGoals, sharedEntries ?? []),
+    saveShared: (
+      { id, name, targetCents, unlockDate, myPercent, archived },
+      existing,
+    ) =>
+      run(
+        (p) =>
+          p.saveSharedGoal(
+            pair.id,
+            {
+              name,
+              targetCents,
+              unlockDate: unlockDate || "",
+              icon: existing?.icon ?? "star",
+              split: splitFor(uid, partnerUid, myPercent),
+              createdBy: existing?.createdBy ?? uid,
+              createdAt: existing?.createdAt ?? Date.now(),
+              archived: Boolean(archived),
+            },
+            id,
+          ),
+        existing ? "Cajita actualizada." : `Cajita en pareja lista 💞`,
+      ),
+    contribute: (goal, cents, at, note = "") =>
+      run(
+        (p) =>
+          p.addSharedEntry(pair.id, {
+            goalId: goal.id,
+            by: uid,
+            cents: checkEntry(goal, uid, cents),
+            at,
+            note,
+          }),
+        cents > 0
+          ? "Aporte registrado. ¡Un pasito juntos! 💞"
+          : "Retiro registrado. Usarlo también es cumplir su propósito.",
+      ),
+    removeEntry: (id) =>
+      run((p) => p.deleteSharedEntry(pair.id, id), "Aporte borrado."),
     unpair: () => run((p) => p.unpair(pair.id, uid), "Se deshizo el vínculo."),
   };
 }

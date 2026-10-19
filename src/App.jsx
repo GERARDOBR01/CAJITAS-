@@ -15,6 +15,7 @@ import { useCloud } from "./cloud/useCloud.js";
 import { usePartner } from "./cloud/usePartner.js";
 import Partner from "./components/Partner.jsx";
 import SurpriseReveal from "./components/SurpriseReveal.jsx";
+import SharedGoals from "./components/SharedGoals.jsx";
 import {
   haptic,
   isNative,
@@ -416,6 +417,14 @@ export default function App() {
               })
             }
             onPet={() => haptic()}
+          />
+        )}
+        {tab === "goals" && partner.pair && (
+          <SharedGoals
+            partner={partner}
+            uid={cloud.user?.uid}
+            now={now}
+            onCelebrate={celebrate}
           />
         )}
         {tab === "pet" && (

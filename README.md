@@ -28,6 +28,17 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 [Capturas](docs/screenshots/v09/) · Posicionamiento y estudio de Splitwise con REA: [competencia](docs/research/competencia-2026-10.md), [Splitwise](docs/research/splitwise-rea.md).
 
+## Cajitas en pareja v0.11 💞
+
+- **Mis cajitas → En pareja:** cuando estás vinculada, aparece «+ Cajita en pareja». Ahí defines la meta, la fecha (opcional) y **la parte de cada quien**: mitad y mitad, 60/40 o lo que acuerden.
+- Cada quien **aparta su parte en su propio banco** y registra su aporte. La barra muestra lo de cada uno con su color, y tu tarjeta dice «Tu parte (40 %): te faltan $600», sin comparaciones.
+- Si hay fecha, sale **tu pasito por quincena** para tu parte.
+- Cuando tu pareja aporta te llega un aviso: «Beto apartó $300 para Cancún 🎉». Si juntos llegan al 100 %, confeti.
+- Cada quien corrige o borra **solo sus aportes**, y solo puede retirar lo que puso. Cualquiera de los dos puede editar la cajita, como en Splitwise, pero nunca borrarla: se archiva, para que nadie borre el ahorro del otro.
+- Hay 19 pruebas de reglas y un recorrido de dos teléfonos en Chrome de Android y Safari de iPhone.
+
+[Captura](docs/screenshots/v11/cajita-en-pareja.png)
+
 ## En pareja v0.10 💞
 
 - **Más → Mi pareja:** una persona crea un código de 6 letras (dura 2 días) y lo comparte por WhatsApp; la otra lo escribe o abre el enlace `?pareja=CÓDIGO`. Las dos necesitan cuenta.
