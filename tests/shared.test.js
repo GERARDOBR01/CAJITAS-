@@ -4,6 +4,7 @@ import {
   contributions,
   myPart,
   myPlan,
+  sharedEntryNews,
   splitFor,
   withEntries,
 } from "../src/cloud/shared.js";
@@ -53,5 +54,23 @@ describe("cajita en pareja", () => {
   it("el reparto suma 100", () => {
     expect(splitFor("a", "j", 60)).toEqual({ a: 60, j: 40 });
     expect(splitFor("a", "j", 150)).toEqual({ a: 100, j: 0 });
+  });
+});
+
+describe("noticias de la cajita en pareja", () => {
+  it("celebra solo los ahorros nuevos de mi pareja", () => {
+    const entries = [
+      { id: "1", goalId: "viaje", by: "a", cents: 50000 },
+      { id: "4", goalId: "viaje", by: "a", cents: 1500 },
+      { id: "5", goalId: "viaje", by: "a", cents: -1000 },
+      { id: "6", goalId: "viaje", by: "j", cents: 2000 },
+      { id: "7", goalId: "otra", by: "a", cents: 300 },
+    ];
+    expect(
+      sharedEntryNews(new Set(["1"]), entries, [goal], "a", "Ana"),
+    ).toEqual([
+      "Ana apartó $15.00 para Viaje 🎉",
+      "Ana apartó $3.00 para su cajita 🎉",
+    ]);
   });
 });

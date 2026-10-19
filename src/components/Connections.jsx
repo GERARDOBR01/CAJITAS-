@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../platform.js";
 import { connectGmail } from "../gmail/connection.js";
-import { money, reachedTarget } from "../domain.js";
+import { money } from "../domain.js";
 import {
   addReceipt,
   possibleReceiptMatches,
@@ -13,7 +13,7 @@ export default function Connections({
   data,
   setData,
   notify,
-  celebrate,
+  record,
   onCreate,
 }) {
   const [status, setStatus] = useState({}),
@@ -58,8 +58,7 @@ export default function Connections({
       );
     setPageToken(result.nextPageToken);
     let updated = data,
-      automatic = 0,
-      achieved = false;
+      automatic = 0;
     for (const receipt of result.receipts) {
       const matches = possibleReceiptMatches(updated, receipt);
       const goalId = updated.assignments[receipt.patternId],
@@ -73,17 +72,13 @@ export default function Connections({
         !updated.importedIds.includes(receipt.id) &&
         !matches.length
       ) {
-        const added = addReceipt(updated, receipt, goalId);
-        if (reachedTarget(updated, added, goalId)) achieved = true;
-        updated = added;
+        updated = addReceipt(updated, receipt, goalId);
         automatic++;
       }
     }
-    if (automatic && !setData(updated)) {
-      updated = data;
-      automatic = 0;
-      achieved = false;
-    }
+    const summary = `Consulta lista. ${automatic} depósitos automáticos. ${result.ignored} correos sin patrón seguro; no se registraron.`;
+    if (!automatic) notify(summary);
+    else if (!record(data, updated, summary)) updated = data;
     setReceipts((prev) => [
       ...new Map(
         [...(next ? prev : []), ...result.receipts]
@@ -91,11 +86,6 @@ export default function Connections({
           .map((r) => [r.id, r]),
       ).values(),
     ]);
-    if (achieved) celebrate();
-    else
-      notify(
-        `Consulta lista. ${automatic} depósitos automáticos. ${result.ignored} correos sin patrón seguro; no se registraron.`,
-      );
   }
   function accept(receipt) {
     try {
@@ -133,10 +123,8 @@ export default function Connections({
       });
       if (remember[receipt.id])
         next.assignments = { ...next.assignments, [receipt.patternId]: goalId };
-      if (!setData(next)) return;
-      if (reachedTarget(data, next, goalId)) celebrate();
+      if (!record(data, next, "Depósito registrado una sola vez.")) return;
       setReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
-      notify("Depósito registrado una sola vez.");
     } catch (error) {
       notify(error.message);
     }
@@ -155,9 +143,8 @@ export default function Connections({
       </div>
       <LocalMailImport
         data={data}
-        onSave={setData}
+        record={record}
         notify={notify}
-        celebrate={celebrate}
         onCreate={onCreate}
       />
       {statusError && (

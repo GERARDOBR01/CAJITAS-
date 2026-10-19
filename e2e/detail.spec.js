@@ -248,6 +248,10 @@ for (const theme of ["light", "dark"])
       .first()
       .getByRole("button", { name: "+ Registrar ahorro" })
       .click();
+    // The sheet fades in; measure contrast once it is fully opaque.
+    await page
+      .locator("dialog.sheet")
+      .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     const axe = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
       .analyze();

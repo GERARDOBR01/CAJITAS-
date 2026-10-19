@@ -1,4 +1,4 @@
-import { plan } from "../domain.js";
+import { money, plan } from "../domain.js";
 
 /** Cajitas en pareja with their entries, oldest entry first. */
 export function withEntries(goals, entries) {
@@ -55,4 +55,17 @@ export function checkEntry(goal, uid, cents) {
 export function splitFor(uid, partnerUid, myPercent) {
   const mine = Math.min(100, Math.max(0, Math.round(Number(myPercent))));
   return { [uid]: mine, [partnerUid]: 100 - mine };
+}
+
+/**
+ * A cheer for each saving my partner recorded in a cajita we share since
+ * `seen` (the entry ids already there).
+ */
+export function sharedEntryNews(seen, entries, goals, partnerUid, who) {
+  return entries
+    .filter((e) => !seen.has(e.id) && e.by === partnerUid && e.cents > 0)
+    .map(
+      (e) =>
+        `${who} apartó ${money(e.cents)} para ${goals.find((g) => g.id === e.goalId)?.name ?? "su cajita"} 🎉`,
+    );
 }
