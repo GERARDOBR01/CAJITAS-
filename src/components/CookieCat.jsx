@@ -10,7 +10,7 @@ import {
   petMood,
   registerTap,
 } from "../pet/state.js";
-import { PET_WORDS } from "../domain.js";
+import { PET_WORDS } from "../pet/catalog.js";
 
 // Cookie, el gatito café: la mascota principal de Guardadito. Original art,
 // drawn as layered SVG so each part (ears, tail, paws, face) can move.

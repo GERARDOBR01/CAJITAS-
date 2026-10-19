@@ -4,7 +4,8 @@ import { GoalCard } from "../components/Goals.jsx";
 import NextStep from "../components/NextStep.jsx";
 import Money from "../components/Money.jsx";
 import { ShieldCheck } from "../components/icons.jsx";
-import { balance, isComplete, nextGoal, petWords } from "../domain.js";
+import { balance, isComplete, nextGoal } from "../domain.js";
+import { petWords } from "../pet/catalog.js";
 import {
   STAGE_NAMES,
   daysAway,

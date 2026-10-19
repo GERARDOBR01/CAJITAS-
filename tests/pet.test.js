@@ -1,12 +1,6 @@
 import { describe, it, expect } from "vitest";
-import {
-  PET_WORDS,
-  availablePets,
-  initialData,
-  petWords,
-  plan,
-  validateBackup,
-} from "../src/domain.js";
+import { initialData, plan, validateBackup } from "../src/domain.js";
+import { PET_WORDS, availablePets, petWords } from "../src/pet/catalog.js";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {

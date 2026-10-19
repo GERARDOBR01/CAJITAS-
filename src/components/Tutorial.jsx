@@ -9,11 +9,10 @@ import {
   estimate,
   localDate,
   money,
-  PETS,
-  availablePets,
   plan,
   today,
 } from "../domain.js";
+import { PETS, availablePets } from "../pet/catalog.js";
 import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative } from "../platform.js";

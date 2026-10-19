@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { PETS } from "../domain.js";
+import { PETS } from "../pet/catalog.js";
 import Sprout from "./Sprout.jsx";
 import CookieCat from "./CookieCat.jsx";
 import FlatPet from "./FlatPet.jsx";
