@@ -2,7 +2,7 @@ import AppShell from "./components/AppShell.jsx";
 import GoalDialogs from "./components/GoalDialogs.jsx";
 import Home from "./screens/Home.jsx";
 import More from "./screens/More.jsx";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import PetRoom from "./components/PetRoom.jsx";
 import Activity from "./components/Activity.jsx";
@@ -18,25 +18,40 @@ import Partner from "./components/Partner.jsx";
 import SurpriseReveal from "./components/SurpriseReveal.jsx";
 import SharedGoals from "./components/SharedGoals.jsx";
 import { DepositDialog, DepositInbox } from "./components/Guardian.jsx";
+import { journal } from "./journal/index.js";
+import { useJournal } from "./journal/useJournal.js";
 import {
   haptic,
   isNative,
-  persistSavings,
   syncReminders,
   listenToReminders,
   consumeConnectionResult,
 } from "./platform.js";
-import { answerCheckIn, dueCheckIn, easeReminders } from "./pet/reminders.js";
-import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
 import {
-  STORAGE_KEY,
-  balance,
-  initialData,
-  restoreEntry,
-  validateBackup,
-} from "./domain.js";
+  answerCheckIn,
+  dueCheckIn,
+  easeReminders,
+  restoreWithoutReminders,
+} from "./pet/reminders.js";
+import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
+import { balance, restoreEntry } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
+
+const RECOVERY_MESSAGES = {
+  unreadable:
+    "No se pudieron leer los datos guardados. Exporta o recupera un respaldo antes de registrar cambios.",
+  external:
+    "Los datos cambiaron en otra pestaña y necesitan recuperación. Descarga los datos originales o importa un respaldo.",
+};
+const SAVE_MESSAGES = {
+  recovery:
+    "Los datos guardados necesitan recuperación. Descarga los datos originales o importa un respaldo antes de continuar.",
+  stale:
+    "Tus cajitas cambiaron mientras revisabas. Abre de nuevo esta pantalla antes de guardar.",
+  quota:
+    "No pudimos guardar el cambio. Revisa el espacio o los permisos del navegador y descarga un respaldo.",
+};
 
 function ServiceWorkerNotices() {
   const {
@@ -66,23 +81,9 @@ function ServiceWorkerNotices() {
   );
 }
 export default function App() {
-  const [loadError, setLoadError] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) validateBackup(JSON.parse(raw));
-      return "";
-    } catch {
-      return "No se pudieron leer los datos guardados. Exporta o recupera un respaldo antes de registrar cambios.";
-    }
-  });
-  const [data, setDataState] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? validateBackup(JSON.parse(raw)) : initialData();
-    } catch {
-      return initialData();
-    }
-  });
+  const store = journal();
+  const { data, recovery } = useJournal(store);
+  const loadError = RECOVERY_MESSAGES[recovery] ?? "";
   const [tab, setTab] = useState(() => {
       const params = new URLSearchParams(location.search);
       if (params.get("tutorial") === "1") return "tutorial";
@@ -100,35 +101,26 @@ export default function App() {
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
   const [connectionVersion, setConnectionVersion] = useState(0);
-  const [startingRaw] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY);
-    } catch {
-      return null;
-    }
-  });
-  const lastStoredRaw = useRef(startingRaw);
-  const latestData = useRef(data);
-  latestData.current = data;
+  // The cloud hook reads the newest journal through `.current`.
+  const latestData = useMemo(
+    () => ({
+      get current() {
+        return store.get();
+      },
+    }),
+    [store],
+  );
+  const cloudRef = useRef();
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
     excitedTimer = useRef();
   // A copy that came from the account (first sign-in or another device).
   function applyRemote(next, message) {
-    const raw = JSON.stringify(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, raw);
-    } catch {
-      /* The account keeps the copy; this device retries on its next save. */
-    }
-    lastStoredRaw.current = raw;
-    latestData.current = next;
-    setDataState(next);
-    setLoadError("");
-    persistSavings(raw).catch(() => {});
+    store.replace(next, { remote: true });
     if (message) notify(message);
   }
   const cloud = useCloud({ latest: latestData, applyRemote, notify });
+  cloudRef.current = cloud;
   const partner = usePartner({
     user: cloud.user,
     data,
@@ -144,50 +136,17 @@ export default function App() {
     setToast(message);
     toastTimer.current = setTimeout(() => setToast(""), 7000);
   }
-  function setData(next, restoring = false) {
-    if (loadError && !restoring) {
+  // Says why a change was not kept; true when it was.
+  function report(result) {
+    if (!result.ok)
       notify(
-        "Los datos guardados necesitan recuperación. Descarga los datos originales o importa un respaldo antes de continuar.",
+        SAVE_MESSAGES[result.reason] ||
+          result.message ||
+          "No pudimos guardar el cambio.",
       );
-      return false;
-    }
-    try {
-      if (
-        !restoring &&
-        ((next.savedAt ?? 0) !== (latestData.current.savedAt ?? 0) ||
-          localStorage.getItem(STORAGE_KEY) !== lastStoredRaw.current)
-      ) {
-        notify(
-          "Tus cajitas cambiaron mientras revisabas. Abre de nuevo esta pantalla antes de guardar.",
-        );
-        return false;
-      }
-      const saved = {
-        ...validateBackup(next),
-        savedAt: Math.max(Date.now(), (latestData.current.savedAt ?? 0) + 1),
-      };
-      const raw = JSON.stringify(saved);
-      localStorage.setItem(STORAGE_KEY, raw);
-      lastStoredRaw.current = raw;
-      latestData.current = saved;
-      setDataState(saved);
-      persistSavings(raw).catch(() =>
-        notify(
-          "El cambio está guardado en la app, pero no se pudo actualizar la copia adicional del dispositivo. Descarga un respaldo.",
-        ),
-      );
-      if (restoring) setLoadError("");
-      cloud.save(saved);
-      return true;
-    } catch (error) {
-      notify(
-        error.name === "QuotaExceededError" || error.name === "SecurityError"
-          ? "No pudimos guardar el cambio. Revisa el espacio o los permisos del navegador y descarga un respaldo."
-          : error.message || "No pudimos guardar el cambio.",
-      );
-      return false;
-    }
+    return result.ok;
   }
+  const setData = (next) => report(store.save(next));
   function celebrate() {
     clearTimeout(celebrationTimer.current);
     setConfetti(true);
@@ -209,34 +168,23 @@ export default function App() {
       clearTimeout(excitedTimer.current);
     };
   }, []);
-  useEffect(() => {
-    function changed(event) {
-      if (
-        event.storageArea !== localStorage ||
-        (event.key !== STORAGE_KEY && event.key !== null)
-      )
-        return;
-      const raw = localStorage.getItem(STORAGE_KEY);
-      try {
-        const next = raw ? validateBackup(JSON.parse(raw)) : initialData();
-        lastStoredRaw.current = raw;
-        latestData.current = next;
-        setDataState(next);
-        setModal(null);
-        setLoadError("");
-        notify(
-          "Tus cajitas se actualizaron desde otra pestaña. Revisa el cambio antes de continuar.",
-        );
-      } catch {
-        setLoadError(
-          "Los datos cambiaron en otra pestaña y necesitan recuperación. Descarga los datos originales o importa un respaldo.",
-        );
-        setModal(null);
-      }
-    }
-    window.addEventListener("storage", changed);
-    return () => window.removeEventListener("storage", changed);
-  }, []);
+  useEffect(
+    () =>
+      store.subscribe((event) => {
+        if (event.type === "saved") cloudRef.current.save(event.data);
+        else if (event.type === "external") {
+          setModal(null);
+          notify(
+            "Tus cajitas se actualizaron desde otra pestaña. Revisa el cambio antes de continuar.",
+          );
+        } else if (event.type === "external-invalid") setModal(null);
+        else if (event.type === "replica-failed")
+          notify(
+            "El cambio está guardado en la app, pero no se pudo actualizar la copia adicional del dispositivo. Descarga un respaldo.",
+          );
+      }),
+    [],
+  );
   useEffect(() => {
     if (!inviteCode) return;
     setTab("partner");
@@ -376,7 +324,7 @@ export default function App() {
             <button
               className="text-button"
               onClick={() => {
-                const raw = localStorage.getItem(STORAGE_KEY);
+                const raw = store.readRaw();
                 const url = URL.createObjectURL(
                   new Blob([raw ?? ""], { type: "application/json" }),
                 );
@@ -528,30 +476,10 @@ export default function App() {
           <Backup
             data={data}
             onRestore={async (next) => {
-              if (
-                !setData(
-                  {
-                    ...next,
-                    preferences: {
-                      ...next.preferences,
-                      reminder: {
-                        ...next.preferences.reminder,
-                        enabled: false,
-                      },
-                    },
-                  },
-                  true,
-                )
-              )
-                return false;
+              const restored = restoreWithoutReminders(next);
+              if (!report(store.replace(restored))) return false;
               try {
-                await syncReminders({
-                  ...next,
-                  preferences: {
-                    ...next.preferences,
-                    reminder: { ...next.preferences.reminder, enabled: false },
-                  },
-                });
+                await syncReminders(restored);
                 notify(
                   "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Mi mascota.",
                 );

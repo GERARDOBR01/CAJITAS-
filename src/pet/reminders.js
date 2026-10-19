@@ -295,3 +295,15 @@ export function answerCheckIn(data, now = new Date()) {
     },
   };
 }
+
+/** A restored backup never arrives with reminders on: the device has to ask
+ * for notification permission again before they can be turned back on. */
+export function restoreWithoutReminders(data) {
+  return {
+    ...data,
+    preferences: {
+      ...data.preferences,
+      reminder: { ...data.preferences.reminder, enabled: false },
+    },
+  };
+}
