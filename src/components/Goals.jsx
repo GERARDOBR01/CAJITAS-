@@ -10,6 +10,7 @@ import {
   localDate,
   goalStatus,
   unlockTime,
+  SOURCE_LABEL,
 } from "../domain.js";
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
@@ -416,7 +417,15 @@ export function MovementForm({
     </Modal>
   );
 }
-export function GoalCard({ goal, onMove, onEdit, now, onFrequency, weekday }) {
+export function GoalCard({
+  goal,
+  onMove,
+  onEdit,
+  now,
+  onFrequency,
+  weekday,
+  guardian,
+}) {
   const saved = balance(goal),
     progress = Math.min(1, saved / goal.targetCents);
   const frequency = goal.frequency;
@@ -473,6 +482,17 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency, weekday }) {
         </div>
       </div>
       <CommitmentNotice provider={goal.provider} />
+      {guardian?.pending?.in > 0 && (
+        <p className="on-the-way">
+          ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
+          {guardian.name}
+        </p>
+      )}
+      {guardian?.pending?.out > 0 && (
+        <p className="on-the-way">
+          ⏳ Pediste {money(guardian.pending.out)} a {guardian.name}
+        </p>
+      )}
       {progress >= 1 ? (
         <div className="complete-scene">
           <Illustration kind="complete" />
@@ -533,6 +553,23 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency, weekday }) {
               <span className="muted small-text">Aparta en tu app</span>
             )}
           </div>
+          {guardian && (
+            <div className="guardian-actions">
+              <button
+                className="secondary"
+                onClick={() => guardian.onDeposit(goal, false)}
+              >
+                Depositar con {guardian.name}
+              </button>
+              <button
+                className="text-button"
+                disabled={saved - (guardian.pending?.out ?? 0) <= 0}
+                onClick={() => guardian.onDeposit(goal, true)}
+              >
+                Pedir retiro a {guardian.name}
+              </button>
+            </div>
+          )}
           <button
             className="text-button withdraw"
             disabled={!saved}
@@ -553,7 +590,7 @@ export function GoalCard({ goal, onMove, onEdit, now, onFrequency, weekday }) {
                 <li key={e.id}>
                   <span>
                     {new Date(e.at).toLocaleDateString("es-MX")} ·{" "}
-                    {e.source === "gmail" ? "Correo" : "Manual"}
+                    {SOURCE_LABEL[e.source] ?? "Manual"}
                   </span>
                   <strong>
                     {e.cents > 0 ? "+" : ""}

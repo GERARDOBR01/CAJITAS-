@@ -2919,3 +2919,90 @@ summary {
   align-items: center;
   justify-content: space-between;
 }
+
+/* Depósitos a través del guardián (0.12) */
+.partner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.deposit-inbox {
+  border: 2px solid var(--primary);
+}
+.deposit-inbox li {
+  flex-wrap: wrap;
+}
+.clabe-line {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.clabe-line strong {
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.clabe-line small {
+  color: var(--muted);
+}
+.on-the-way {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+.guardian-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.transfer-data {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.transfer-data > div {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+.transfer-data dt {
+  font-size: var(--small);
+  font-weight: 850;
+  color: var(--muted);
+}
+.transfer-data dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 2px 0 0;
+  font-weight: 800;
+}
+.transfer-data code {
+  font-size: 1.05rem;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.method-choice {
+  display: grid;
+  gap: var(--space-2);
+}
+.method-choice .radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+.method-choice input {
+  width: auto;
+  accent-color: var(--primary);
+}

@@ -28,6 +28,20 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 [Capturas](docs/screenshots/v09/) · Posicionamiento y estudio de Splitwise con REA: [competencia](docs/research/competencia-2026-10.md), [Splitwise](docs/research/splitwise-rea.md).
 
+## Depositar a través de tu guardián v0.12 🤝
+
+Para quien no tiene cuenta de banco (o no quiere abrir una): una persona de confianza guarda el dinero y Guardadito lleva la cuenta clara para los dos.
+
+- **El guardián escribe su CLABE** en Más → Mi pareja → «¿Guardas el ahorro de…?». La app revisa el dígito verificador y solo la pareja vinculada la ve.
+- **En cada cajita aparece «Depositar con {nombre}»**. Por transferencia, muestra la CLABE, el titular, el monto y un concepto («Guardadito Viaje»), cada uno con botón de copiar, y luego «Ya lo mandé». En efectivo basta con «Ya se lo di en persona».
+- **No cuenta hasta que el guardián confirma.** Mientras tanto la tarjeta dice «⏳ En camino: $200 · esperando a Beto». El guardián lo ve arriba de su inicio, en «Por confirmar», y elige «Sí me llegó» o «Aún no».
+- Al confirmarse, se vuelve un movimiento de la cajita con origen **«Confirmado por tu guardián»**. No se puede editar a mano y aparece así en la actividad y en el CSV.
+- **Retiros:** «Pedir retiro a {nombre}», que no puede pasar de lo que hay en la cajita, contando lo que ya está pedido. El guardián lo confirma con «Ya se lo mandé» o «Ya se lo di».
+- **Guardadito nunca mueve dinero.** La transferencia la hace cada quien desde su banco, sin comisiones: SPEI es gratis. Un link de pago de Mercado Pago costaría alrededor de 9 % en $100.
+- Hay 6 pruebas de reglas (CLABE, quién avisa, quién confirma, una sola vez) y un recorrido de dos teléfonos en Chrome de Android y Safari de iPhone.
+
+[Capturas](docs/screenshots/v12/)
+
 ## Cajitas en pareja v0.11 💞
 
 - **Mis cajitas → En pareja:** cuando estás vinculada, aparece «+ Cajita en pareja». Ahí defines la meta, la fecha (opcional) y **la parte de cada quien**: mitad y mitad, 60/40 o lo que acuerden.

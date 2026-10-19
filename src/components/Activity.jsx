@@ -208,7 +208,9 @@ export default function Activity({ data, notify, onCorrect }) {
                     ·{" "}
                     {e.source === "gmail"
                       ? "Correo confirmado"
-                      : "Registro manual"}{" "}
+                      : e.source === "guardian"
+                        ? "Confirmado por tu guardián"
+                        : "Registro manual"}{" "}
                     · {e.provider}
                   </span>
                 </div>

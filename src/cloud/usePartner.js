@@ -7,6 +7,7 @@ import {
   waitingRewards,
 } from "./surprises.js";
 import { checkEntry, splitFor, withEntries } from "./shared.js";
+import { applyConfirmed, checkDeposit, pendingByGoal } from "./deposits.js";
 import { money } from "../domain.js";
 
 const lib = () => import("./partner.js");
@@ -42,9 +43,13 @@ export function usePartner({ user, data, update, notify }) {
     [invite, setInvite] = useState(stored),
     [retry, setRetry] = useState(0),
     [sharedGoals, setSharedGoals] = useState([]),
-    [sharedEntries, setSharedEntries] = useState(null);
+    [sharedEntries, setSharedEntries] = useState(null),
+    [payouts, setPayouts] = useState({}),
+    [deposits, setDeposits] = useState(null);
   const shown = useRef(new Set()),
     seenEntries = useRef(null),
+    seenDeposits = useRef(null),
+    applying = useRef(new Set()),
     callbacks = useRef();
   callbacks.current = { update, notify };
   const uid = user?.uid ?? null;
@@ -71,7 +76,10 @@ export function usePartner({ user, data, update, notify }) {
     setSummary([]);
     setSharedGoals([]);
     setSharedEntries(null);
+    setPayouts({});
+    setDeposits(null);
     seenEntries.current = null;
+    seenDeposits.current = null;
     if (!pair || !partnerUid) return;
     const stops = [];
     let alive = true,
@@ -83,7 +91,14 @@ export function usePartner({ user, data, update, notify }) {
       if (alive) timer = setTimeout(() => setRetry((n) => n + 1), 2000);
     };
     lib()
-      .then(async ({ watchGifts, watchSummary, watchShared }) => {
+      .then(async ({ watchGifts, watchSummary, watchShared, watchMoney }) => {
+        const d = await watchMoney(
+          pair.id,
+          (p) => alive && setPayouts(p),
+          (list) => alive && setDeposits(list),
+          again,
+        );
+        stops.push(d);
         const c = await watchShared(
           pair.id,
           (g) => alive && setSharedGoals(g),
@@ -131,6 +146,64 @@ export function usePartner({ user, data, update, notify }) {
       }
     seenEntries.current = ids;
   }, [sharedEntries]);
+
+  // Money news: my partner says they sent me something, or my guardian
+  // answered. The first list (null until it loads) is what was there.
+  useEffect(() => {
+    if (!deposits) return;
+    const before = seenDeposits.current;
+    seenDeposits.current = new Map(deposits.map((d) => [d.id, d.status]));
+    if (!before) return;
+    const who = partnerName || "Tu pareja";
+    for (const d of deposits) {
+      if (before.get(d.id) === d.status) continue;
+      const amount = money(Math.abs(d.cents));
+      if (d.to === uid && d.status === "pending")
+        callbacks.current.notify(
+          d.cents > 0
+            ? `${who} dice que te mandó ${amount} para ${d.goalName}. ¿Te llegó?`
+            : `${who} te pide ${amount} de ${d.goalName}.`,
+        );
+      else if (d.from === uid && d.status === "rejected")
+        callbacks.current.notify(
+          d.cents > 0
+            ? `${who} todavía no ve tus ${amount}. Revisa la transferencia.`
+            : `${who} no pudo darte ${amount} por ahora.`,
+        );
+    }
+  }, [deposits]);
+
+  // A deposit my guardian confirmed becomes a movement in my cajita.
+  useEffect(() => {
+    if (!deposits || !pair || !uid) return;
+    const fresh = deposits.filter((d) => !applying.current.has(d.id));
+    const { marks, added } = applyConfirmed(data, fresh, uid);
+    if (!marks.length) return;
+    if (
+      added.length &&
+      callbacks.current.update(
+        (current) => applyConfirmed(current, added, uid).data,
+      ) === false
+    )
+      return;
+    marks.forEach((d) => applying.current.add(d.id));
+    if (added.length) {
+      const total = added.reduce((sum, d) => sum + d.cents, 0);
+      const who = partnerName || "Tu guardián";
+      callbacks.current.notify(
+        total > 0
+          ? `${who} confirmó tu depósito: +${money(total)} 💞`
+          : `${who} confirmó tu retiro de ${money(-total)}.`,
+      );
+      if (total > 0) setSaved((n) => n + 1);
+    }
+    lib()
+      .then(({ markApplied }) =>
+        Promise.all(marks.map((d) => markApplied(pair.id, d.id))),
+      )
+      // The movement is already in my journal; marking it is retried later.
+      .catch(() => marks.forEach((d) => applying.current.delete(d.id)));
+  }, [deposits, data.savedAt, pair?.id, uid]);
 
   // Once paired, the code I shared is no longer needed.
   useEffect(() => {
@@ -292,5 +365,49 @@ export function usePartner({ user, data, update, notify }) {
     removeEntry: (id) =>
       run((p) => p.deleteSharedEntry(pair.id, id), "Aporte borrado."),
     unpair: () => run((p) => p.unpair(pair.id, uid), "Se deshizo el vínculo."),
+    /** The partner keeps my money when they saved a CLABE. */
+    guardian: (partnerUid && payouts[partnerUid]) || null,
+    myPayout: (uid && payouts[uid]) || null,
+    myName: (uid && pair?.names?.[uid]) || "",
+    pending: pendingByGoal(deposits ?? [], uid),
+    toConfirm: (deposits ?? [])
+      .filter((d) => d.to === uid && d.status === "pending")
+      .sort((a, b) => a.createdAt - b.createdAt),
+    myDeposits: (deposits ?? [])
+      .filter((d) => d.from === uid && d.status !== "confirmed")
+      .sort((a, b) => b.createdAt - a.createdAt),
+    savePayout: (payout) =>
+      run(
+        (p) => p.savePayout(pair.id, uid, payout),
+        `Listo: ${partnerName || "tu pareja"} ya puede mandarte su ahorro.`,
+      ),
+    deletePayout: () =>
+      run((p) => p.deletePayout(pair.id, uid), "Quitaste tu CLABE."),
+    deposit: (goal, cents, method, pendingOut = 0) =>
+      run(
+        (p) =>
+          p.requestDeposit(pair.id, {
+            from: uid,
+            to: partnerUid,
+            goalId: goal.id,
+            goalName: goal.name.slice(0, 80),
+            cents: checkDeposit(goal, cents, pendingOut),
+            method,
+          }),
+        cents > 0
+          ? `Avisamos a ${partnerName || "tu pareja"}. Cuenta en tu cajita cuando confirme que llegó.`
+          : `Le pedimos ${money(-cents)} a ${partnerName || "tu pareja"}.`,
+      ),
+    decide: (deposit, confirmed) =>
+      run(
+        (p) => p.decideDeposit(pair.id, deposit.id, confirmed),
+        confirmed
+          ? deposit.cents > 0
+            ? "Confirmado. Ya cuenta en su cajita 💞"
+            : "Retiro confirmado."
+          : "Le avisamos que todavía no.",
+      ),
+    cancelDeposit: (id) =>
+      run((p) => p.deleteDeposit(pair.id, id), "Aviso cancelado."),
   };
 }

@@ -28,6 +28,7 @@ export default function Home({
   celebrating,
   onCreate,
   onMove,
+  guardian,
   onEdit,
   onRecord,
   onFrequency,
@@ -213,6 +214,12 @@ export default function Home({
                 weekday={data.preferences.reminder.day}
                 onMove={onMove}
                 onEdit={onEdit}
+                guardian={
+                  guardian && {
+                    ...guardian,
+                    pending: guardian.pending[goal.id],
+                  }
+                }
               />
             ))}
           </div>
