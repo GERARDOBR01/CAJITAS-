@@ -80,7 +80,9 @@ export default function GoalDialogs({
             const next = removeManualEntry(data, modal.goalId, modal.entryId);
             if (setData(next)) {
               setModal(null);
-              notify("Registro equivocado eliminado.");
+              notify(
+                "Registro eliminado. Si fue un error, lo recuperas en Actividad → Papelera.",
+              );
             }
           }}
         />

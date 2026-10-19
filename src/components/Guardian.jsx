@@ -31,6 +31,10 @@ export function PayoutForm({ partner, name }) {
     return (
       <div className="panel partner-panel">
         <h2>Guardas el ahorro de {name}</h2>
+        <p className="held">
+          <strong>{money(partner.held)}</strong>
+          <small>confirmados por ti hasta hoy</small>
+        </p>
         <p className="muted">
           {name} ve esta cuenta al depositar. Tú confirmas cada depósito cuando
           te llega.

@@ -28,6 +28,12 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 [Capturas](docs/screenshots/v09/) · Posicionamiento y estudio de Splitwise con REA: [competencia](docs/research/competencia-2026-10.md), [Splitwise](docs/research/splitwise-rea.md).
 
+## Papelera y guardián más claro v0.14 🗑
+
+- **Papelera:** un movimiento que borras queda 30 días en Actividad → «🗑 Papelera», como en Splitwise, con botón «Restaurar». No restaura si la cajita quedaría en negativo. Guarda como mucho 50 y viaja en respaldos y en la nube.
+- **Cajitas con guardián:** si mandaste dinero a tu guardián, el aviso de la cajita dice «Gerardo guarda lo que le mandaste; lo que apartes tú sigue en Nu» en lugar de «Tu dinero sigue en Nu».
+- **El guardián ve cuánto guarda:** en Mi pareja aparece el total que ha confirmado, sumando depósitos y restando retiros.
+
 ## Avisos en el teléfono v0.13 🔔
 
 - **Más → Mi pareja → «Activar avisos»** registra ese teléfono. Te avisa aunque la app esté cerrada cuando tu pareja:

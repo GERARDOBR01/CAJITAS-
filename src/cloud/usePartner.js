@@ -392,6 +392,10 @@ export function usePartner({ user, data, update, notify }) {
     myPayout: (uid && payouts[uid]) || null,
     myName: (uid && pair?.names?.[uid]) || "",
     pending: pendingByGoal(deposits ?? [], uid),
+    /** What I keep for my partner: everything I confirmed, in and out. */
+    held: (deposits ?? [])
+      .filter((d) => d.to === uid && d.status === "confirmed")
+      .reduce((sum, d) => sum + d.cents, 0),
     toConfirm: (deposits ?? [])
       .filter((d) => d.to === uid && d.status === "pending")
       .sort((a, b) => a.createdAt - b.createdAt),

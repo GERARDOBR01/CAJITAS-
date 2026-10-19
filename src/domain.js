@@ -413,6 +413,7 @@ export function validateBackup(data) {
     }
     validateHistory(g.entries);
   }
+  const trash = validTrash(data.trash);
   if (
     data.importedIds.length > 50000 ||
     data.importedIds.some((id) => typeof id !== "string")
@@ -452,6 +453,7 @@ export function validateBackup(data) {
       })),
     })),
     importedIds: [...new Set(data.importedIds)],
+    ...(trash.length && { trash }),
     assignments: Object.fromEntries(
       Object.entries(data.assignments).filter(
         ([k, v]) =>
@@ -459,6 +461,61 @@ export function validateBackup(data) {
       ),
     ),
   };
+}
+// Deleted movements wait here 30 days, like Splitwise's restore.
+export const TRASH_DAYS = 30;
+const TRASH_MAX = 50;
+function validTrash(trash) {
+  if (trash === undefined) return [];
+  if (!Array.isArray(trash) || trash.length > TRASH_MAX)
+    throw new Error("La papelera es inválida.");
+  for (const item of trash)
+    if (
+      !item ||
+      typeof item.goalId !== "string" ||
+      typeof item.goalName !== "string" ||
+      !Number.isSafeInteger(item.deletedAt) ||
+      !item.entry ||
+      typeof item.entry.id !== "string" ||
+      !Number.isSafeInteger(item.entry.cents) ||
+      item.entry.cents === 0 ||
+      !validMovementDate(item.entry.at)
+    )
+      throw new Error("La papelera es inválida.");
+  return trash.map(({ goalId, goalName, deletedAt, entry }) => ({
+    goalId,
+    goalName: goalName.slice(0, 80),
+    deletedAt,
+    entry: { id: entry.id, cents: entry.cents, at: entry.at, source: "manual" },
+  }));
+}
+/** What is still in the trash, newest first, without expired items. */
+export function trashItems(data, now = Date.now()) {
+  return (data.trash ?? [])
+    .filter((item) => now - item.deletedAt < TRASH_DAYS * 86400000)
+    .sort((a, b) => b.deletedAt - a.deletedAt);
+}
+export function restoreEntry(data, entryId, now = Date.now()) {
+  const item = trashItems(data, now).find((t) => t.entry.id === entryId);
+  const goal = item && data.goals.find((g) => g.id === item.goalId);
+  if (!goal) throw new Error("Esa cajita ya no existe; no se puede restaurar.");
+  const next = {
+    ...data,
+    trash: (data.trash ?? []).filter((t) => t.entry.id !== entryId),
+    goals: data.goals.map((g) =>
+      g.id === goal.id && !g.entries.some((e) => e.id === entryId)
+        ? { ...g, entries: [...g.entries, item.entry] }
+        : g,
+    ),
+  };
+  try {
+    validateBackup(next);
+  } catch {
+    throw new Error(
+      "Restaurarlo dejaría la cajita en negativo. Revisa tus retiros primero.",
+    );
+  }
+  return next;
 }
 function validateReceipt(receipt) {
   if (!receipt || typeof receipt.id !== "string" || !receipt.id.trim())
@@ -556,8 +613,17 @@ export function correctManualEntry(data, goalId, entryId, { cents, at }) {
     at,
   }));
 }
-export function removeManualEntry(data, goalId, entryId) {
-  return changeManualEntry(data, goalId, entryId, () => null);
+export function removeManualEntry(data, goalId, entryId, now = Date.now()) {
+  const goal = data.goals.find((g) => g.id === goalId);
+  const entry = goal?.entries.find((e) => e.id === entryId);
+  const next = changeManualEntry(data, goalId, entryId, () => null);
+  return {
+    ...next,
+    trash: [
+      { goalId, goalName: goal.name, deletedAt: now, entry: { ...entry } },
+      ...trashItems(data, now).filter((t) => t.entry.id !== entryId),
+    ].slice(0, TRASH_MAX),
+  };
 }
 export function addReceipt(
   data,

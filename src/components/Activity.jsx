@@ -6,12 +6,15 @@ import {
   money,
   localDate,
   balance,
+  trashItems,
+  TRASH_DAYS,
 } from "../domain.js";
 import { saveFile } from "../platform.js";
 import Illustration from "./Illustration.jsx";
-export default function Activity({ data, notify, onCorrect }) {
+export default function Activity({ data, notify, onCorrect, onRestore }) {
   const [goalId, setGoalId] = useState(""),
     [month, setMonth] = useState(localDate(new Date()).slice(0, 7));
+  const trash = trashItems(data);
   const entries = activity(data, { goalId, month }),
     saved = entries.filter((e) => e.cents > 0).reduce((s, e) => s + e.cents, 0),
     withdrawn = -entries
@@ -238,6 +241,44 @@ export default function Activity({ data, notify, onCorrect }) {
           </div>
         )}
       </div>
+      {trash.length > 0 && (
+        <details className="panel trash">
+          <summary>🗑 Papelera ({trash.length})</summary>
+          <p className="small-text muted">
+            Lo que borras se guarda aquí {TRASH_DAYS} días por si te
+            equivocaste.
+          </p>
+          <ul className="partner-list" aria-label="Papelera">
+            {trash.map((t) => (
+              <li key={t.entry.id}>
+                <span>
+                  <strong>
+                    {t.entry.cents > 0 ? "+" : ""}
+                    {money(t.entry.cents)} · {t.goalName}
+                  </strong>
+                  <small>
+                    {new Date(t.entry.at).toLocaleDateString("es-MX", {
+                      day: "numeric",
+                      month: "short",
+                    })}{" "}
+                    · borrado el{" "}
+                    {new Date(t.deletedAt).toLocaleDateString("es-MX", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </small>
+                </span>
+                <button
+                  className="secondary"
+                  onClick={() => onRestore(t.entry.id)}
+                >
+                  Restaurar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </section>
   );
 }

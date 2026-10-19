@@ -279,6 +279,14 @@ test("corregir y eliminar errores conserva saldo histórico válido; gráfico y 
   const csv = await readFile(path, "utf8");
   expect(csv).toContain("700.00");
   expect(csv).not.toContain("Viaje archivado");
+  // Lo borrado espera en la papelera y vuelve igual.
+  await page.getByText("🗑 Papelera (1)").click();
+  const trash = page.getByRole("list", { name: "Papelera" });
+  await expect(trash).toContainText("-$100.00");
+  await trash.getByRole("button", { name: "Restaurar" }).click();
+  await expect(page.locator(".chart-heading")).toContainText("$600.00");
+  await expect(page.getByText("🗑 Papelera")).toHaveCount(0);
+  expect((await saved(page)).trash).toBeUndefined();
 });
 test("una segunda pestaña actualiza la vista y cierra una captura que quedó desactualizada", async ({
   page,
