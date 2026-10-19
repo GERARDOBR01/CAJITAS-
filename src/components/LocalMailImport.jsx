@@ -4,7 +4,7 @@ import { parseLocalEmail, MAX_EMAIL_BYTES } from "../mail/parseEmail.js";
 import {
   applyLocalReceipt,
   possibleLocalMatches,
-} from "../mail/receiptImport.js";
+} from "../receipts/local.js";
 import { cents, localDate, money, reachedTarget, today } from "../domain.js";
 
 export default function LocalMailImport({

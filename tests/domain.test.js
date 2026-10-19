@@ -4,7 +4,6 @@ import {
   plan,
   streak,
   initialData,
-  addReceipt,
   validateBackup,
   cents,
   countdown,
@@ -13,6 +12,7 @@ import {
   goalStatus,
   nextGoal,
 } from "../src/domain.js";
+import { addReceipt } from "../src/receipts/gmail.js";
 const goal = {
   id: "g1",
   name: "Viaje",

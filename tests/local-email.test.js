@@ -4,14 +4,14 @@ import { MAX_EMAIL_BYTES, parseLocalEmail } from "../src/mail/parseEmail.js";
 import {
   applyLocalReceipt,
   possibleLocalMatches,
-} from "../src/mail/receiptImport.js";
+} from "../src/receipts/local.js";
 import {
   balance,
   correctManualEntry,
   initialData,
-  possibleReceiptMatches,
   validateBackup,
 } from "../src/domain.js";
+import { possibleReceiptMatches } from "../src/receipts/gmail.js";
 
 const now = new Date("2026-10-14T12:00:00Z");
 const fixture = async (name) =>

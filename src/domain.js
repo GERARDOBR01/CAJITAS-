@@ -1,6 +1,7 @@
 import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
 import { DEFAULT_WEEKDAY, countScheduleDays } from "./calendar.js";
 export const STORAGE_KEY = "guardadito:v1";
+export const PROVIDERS = ["Nu", "Mercado Pago", "Bitso", "Otra"];
 // Before the rename the app saved under this key; copy it once so nobody
 // loses their cajitas. The old copy stays as a fallback.
 export const LEGACY_STORAGE_KEY = "cajitas:v1";
@@ -339,7 +340,7 @@ function validDate(value) {
     localDate(new Date(`${value}T12:00:00`)) === value
   );
 }
-function validMovementDate(value) {
+export function validMovementDate(value) {
   if (typeof value !== "string") return false;
   const match =
     /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?)?$/.exec(
@@ -422,7 +423,7 @@ export function validateBackup(data) {
       g.targetCents <= 0 ||
       g.targetCents > 1e11 ||
       (!noDate(g.unlockDate) && !validDate(g.unlockDate)) ||
-      !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(g.provider) ||
+      !PROVIDERS.includes(g.provider) ||
       !Array.isArray(g.entries) ||
       g.entries.length > 10000 ||
       !["star", "flower", "cloud"].includes(g.icon) ||
@@ -553,72 +554,6 @@ export function restoreEntry(data, entryId, now = Date.now()) {
   }
   return next;
 }
-function validateReceipt(receipt) {
-  if (!receipt || typeof receipt.id !== "string" || !receipt.id.trim())
-    throw new Error("Identificador de correo inválido.");
-  if (
-    !Number.isSafeInteger(receipt.amountCents) ||
-    receipt.amountCents <= 0 ||
-    receipt.amountCents > 1e11
-  )
-    throw new Error("Monto de correo inválido.");
-  if (!validMovementDate(receipt.at))
-    throw new Error("Fecha de correo inválida o futura.");
-  if (
-    (receipt.provider !== undefined &&
-      !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(receipt.provider)) ||
-    (receipt.validated !== undefined && typeof receipt.validated !== "boolean")
-  )
-    throw new Error("El comprobante de correo no es válido.");
-}
-export function possibleReceiptMatches(data, receipt) {
-  validateReceipt(receipt);
-  if (data.importedIds.includes(receipt.id) || !receipt.provider) return [];
-  const receiptDay = localDate(new Date(receipt.at));
-  return data.goals
-    .filter((goal) => goal.provider === receipt.provider)
-    .flatMap((goal) =>
-      goal.entries
-        .filter(
-          (entry) =>
-            (entry.source === undefined || entry.source === "manual") &&
-            entry.cents === receipt.amountCents &&
-            localDate(new Date(entry.at)) === receiptDay,
-        )
-        .map((entry) => ({
-          goalId: goal.id,
-          goalName: goal.name,
-          entryId: entry.id,
-          at: entry.at,
-        })),
-    );
-}
-export function reconcileReceipt(data, receipt, goalId, entryId) {
-  validateReceipt(receipt);
-  if (data.importedIds.includes(receipt.id)) return data;
-  if (
-    !possibleReceiptMatches(data, receipt).some(
-      (match) => match.goalId === goalId && match.entryId === entryId,
-    )
-  )
-    throw new Error("Elige un movimiento manual del mismo monto, app y día.");
-  const next = {
-    ...data,
-    importedIds: [...data.importedIds, receipt.id],
-    goals: data.goals.map((goal) =>
-      goal.id === goalId
-        ? {
-            ...goal,
-            entries: goal.entries.map((entry) =>
-              entry.id === entryId ? { ...entry, source: "gmail" } : entry,
-            ),
-          }
-        : goal,
-    ),
-  };
-  validateBackup(next);
-  return next;
-}
 function changeManualEntry(data, goalId, entryId, change) {
   const goal = data.goals.find((item) => item.id === goalId);
   const entry = goal?.entries.find((item) => item.id === entryId);
@@ -660,31 +595,6 @@ export function removeManualEntry(data, goalId, entryId, now = Date.now()) {
       ...trashItems(data, now).filter((t) => t.entry.id !== entryId),
     ].slice(0, TRASH_MAX),
   };
-}
-export function addReceipt(
-  data,
-  receipt,
-  goalId,
-  { allowPossibleDuplicate = false } = {},
-) {
-  if (
-    data.importedIds.includes(receipt.id) ||
-    !data.goals.some((g) => g.id === goalId)
-  )
-    return data;
-  validateReceipt(receipt);
-  const goal = data.goals.find((item) => item.id === goalId);
-  if (goal.archived || (receipt.provider && goal.provider !== receipt.provider))
-    throw new Error("Elige una cajita activa de la misma app del comprobante.");
-  if (!allowPossibleDuplicate && possibleReceiptMatches(data, receipt).length)
-    throw new Error(
-      "Revisa los movimientos manuales que podrían corresponder a este correo.",
-    );
-  return recordEntry(
-    { ...data, importedIds: [...data.importedIds, receipt.id] },
-    goalId,
-    { cents: receipt.amountCents, at: receipt.at, source: "gmail" },
-  ).data;
 }
 export function estimate(principalCents, annualRate, days) {
   return Math.round((((principalCents * annualRate) / 100) * days) / 365);

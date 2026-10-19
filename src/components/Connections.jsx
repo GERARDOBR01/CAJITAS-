@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { api, connectGmail } from "../platform.js";
+import { money, reachedTarget } from "../domain.js";
 import {
   addReceipt,
-  money,
   possibleReceiptMatches,
-  reachedTarget,
   reconcileReceipt,
-} from "../domain.js";
+} from "../receipts/gmail.js";
 import LocalMailImport from "./LocalMailImport.jsx";
 
 export default function Connections({

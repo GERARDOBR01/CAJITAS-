@@ -8,3 +8,5 @@ Términos del dominio de Guardadito. Úsalos igual en código, tests y revisione
 - **Journal store**: el módulo que guarda el Journal en el dispositivo (web o nativo), impide pisar cambios más nuevos con escrituras viejas y avisa a quien lo escuche. No conoce textos de la interfaz ni recordatorios.
 - **Respaldo**: un archivo exportado del Journal. Restaurarlo reemplaza el Journal y apaga los recordatorios.
 - **Guardián**: la pareja que confirma depósitos y retiros de una cajita en pareja.
+- **Comprobante** (`receipt`): el aviso de un depósito que llega por Gmail o por un archivo de correo local. Se cuenta una sola vez (`importedIds`) y puede coincidir con un movimiento ya anotado (mismo monto, misma app, mismo día).
+- **Receipt kernel** (`src/receipts/kernel.js`): lo que Gmail y el correo local comparten (qué es la misma operación, contarla una vez, anotar el depósito). Cada fuente decide lo suyo: qué movimientos puede reconocer, qué pasa al vincular y con qué `source` se anota el nuevo.
