@@ -1229,6 +1229,35 @@ summary {
 .pet-eyes {
   animation: blink 6.5s infinite;
 }
+/* Taro and Nuri (FlatPet): the tail and the pebble move on their own. */
+.pet-tail {
+  transform-box: fill-box;
+  transform-origin: 5% 95%;
+  animation: pet-wag 2.6s ease-in-out infinite;
+}
+.otter-tail {
+  transform-origin: 5% 70%;
+}
+.mood-happy .pet-tail,
+.mood-excited .pet-tail,
+.mood-celebrate .pet-tail {
+  animation-duration: 0.4s;
+}
+.mood-sleepy .pet-tail {
+  animation: none;
+}
+.pet-dog .pet-arm,
+.pet-otter .pet-arm {
+  transform-origin: 85% 10%;
+}
+.pet-dog .pet-ear {
+  transform-origin: 50% 95%;
+}
+.pet-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pet-twinkle 2.8s ease-in-out infinite;
+}
 .pet-sparkles {
   animation: twinkle 4s ease-in-out infinite;
 }
@@ -2222,6 +2251,26 @@ summary {
   }
   75% {
     transform: rotate(4deg);
+  }
+}
+@keyframes pet-wag {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes pet-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 @keyframes pet-snooze {

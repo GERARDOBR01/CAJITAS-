@@ -82,7 +82,11 @@ export default function AppShell({
                     ? "🐮"
                     : pet.pet === "bunny"
                       ? "🐰"
-                      : "🌱"}
+                      : pet.pet === "dog"
+                        ? "🐶"
+                        : pet.pet === "otter"
+                          ? "🦦"
+                          : "🌱"}
             </span>
           </button>
         </header>

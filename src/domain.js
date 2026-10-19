@@ -161,6 +161,18 @@ export const PETS = {
     color: "#d9d5ef",
     motto: "Vamos a tu ritmo, muuuy bien.",
   },
+  dog: {
+    name: "Taro",
+    label: "Shiba",
+    color: "#ffb36b",
+    motto: "Meneo la cola por cada pasito.",
+  },
+  otter: {
+    name: "Nuri",
+    label: "Nutria",
+    color: "#c99467",
+    motto: "Guardo mi piedrita, y tú tus sueños.",
+  },
   bunny: {
     name: "Luna",
     label: "Conejito",

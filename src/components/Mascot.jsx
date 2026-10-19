@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { PETS } from "../domain.js";
 import Sprout from "./Sprout.jsx";
 import CookieCat from "./CookieCat.jsx";
+import FlatPet from "./FlatPet.jsx";
 import {
   HAPPY_MS,
   MOOD_LABEL,
@@ -143,6 +144,7 @@ function ClassicMascot({
     daysAway: moodProp === "sleepy" ? Infinity : 0,
   });
   const animal = pet !== "box",
+    flat = pet === "dog" || pet === "otter",
     outline = "#574d55";
   const shown = name ?? spec.name;
   const label = `${shown} ${MOOD_LABEL[mood]}`;
@@ -236,7 +238,15 @@ function ClassicMascot({
           className="pet-body"
           transform={`translate(120 196) scale(${growth}) translate(-120 -196)`}
         >
-          {animal ? (
+          {flat ? (
+            <FlatPet
+              pet={pet}
+              mood={mood}
+              look={look}
+              stage={stage}
+              accessory={accessory}
+            />
+          ) : animal ? (
             <>
               <path
                 className="pet-arm left"
@@ -494,50 +504,54 @@ function ClassicMascot({
               <Mouth x={120} y={140} color="#476955" mood={mood} />
             </>
           )}
-          <g transform={animal ? "translate(0 -8)" : "translate(0 6)"}>
-            <Sprout stage={stage} />
-          </g>
-          {accessory === "bow" && (
-            <g transform="translate(139 54)">
-              <path
-                d="M0 0q-25-20-22 2 2 18 22 1 23 18 23-1 0-22-23-2"
-                fill="#e9a5b9"
-                stroke={outline}
-                strokeWidth="2"
-              />
-              <circle
-                cx="0"
-                cy="2"
-                r="5"
-                fill="#f7c6d3"
-                stroke={outline}
-                strokeWidth="2"
-              />
-            </g>
-          )}
-          {accessory === "scarf" && (
+          {!flat && (
             <>
-              <path
-                d="M82 149q39 14 77 0l-2 13q-40 12-73 0Z"
-                fill="#d4b7e9"
-                stroke={outline}
-                strokeWidth="2"
-              />
-              <path
-                d="M141 156v30l-16-5 6-24"
-                fill="#d4b7e9"
-                stroke={outline}
-                strokeWidth="2"
-              />
+              <g transform={animal ? "translate(0 -8)" : "translate(0 6)"}>
+                <Sprout stage={stage} />
+              </g>
+              {accessory === "bow" && (
+                <g transform="translate(139 54)">
+                  <path
+                    d="M0 0q-25-20-22 2 2 18 22 1 23 18 23-1 0-22-23-2"
+                    fill="#e9a5b9"
+                    stroke={outline}
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx="0"
+                    cy="2"
+                    r="5"
+                    fill="#f7c6d3"
+                    stroke={outline}
+                    strokeWidth="2"
+                  />
+                </g>
+              )}
+              {accessory === "scarf" && (
+                <>
+                  <path
+                    d="M82 149q39 14 77 0l-2 13q-40 12-73 0Z"
+                    fill="#d4b7e9"
+                    stroke={outline}
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M141 156v30l-16-5 6-24"
+                    fill="#d4b7e9"
+                    stroke={outline}
+                    strokeWidth="2"
+                  />
+                </>
+              )}
+              {accessory === "star" && (
+                <path
+                  d="m120 150 5 9 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z"
+                  fill="#f9dc8c"
+                  stroke="#bba168"
+                  strokeWidth="2"
+                />
+              )}
             </>
-          )}
-          {accessory === "star" && (
-            <path
-              d="m120 150 5 9 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z"
-              fill="#f9dc8c"
-              stroke="#bba168"
-              strokeWidth="2"
-            />
           )}
         </g>
       </g>
