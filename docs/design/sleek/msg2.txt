@@ -1,0 +1,9 @@
+Sigue con el resto de la app Guardadito, con el mismo estilo y tema que las 4 pantallas ya creadas (Mis cajitas, Registrar ahorro, Detalle de cajita, Bienvenida). Crea estas pantallas nuevas, todas con la barra inferior de 4 pestañas (Mis cajitas, Mi mascota, Actividad, Más) cuando corresponda: 
+1. Retiro con confirmación suave de compromiso (el candado es de compromiso, no bancario; tono sin culpa, con la mascota un poco triste pero cariñosa). 
+2. Meta alcanzada: celebración con confeti, brote que florece al 100 % y la mascota saltando. 
+3. Mi mascota: mascota grande con su estado, selector de mascota (Pipo, Mila, Luna, Caji), accesorios incluido el brote que crece con el avance, personalización. 
+4. Actividad: historial de movimientos agrupado por fecha, filtros por cajita, y sección Papelera con botón "Restaurar" (30 días). 
+5. Mi pareja: guardián, depósitos pendientes por confirmar, cajitas de los dos, mandar una sorpresa (notita, premio, mascota). 
+6. Importar comprobantes: lista por revisar con monto, app de origen, fecha y coincidencias con movimientos ya anotados; cada depósito se registra una sola vez. 
+7. Más: Mi cuenta (sincronizar en la nube), Simulador de ahorro, Respaldo, Recordatorios, Instalar la app, Conexiones. 
+Mismo español de México, cálido, sin culpa. Recuerda: la app nunca mueve dinero.
