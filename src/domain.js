@@ -102,7 +102,9 @@ export const PETS = {
     name: "Cookie",
     label: "Gatito",
     color: "#c98b5b",
-    motto: "¡BECHO! Aquí estoy para cuidar tus sueños.",
+    motto: "Miau. Aquí estoy para cuidar tus sueños.",
+    // Only for whoever receives Cookie as a gift from their partner.
+    special: true,
   },
   pig: {
     name: "Pipo",
@@ -129,10 +131,57 @@ export const PETS = {
     motto: "Los sueños también necesitan una casita.",
   },
 };
+/** What a special pet says when nobody personalized it. */
+export const PET_WORDS = {
+  lines: ["¡Miau!", "Miau miau"],
+  loveText: "¡Te quiero mucho!",
+};
+/** Pets this person can choose: special ones only once they were given. */
+export function availablePets(preferences) {
+  const given = preferences?.special?.pets ?? [];
+  return Object.keys(PETS).filter(
+    (key) =>
+      !PETS[key].special || given.includes(key) || preferences?.pet === key,
+  );
+}
+/** Words of the current pet: the partner's, or the default ones. */
+export function petWords(preferences) {
+  const special = preferences?.special;
+  return {
+    lines: special?.lines?.length ? special.lines : PET_WORDS.lines,
+    loveText: special?.loveText || PET_WORDS.loveText,
+    motto: special?.motto || PETS[preferences?.pet]?.motto || "",
+    from: special?.from || "",
+  };
+}
+function validSpecial(special) {
+  if (!special || typeof special !== "object" || Array.isArray(special))
+    return undefined;
+  const text = (value, max) =>
+    typeof value === "string" && value.trim() && value.length <= max
+      ? value.trim()
+      : "";
+  const lines = Array.isArray(special.lines)
+    ? special.lines
+        .map((l) => text(l, 40))
+        .filter(Boolean)
+        .slice(0, 8)
+    : [];
+  const pets = Array.isArray(special.pets)
+    ? special.pets.filter((p) => Object.hasOwn(PETS, p))
+    : [];
+  return {
+    from: text(special.from, 40),
+    lines,
+    loveText: text(special.loveText, 60),
+    motto: text(special.motto, 80),
+    pets,
+  };
+}
 export function defaultPreferences() {
   return {
-    pet: "cat",
-    petName: "Cookie",
+    pet: "pig",
+    petName: "Pipo",
     accessory: "leaf",
     animations: true,
     reminder: defaultReminder(),
@@ -374,6 +423,9 @@ export function validateBackup(data) {
       accessory: preferences.accessory,
       animations: preferences.animations,
       reminder: preferences.reminder,
+      ...(validSpecial(data.preferences?.special) && {
+        special: validSpecial(data.preferences.special),
+      }),
     },
     checkins: [...new Set(checkins)].sort(),
     goals: data.goals.map((g) => ({

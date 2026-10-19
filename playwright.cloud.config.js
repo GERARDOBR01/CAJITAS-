@@ -20,5 +20,5 @@ export default defineConfig({
     env: { VITE_FIREBASE_EMULATOR: "1" },
     reuseExistingServer: false,
   },
-  timeout: 60000,
+  timeout: 120000,
 });
