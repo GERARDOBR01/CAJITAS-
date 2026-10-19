@@ -1,0 +1,12 @@
+android
+ios
+docs
+e2e
+e2e-cloud
+tests
+tests-rules
+test-results
+playwright-report
+.env
+.env.*
+!.env.example

@@ -24,7 +24,9 @@ export const cloudConfigured = useEmulator || Boolean(firebaseConfig.apiKey);
 // key; the private half lives only on the server.
 export const vapidPublicKey =
   "BPkPKnEY6C0Im8LU5jgvgNC7bnCyMAWvXraGQD3g8RsdCtwDafeFQBlB2ukO_9iLUm1Dy3rwTFworwtMUcV-9qo";
-// Where /api/push lives. Same origin in development; the Vercel backend for
-// the published web and the app.
-export const pushOrigin = import.meta.env.VITE_PUSH_ORIGIN ?? "";
+// Where /api/push lives: the same dev server locally, the Vercel backend
+// (server/push.js) for the published web.
+export const pushOrigin =
+  import.meta.env.VITE_PUSH_ORIGIN ??
+  (import.meta.env.DEV ? "" : "https://guardadito-kappa.vercel.app");
 export const pushConfigured = Boolean(pushOrigin) || import.meta.env.DEV;

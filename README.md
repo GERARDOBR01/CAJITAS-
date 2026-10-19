@@ -28,6 +28,18 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 [Capturas](docs/screenshots/v09/) · Posicionamiento y estudio de Splitwise con REA: [competencia](docs/research/competencia-2026-10.md), [Splitwise](docs/research/splitwise-rea.md).
 
+## Avisos en el teléfono v0.13 🔔
+
+- **Más → Mi pareja → «Activar avisos»** registra ese teléfono. Te avisa aunque la app esté cerrada cuando tu pareja:
+  - te mande una sorpresa: notita, premio o mascota (el aviso no dice qué trae);
+  - te avise un depósito o te pida un retiro;
+  - confirme o rechace tu depósito;
+  - aparte para una cajita de los dos.
+- **En iPhone** los avisos necesitan iOS 16.4 o más y Guardadito en la pantalla de inicio (Safari → Compartir → «Agregar a inicio»). Si falta eso, el panel lo explica.
+- **Cómo funciona:** es Web Push estándar con llaves VAPID. El servidor (`server/push.js`, en Vercel) lee el registro **con la sesión de quien avisa**, así que las reglas de Firestore deciden qué puede ver. El texto del aviso lo escribe el servidor y solo para algo de los últimos 10 minutos, así que nadie puede mandar mensajes inventados ni repetirlos. Si un teléfono ya no acepta avisos, se borra solo.
+- Servidor: `npx vercel deploy --prod`, con `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `APP_ORIGIN` y `WEB_APP_URL` (la de Pages) configuradas en Vercel. La llave pública también va en `src/cloud/config.js`.
+- Hay 9 pruebas del servidor, 4 de reglas y del servidor contra el emulador de Firestore, y un recorrido en Chrome de Android y Safari de iPhone.
+
 ## Depositar a través de tu guardián v0.12 🤝
 
 Para quien no tiene cuenta de banco (o no quiere abrir una): una persona de confianza guarda el dinero y Guardadito lleva la cuenta clara para los dos.
