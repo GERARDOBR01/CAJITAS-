@@ -78,6 +78,45 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
+      // Cajitas both of them save for. No admins: either one edits it; it is
+      // archived, never deleted, so nobody erases the other's savings.
+      match /goals/{goalId} {
+        allow read: if member(pairId);
+        allow create, update: if member(pairId)
+          && request.resource.data.keys().hasOnly(["name", "targetCents", "unlockDate",
+            "icon", "split", "createdBy", "createdAt", "archived"])
+          && shortText(request.resource.data.name, 80)
+          && request.resource.data.targetCents is int
+          && request.resource.data.targetCents > 0
+          && request.resource.data.targetCents <= 100000000000
+          && request.resource.data.split is map
+          && request.resource.data.split.keys().hasOnly(pair(pairId).members)
+          && request.resource.data.archived is bool;
+        allow delete: if false;
+      }
+      // What each one set aside (positive) or took out (negative) in their
+      // own bank. Each person records and corrects only their own.
+      match /entries/{entryId} {
+        allow read: if member(pairId);
+        allow create: if member(pairId)
+          && request.resource.data.keys().hasOnly(["goalId", "by", "cents", "at", "note", "createdAt"])
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.cents is int
+          && request.resource.data.cents != 0
+          && request.resource.data.cents <= 100000000000
+          && request.resource.data.cents >= -100000000000
+          && request.resource.data.at is string
+          && (!("note" in request.resource.data) || request.resource.data.note.size() <= 200)
+          && exists(/databases/$(database)/documents/pairs/$(pairId)/goals/$(request.resource.data.goalId));
+        allow update: if member(pairId)
+          && resource.data.by == request.auth.uid
+          && request.resource.data.by == resource.data.by
+          && request.resource.data.goalId == resource.data.goalId
+          && request.resource.data.cents is int
+          && request.resource.data.cents != 0;
+        allow delete: if member(pairId) && resource.data.by == request.auth.uid;
+      }
+
       // Surprises from one to the other: a special pet, notes, rewards.
       match /gifts/{giftId} {
         allow read: if member(pairId);
