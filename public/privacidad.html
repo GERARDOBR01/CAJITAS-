@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacidad · Guardadito</title>
+    <style>
+      :root {
+        --bg: #fff7ef;
+        --text: #2b2140;
+        --muted: #6b5f80;
+        --primary: #6c3fd1;
+        --card: #ffffff;
+        --line: #e6dcf3;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1626;
+          --text: #f3edfb;
+          --muted: #c2b6d6;
+          --primary: #b99bff;
+          --card: #261e33;
+          --line: #3a2f4b;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      h1 {
+        font-size: 1.9rem;
+        line-height: 1.2;
+      }
+      h2 {
+        margin-top: 2rem;
+        font-size: 1.2rem;
+      }
+      a {
+        color: var(--primary);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card);
+        border-radius: 12px;
+        overflow: hidden;
+        font-size: 0.95rem;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .table {
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="muted">Guardadito · Aviso de privacidad</p>
+      <h1>Tu ahorro es tuyo. Tus datos también.</h1>
+      <p class="muted">Última actualización: 18 de octubre de 2026</p>
+
+      <p>
+        Guardadito es una app para registrar tus metas de ahorro, sola o en
+        pareja. <strong>Guardadito no es un banco y nunca mueve tu dinero</strong>:
+        tú apartas en tu propia app o banco y aquí llevas la cuenta. Este aviso
+        explica qué datos usa la app, para qué y cómo borrarlos.
+      </p>
+
+      <h2>Sin cuenta, todo se queda en tu teléfono</h2>
+      <p>
+        Puedes usar Guardadito sin crear cuenta. Tus cajitas, movimientos y tu
+        mascota se guardan solo en tu teléfono. No los vemos ni salen de él,
+        salvo que tú descargues un respaldo.
+      </p>
+
+      <h2>Con cuenta, esto es lo que guardamos</h2>
+      <div class="table">
+        <table>
+          <tr>
+            <th>Dato</th>
+            <th>Para qué</th>
+            <th>Quién lo ve</th>
+          </tr>
+          <tr>
+            <td>Correo, nombre y contraseña (la contraseña cifrada)</td>
+            <td>Entrar a tu cuenta y recuperarla</td>
+            <td>Solo tú. Tu pareja vinculada ve tu nombre.</td>
+          </tr>
+          <tr>
+            <td>Tus cajitas y movimientos</td>
+            <td>Respaldarlos y llevarlos a tus otros teléfonos</td>
+            <td>Solo tú</td>
+          </tr>
+          <tr>
+            <td>Avance de tus cajitas (nombre, meta y cuánto llevas)</td>
+            <td>Que tu pareja vinculada vea cómo vas</td>
+            <td>Tú y tu pareja vinculada</td>
+          </tr>
+          <tr>
+            <td>Cajitas en pareja, aportes, notitas, premios y fotos que mandas</td>
+            <td>Ahorrar juntos y mandarse sorpresas</td>
+            <td>Tú y tu pareja vinculada</td>
+          </tr>
+          <tr>
+            <td>CLABE, titular y banco, si eres guardián</td>
+            <td>Que tu pareja sepa a dónde mandarte su ahorro</td>
+            <td>Tú y tu pareja vinculada</td>
+          </tr>
+          <tr>
+            <td>Depósitos avisados y confirmados</td>
+            <td>Llevar la cuenta entre tú y tu guardián</td>
+            <td>Tú y tu pareja vinculada</td>
+          </tr>
+          <tr>
+            <td>Dirección técnica de avisos de tu teléfono, si activas avisos</td>
+            <td>Mandarte avisos de tu pareja</td>
+            <td>Nadie la usa para otra cosa</td>
+          </tr>
+        </table>
+      </div>
+      <p>
+        Guardadito <strong>no</strong> pide ni guarda números de tarjeta,
+        contraseñas de tu banco ni tu ubicación. No usa publicidad, no vende ni
+        comparte tus datos para marketing y no usa analítica de terceros.
+      </p>
+
+      <h2>Dónde viven</h2>
+      <p>
+        Las cuentas y los datos en la nube están en
+        <a href="https://firebase.google.com/support/privacy">Firebase</a>
+        (Google). Los avisos se mandan desde un servidor en
+        <a href="https://vercel.com/legal/privacy-policy">Vercel</a>, que
+        solo lee lo necesario para escribir cada aviso y no lo guarda. Todo
+        viaja cifrado (HTTPS). Las reglas de seguridad no dejan que nadie fuera
+        de tu pareja vinculada lea tus datos.
+      </p>
+
+      <h2>Conexiones opcionales</h2>
+      <p>
+        Si tú lo activas, Guardadito puede leer los correos de comprobantes de
+        depósito de Nu o Mercado Pago en Gmail (solo lectura). Lo hace para
+        proponerte registrar ese ahorro. Solo se usa el monto y la fecha;
+        puedes desconectarlo cuando quieras.
+      </p>
+
+      <h2>Tus derechos y cómo borrar todo</h2>
+      <ul>
+        <li>
+          <strong>Deshacer el vínculo:</strong> en Mi pareja. Se borran tus
+          sorpresas, tu CLABE y tus avisos pendientes.
+        </li>
+        <li>
+          <strong>Borrar tu cuenta:</strong> Más → Mi cuenta → «Borrar mi
+          cuenta». Se borran la cuenta, tu copia en la nube, tus aportes en
+          cajitas de pareja y el vínculo.
+          <a href="borrar-cuenta.html">Instrucciones completas</a>.
+        </li>
+        <li>
+          <strong>Llevarte tus datos:</strong> Más → Respaldo descarga todo en
+          un archivo, y Actividad → «Exportar CSV» descarga tus movimientos.
+        </li>
+      </ul>
+      <p>
+        Puedes ejercer tus derechos de acceso, rectificación, cancelación u
+        oposición (ARCO) desde la app o escribiéndonos.
+      </p>
+
+      <h2>Menores de edad</h2>
+      <p>
+        Guardadito puede usarse en familia con un adulto de confianza como
+        guardián. No pedimos más datos de los descritos arriba.
+      </p>
+
+      <h2>Contacto</h2>
+      <p>
+        Dudas o solicitudes:
+        <a href="https://github.com/GERARDOBR01/CAJITAS-/issues"
+          >github.com/GERARDOBR01/CAJITAS-/issues</a
+        >. Si cambiamos este aviso, la app y esta página mostrarán la nueva
+        fecha.
+      </p>
+    </main>
+  </body>
+</html>

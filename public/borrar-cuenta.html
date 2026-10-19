@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Borrar cuenta · Guardadito</title>
+    <style>
+      :root {
+        --bg: #fff7ef;
+        --text: #2b2140;
+        --muted: #6b5f80;
+        --primary: #6c3fd1;
+        --card: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1626;
+          --text: #f3edfb;
+          --muted: #c2b6d6;
+          --primary: #b99bff;
+          --card: #261e33;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      a {
+        color: var(--primary);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 16px 20px;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 800;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="muted">Guardadito</p>
+      <h1>Cómo borrar tu cuenta y tus datos</h1>
+      <div class="card">
+        <ol>
+          <li>Abre Guardadito: la app o la web.</li>
+          <li>Entra a <strong>Más → Mi cuenta</strong> con tu correo.</li>
+          <li>Toca <strong>«Borrar mi cuenta»</strong> y escribe tu contraseña.</li>
+        </ol>
+        <a class="button" href="./?tab=account">Abrir Guardadito en la web</a>
+      </div>
+      <h2>Qué se borra</h2>
+      <ul>
+        <li>Tu cuenta (correo, nombre y contraseña).</li>
+        <li>Tu copia de cajitas y movimientos en la nube.</li>
+        <li>
+          Tu vínculo de pareja, las sorpresas que mandaste, tu CLABE si eras
+          guardián, tus avisos de depósito y tus aportes a cajitas en pareja.
+        </li>
+        <li>Los teléfonos registrados para recibir avisos.</li>
+      </ul>
+      <p>
+        Se borra al momento; no guardamos copias. Las cajitas que están solo en
+        tu teléfono se quedan ahí hasta que desinstales la app. Antes puedes
+        descargar un respaldo en Más → Respaldo.
+      </p>
+      <h2>¿Olvidaste tu contraseña o ya no tienes la app?</h2>
+      <p>
+        En Mi cuenta usa «Olvidé mi contraseña» para recuperarla y después
+        borra la cuenta. Si no puedes entrar, pídelo en
+        <a href="https://github.com/GERARDOBR01/CAJITAS-/issues"
+          >github.com/GERARDOBR01/CAJITAS-/issues</a
+        >
+        sin escribir tu correo en público; te responderemos para confirmar que
+        la cuenta es tuya y la borraremos en máximo 30 días.
+      </p>
+      <p><a href="privacidad.html">Aviso de privacidad</a></p>
+    </main>
+  </body>
+</html>

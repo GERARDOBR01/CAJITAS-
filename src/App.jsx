@@ -12,6 +12,7 @@ import Connections from "./components/Connections.jsx";
 import Backup from "./components/Backup.jsx";
 import Account, { SyncPrompt } from "./components/Account.jsx";
 import { useCloud } from "./cloud/useCloud.js";
+import { cloudConfigured } from "./cloud/config.js";
 import { usePartner } from "./cloud/usePartner.js";
 import Partner from "./components/Partner.jsx";
 import SurpriseReveal from "./components/SurpriseReveal.jsx";
@@ -82,11 +83,14 @@ export default function App() {
       return initialData();
     }
   });
-  const [tab, setTab] = useState(() =>
-      new URLSearchParams(location.search).get("tutorial") === "1"
-        ? "tutorial"
-        : "goals",
-    ),
+  const [tab, setTab] = useState(() => {
+      const params = new URLSearchParams(location.search);
+      if (params.get("tutorial") === "1") return "tutorial";
+      // Links from the privacy pages open Mi cuenta directly.
+      return params.get("tab") === "account" && cloudConfigured
+        ? "account"
+        : "goals";
+    }),
     [modal, setModal] = useState(null),
     [deposit, setDeposit] = useState(null),
     [toast, setToast] = useState(""),

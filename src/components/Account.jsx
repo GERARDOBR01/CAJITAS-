@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { authMessage } from "../cloud/sync.js";
 import { balance, money, today } from "../domain.js";
-import { saveFile } from "../platform.js";
+import { isNative, openExternal, saveFile } from "../platform.js";
 import Modal from "./Modal.jsx";
 
 const lib = () => import("../cloud/firebase.js");
@@ -15,6 +15,28 @@ const STATUS = {
   error:
     "No pudimos llegar a tu cuenta. Tus cajitas siguen en este teléfono; lo intentamos de nuevo con tu próximo cambio.",
 };
+
+const PRIVACY_URL = "https://gerardobr01.github.io/CAJITAS-/privacidad.html";
+function PrivacyLink() {
+  return (
+    <a
+      className="small-text privacy-link"
+      href={PRIVACY_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={
+        isNative
+          ? (e) => {
+              e.preventDefault();
+              openExternal(PRIVACY_URL);
+            }
+          : undefined
+      }
+    >
+      Aviso de privacidad
+    </a>
+  );
+}
 
 export default function Account({ cloud, notify }) {
   const [mode, setMode] = useState("signin"),
@@ -138,6 +160,7 @@ export default function Account({ cloud, notify }) {
             Sin cuenta, Guardadito funciona igual que siempre y tus cajitas se
             quedan solo en este teléfono.
           </p>
+          <PrivacyLink />
         </div>
       </section>
     );
@@ -233,6 +256,7 @@ export default function Account({ cloud, notify }) {
           </form>
         </Modal>
       )}
+      <PrivacyLink />
     </section>
   );
 }

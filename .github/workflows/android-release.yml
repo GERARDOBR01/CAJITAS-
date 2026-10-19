@@ -1,0 +1,57 @@
+name: Paquete para Google Play
+# Builds the signed Android App Bundle (.aab) to upload to Play Console.
+# Run it from Actions → "Paquete para Google Play" → Run workflow.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-36 build-tools;36.0.0 platform-tools"
+      - run: npm ci
+      - run: npm run build:native
+      - run: npx cap sync android
+      - name: Llave de subida
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/upload-key.jks"
+      - name: Compilar AAB y APK firmados
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/upload-key.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --console=plain bundleRelease assembleRelease
+      - name: Revisar la firma
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs \
+            android/app/build/outputs/apk/release/app-release.apk | grep -i "sha-256"
+          keytool -printcert -jarfile android/app/build/outputs/bundle/release/app-release.aab | grep -i "sha256"
+      - run: rm -f "$RUNNER_TEMP/upload-key.jks"
+        if: always()
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guardadito-play
+          path: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30

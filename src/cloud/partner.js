@@ -92,6 +92,16 @@ export async function unpair(pairId, uid) {
     .deleteDoc(s.doc(db, "pairs", pairId, "summaries", uid))
     .catch(() => {});
   await s.deleteDoc(s.doc(db, "pairs", pairId, "payout", uid)).catch(() => {});
+  // This person's phones stop getting notices from the couple.
+  const phones = await s
+    .getDocs(
+      s.query(
+        s.collection(db, "pairs", pairId, "devices"),
+        s.where("uid", "==", uid),
+      ),
+    )
+    .catch(() => ({ docs: [] }));
+  await Promise.all(phones.docs.map((d) => s.deleteDoc(d.ref).catch(() => {})));
   await s.deleteDoc(s.doc(db, "pairs", pairId));
 }
 
