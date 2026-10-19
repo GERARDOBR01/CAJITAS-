@@ -413,3 +413,24 @@ describe("avisos con metas sin fecha", () => {
     expect(items.map((i) => i.goalId)).toEqual(["g1", "g0"]);
   });
 });
+
+describe("Taro y Nuri, las mascotas nuevas", () => {
+  it("cualquiera puede elegirlas sin regalo", () => {
+    const prefs = initialData().preferences;
+    expect(availablePets(prefs)).toEqual(
+      expect.arrayContaining(["dog", "otter"]),
+    );
+  });
+  it("el respaldo las acepta con su nombre", () => {
+    for (const [pet, petName] of [
+      ["dog", "Taro"],
+      ["otter", "Nuri"],
+    ]) {
+      const data = {
+        ...initialData(),
+        preferences: { ...initialData().preferences, pet, petName },
+      };
+      expect(validateBackup(data).preferences).toMatchObject({ pet, petName });
+    }
+  });
+});

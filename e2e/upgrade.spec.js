@@ -74,14 +74,16 @@ test("plan persistente, edición y archivo reversible conservan dinero e histori
   await page.goto("/");
   await createGoal(page);
   const card = page.locator(".goal-card");
-  await expect(card.getByLabel("Frecuencia de Una escapadita")).toHaveValue(
+  await card
+    .getByRole("button", { name: "Ver detalle de Una escapadita" })
+    .click();
+  await expect(page.getByLabel("Frecuencia de Una escapadita")).toHaveValue(
     "15",
   );
+  await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("100");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await card.getByRole("button", { name: "Editar Una escapadita" }).click();
   await page.getByLabel("Nombre de tu meta").fill("Mi viaje bonito");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
@@ -100,11 +102,16 @@ test("plan persistente, edición y archivo reversible conservan dinero e histori
   await card.getByRole("button", { name: "Recuperar cajita" }).click();
   await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
   await expect(card).toContainText("Mi viaje bonito");
-  await expect(card).toContainText("Ver movimientos (1)");
+  await expect(card).toContainText("Ver plan y movimientos (1)");
   await page.reload();
-  await expect(card.getByLabel("Frecuencia de Mi viaje bonito")).toHaveValue(
+  await card
+    .getByRole("button", { name: "Ver detalle de Mi viaje bonito" })
+    .click();
+  await expect(page.getByLabel("Frecuencia de Mi viaje bonito")).toHaveValue(
     "15",
   );
+  await expect(page.locator(".detail-movements li")).toHaveCount(1);
+  await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
   await dismiss(page);
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({ path: "docs/screenshots/v2-04-meta-mobile.png" });
@@ -119,9 +126,7 @@ test("actividad, CSV y calendario ofrecen descargas reales sin transferencias", 
     .getByRole("button", { name: "+ Registrar ahorro" })
     .click();
   await page.getByLabel("Monto (MXN)").fill("250");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await page.getByRole("button", { name: "Actividad", exact: true }).click();
   await expect(
     page.getByRole("img", { name: /Historial del ahorro registrado/ }),
@@ -137,9 +142,7 @@ test("actividad, CSV y calendario ofrecen descargas reales sin transferencias", 
   expect(csv.suggestedFilename()).toMatch(/\.csv$/);
   await page.getByRole("button", { name: "Mi mascota", exact: true }).click();
   const calendarPromise = page.waitForEvent("download");
-  await page
-    .getByRole("button", { name: "Agregar a mi calendario ↗" })
-    .click();
+  await page.getByRole("button", { name: "Agregar a mi calendario ↗" }).click();
   const calendar = await calendarPromise;
   expect(calendar.suggestedFilename()).toBe("cajitas-recordatorio.ics");
 });

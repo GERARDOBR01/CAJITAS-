@@ -1,6 +1,6 @@
 // Money kept by a guardian: the CLABE to send it to and how a confirmed
 // deposit becomes a movement in the sender's cajita.
-import { balance, validateBackup } from "../domain.js";
+import { balance, recordEntry } from "../domain.js";
 
 const WEIGHTS = [3, 7, 1];
 export const cleanClabe = (text) => String(text ?? "").replace(/\D/g, "");
@@ -53,10 +53,12 @@ export function checkDeposit(goal, cents, pendingOut = 0) {
 /**
  * Records my deposits the guardian confirmed and I have not recorded yet.
  * Returns the new journal and the deposits to mark as applied; `added` are
- * the ones that changed the journal (the rest were already there).
+ * the ones that changed the journal (the rest were already there), and
+ * `completed` says whether any of them reached a cajita's target.
  */
 export function applyConfirmed(data, deposits, uid, now = Date.now()) {
-  let next = data;
+  let next = data,
+    completed = false;
   const marks = [],
     added = [];
   for (const d of deposits) {
@@ -68,34 +70,22 @@ export function applyConfirmed(data, deposits, uid, now = Date.now()) {
       marks.push(d);
       continue;
     }
-    const candidate = {
-      ...next,
-      goals: next.goals.map((g) =>
-        g.id === goal.id
-          ? {
-              ...g,
-              entries: [
-                ...g.entries,
-                {
-                  id,
-                  cents: d.cents,
-                  // The guardian's clock may run a little ahead of mine.
-                  at: new Date(Math.min(d.decidedAt ?? now, now)).toISOString(),
-                  source: "guardian",
-                },
-              ],
-            }
-          : g,
-      ),
-    };
+    let recorded;
     try {
-      validateBackup(candidate);
+      recorded = recordEntry(next, goal.id, {
+        id,
+        cents: d.cents,
+        // The guardian's clock may run a little ahead of mine.
+        at: new Date(Math.min(d.decidedAt ?? now, now)).toISOString(),
+        source: "guardian",
+      });
     } catch {
       continue;
     }
-    next = candidate;
+    next = recorded.data;
+    completed ||= recorded.reachedTarget;
     marks.push(d);
     added.push(d);
   }
-  return { data: next, marks, added };
+  return { data: next, marks, added, completed };
 }

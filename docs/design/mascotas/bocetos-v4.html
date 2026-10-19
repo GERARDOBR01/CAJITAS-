@@ -1,0 +1,420 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mascotas Guardadito v4</title><style>
+:root{font-family:"Nunito",ui-rounded,system-ui,sans-serif;color:#30223f;background:#fff9f1}body{margin:0;padding:28px 22px}h1{margin:0 0 4px;font-size:30px}p.lead{margin:0 0 16px;color:#695675;max-width:64ch}
+.bar[hidden]{display:none}.bar{display:flex;gap:10px;margin:0 0 22px;flex-wrap:wrap}.bar button{font:inherit;font-weight:800;border:2px solid #7040d5;background:#fff;color:#492493;border-radius:16px;padding:10px 18px;box-shadow:0 4px 0 #dfd1ee;cursor:pointer}.bar button[aria-pressed=true]{background:#7040d5;color:#fff;box-shadow:0 4px 0 #492493}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;max-width:840px}.card{background:#fff;border-radius:26px;padding:16px;box-shadow:0 5px 0 #dfd1ee,0 12px 24px #542c7710}
+.card svg{width:100%;height:auto;display:block;background:#f5efff;border-radius:20px}.tag{display:inline-block;margin:12px 0 4px;padding:3px 12px;border-radius:99px;background:#e0f6d5;color:#285238;font-weight:800;font-size:14px}.card h2{margin:0;font-size:20px}.card p{margin:6px 0 0;color:#695675;font-size:15px;line-height:1.4}
+/* --- partes animables --- */
+.pet *{transform-box:fill-box}.pet .mir{transform-box:view-box;transform-origin:0 0}
+.pet .e-happy,.pet .e-sleepy,.pet .zz,.pet .tongue{display:none}
+.pet[data-mood=happy] .e-open,.pet[data-mood=sleepy] .e-open{display:none}.pet[data-mood=happy] .e-happy{display:inline}.pet[data-mood=sleepy] .e-sleepy{display:inline}.pet[data-mood=sleepy] .zz{display:inline}.pet[data-mood=happy] .tongue{display:inline}
+.all{transform-origin:50% 100%}.body{transform-origin:50% 100%}.tail{transform-origin:5% 95%}.ear{transform-origin:85% 12%}.dog2 .ear{transform-origin:50% 96%}.arm{transform-origin:85% 10%}.scarf-end{transform-origin:10% 0}.heart{transform-origin:50% 60%}
+/* poses fijas (también se ven en la hoja estática) */
+.pet[data-mood=happy] .arm.l{transform:rotate(-14deg)}.pet[data-mood=happy] .arm.r{transform:rotate(-14deg)}
+.pet[data-mood=sleepy] .ear{transform:rotate(10deg)}.pet[data-mood=sleepy] .all{transform:translateY(2px) rotate(-2deg)}.pet[data-mood=sleepy] .mouth{display:none}
+.pet[data-mood=happy] .all{transform:translateY(-6px)}
+/* animación */
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,.975)}}
+@keyframes blink{0%,91%,100%{transform:scaleY(1)}94.5%{transform:scaleY(.07)}}
+@keyframes look{0%,100%{transform:translate(0,0)}30%{transform:translate(3px,1px)}65%{transform:translate(-3px,-1px)}}
+@keyframes wag{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(10deg)}}
+@keyframes wagfast{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(20deg)}}
+@keyframes flop{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg)}}
+@keyframes sway{0%,100%{transform:rotate(0)}50%{transform:rotate(-4deg)}}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1.03,.96)}40%{transform:translateY(-16px) scale(.97,1.04)}}
+@keyframes cheer{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-26deg)}}
+@keyframes shadowhop{0%,100%{transform:scale(1)}40%{transform:scale(.8)}}
+@keyframes zz{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes flutter{0%,100%{transform:rotate(0)}50%{transform:rotate(9deg)}}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.pet[data-mood=idle] .body,.pet[data-mood=sleepy] .body{animation:breathe 3.4s ease-in-out infinite}
+.pet[data-mood=sleepy] .body{animation-duration:5.5s}
+.pet .e-open{animation:blink 4.8s infinite}.pet .pupil{animation:look 7s ease-in-out infinite}
+.pet[data-mood=idle] .tail{animation:wag 2.6s ease-in-out infinite}.pet[data-mood=happy] .tail{animation:wagfast .4s ease-in-out infinite}.otter3 .tail,.otter4 .tail{transform-origin:5% 70%}
+.pet[data-mood=idle] .ear.l,.pet[data-mood=idle] .ear.r{animation:flop 5s ease-in-out infinite}.ear.r{animation-delay:-1.8s!important}
+.pet[data-mood=idle] .arm{animation:sway 4s ease-in-out infinite}
+.pet[data-mood=happy] .all{animation:hop .8s ease-in-out infinite}.pet[data-mood=happy] .shadow{animation:shadowhop .8s ease-in-out infinite;transform-origin:50% 50%}
+.pet[data-mood=happy] .arm{animation:cheer .8s ease-in-out infinite}
+.pet[data-mood=sleepy] .zz text{animation:zz 3s ease-in infinite}.pet[data-mood=sleepy] .zz text:nth-child(2){animation-delay:-1.4s}
+.scarf-end{animation:flutter 2.2s ease-in-out infinite}.pet[data-mood=idle] .heart{animation:beat 1.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.pet *{animation:none!important}}
+body.hoja *{animation:none!important}
+.sheet{display:grid;grid-template-columns:150px repeat(3,1fr);gap:10px 14px;max-width:820px;align-items:center}.sheet .cell{background:#f5efff;border-radius:18px;padding:4px}.sheet .cell svg{width:100%;display:block}.sheet .lab{font-weight:800;color:#492493;font-size:15px}.sheet .head{font-weight:800;color:#695675;text-align:center}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}</style>
+<body><h1>Mascotas v4 ✦ Guardadito</h1><p class="lead">Cada mascota es de capas: cola, orejas, alitas, ojos y cuerpo se mueven por separado. Prueba los estados:</p>
+<div class="bar" id="bar"><button data-m="idle" aria-pressed="true">Tranquila</button><button data-m="happy" aria-pressed="false">Feliz</button><button data-m="sleepy" aria-pressed="false">Dormida</button></div>
+<div id="main"><div class="grid"><div class="card"><svg class="pet dog1" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c1"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 172C200 170 212 150 200 132C193 123 182 130 187 141C191 151 184 158 170 158Z" fill="#e8961f" /></g>
+<g class="ear l"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ffc23d" />
+<g clip-path="url(#c1)"><ellipse cx="152" cy="90" rx="40" ry="42" fill="#e8961f" opacity=".55"/><ellipse cx="120" cy="206" rx="52" ry="26" fill="#fff3cd" /></g>
+<path d="M114 38C110 24 120 22 126 28C124 36 122 38 114 38Z" fill="#e8961f" />
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="136" rx="30" ry="21" fill="#fff3cd" />
+<path d="M109 125q11-6 22 0q-1 10-11 13q-10-3-11-13z" fill="#2f2626" /><ellipse cx="116" cy="127" rx="3.2" ry="1.8" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 142q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g><g class="tongue"><path d="M113 149q7 12 14 0z" fill="#ff7d98" /></g>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/>
+<path d="M66 160Q120 188 174 160L172 174Q120 202 68 174Z" fill="#35b3a6"/><ellipse cx="120" cy="190" rx="9" ry="9" fill="#ffd64a" /><ellipse cx="120" cy="190" rx="3.4" ry="3.4" fill="#e3a61f" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg><span class="tag">1 · Perrito</span><h2>Cachorro dorado</h2><p>Mancha en el ojo, collar turquesa con huesito, orejas caídas que se mueven y cola que baila.</p></div><div class="card"><svg class="pet dog2" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c2"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 176C208 182 224 150 206 128C196 118 184 128 192 140C200 154 188 164 170 160Z" fill="#e86f1c" /><path d="M200 132C190 124 184 132 190 142C194 146 200 144 202 138Z" fill="#fff0d6" /></g>
+<g class="ear l"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ff9638" />
+<g clip-path="url(#c2)"><ellipse cx="120" cy="150" rx="60" ry="30" fill="#fff0d6" /><ellipse cx="120" cy="210" rx="40" ry="30" fill="#fff0d6" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="86" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" /><ellipse cx="154" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" />
+<path d="M114 122q6-5 12 0q-1 7-6 8q-5-1-6-8z" fill="#2f2626" />
+<path d="M120 130v4M120 134q-6 8-13 3M120 134q6 8 13 3" fill="none" stroke="#2f2626" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/>
+<path d="M92 168Q120 180 148 168L120 194Z" fill="#ff4d57" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg><span class="tag">2 · Perrito</span><h2>Shiba</h2><p>Mejillas y pecho crema, cejitas de puntos, pañoleta roja, orejas paradas y cola enroscada.</p></div><div class="card"><svg class="pet otter3" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c3"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 192C210 200 232 178 222 152C217 143 206 148 209 159C212 172 196 182 172 178Z" fill="#8c5530" /><path d="M200 184q10-4 16-14M192 188q4-2 8-4" fill="none" stroke="#b0733f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/></g>
+<g class="body">
+<ellipse cx="78" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="78" cy="48" rx="7" ry="7" fill="#8c5530" /><ellipse cx="162" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="162" cy="48" rx="7" ry="7" fill="#8c5530" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#b0733f" />
+<g clip-path="url(#c3)"><ellipse cx="120" cy="176" rx="42" ry="32" fill="#f6e0bd" /></g>
+<path d="M82 56C92 44 110 40 124 42" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".28"/>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="35" ry="24" fill="#f6e0bd" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 134q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g fill="#8c5530" opacity=".7"><circle cx="100" cy="130" r="1.8"/><circle cx="106" cy="135" r="1.8"/><circle cx="140" cy="130" r="1.8"/><circle cx="134" cy="135" r="1.8"/></g>
+<path d="M86 124l-14-3M86 130l-14 4M154 124l14-3M154 130l14 4" fill="none" stroke="#8c5530" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/>
+<g class="heart"><path d="M120 190C84 168 100 148 120 162C140 148 156 168 120 190Z" fill="#ff7ea3" /></g>
+<g class="hands"><g class="arm l"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg><span class="tag">3 · Nutria</span><h2>De pie con su piedrita</h2><p>Panza crema, bigotes, cola ancha y una piedra en forma de corazón entre las manitas.</p></div><div class="card"><svg class="pet otter4" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c4"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M170 190C204 196 224 178 216 158C212 150 202 154 205 163C207 174 192 180 172 176Z" fill="#5f493d" /></g>
+<g class="body">
+<ellipse cx="80" cy="46" rx="13" ry="13" fill="#5f493d" /><ellipse cx="160" cy="46" rx="13" ry="13" fill="#5f493d" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#7d6253" />
+<g clip-path="url(#c4)"><ellipse cx="120" cy="92" rx="70" ry="60" fill="#ead7bf" /><ellipse cx="120" cy="184" rx="38" ry="26" fill="#a98672" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="33" ry="22" fill="#f8ecd9" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M111 134q9 9.450000000000001 18 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<path d="M88 124l-12-3M88 130l-12 4M152 124l12-3M152 130l12 4" fill="none" stroke="#8a6a55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/>
+<g class="scarf"><path d="M62 156Q120 186 178 156L176 172Q120 202 64 172Z" fill="#5fd1b4" /><g class="scarf-end"><path d="M150 178l12 0 8 26-14-2z" fill="#5fd1b4" /><path d="M150 178l12 0 2 8-12-1z" fill="#3fb095" /></g></g>
+<ellipse cx="120" cy="184" rx="16" ry="16" fill="#ffd64a" /><ellipse cx="120" cy="184" rx="10.5" ry="10.5" fill="none" stroke="#e3a61f" stroke-width="2.4"/><text x="120" y="190" font-size="15" font-weight="900" text-anchor="middle" fill="#b87d10" font-family="Nunito,system-ui,sans-serif">$</text>
+<g class="hands"><g class="arm l"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg><span class="tag">4 · Nutria</span><h2>Nutria marina con bufanda</h2><p>Cabeza clara y cuerpo oscuro como las nutrias marinas, bufanda turquesa y su moneda.</p></div></div></div>
+<div id="hoja" hidden><h1>Estados</h1><div class="sheet"><div></div><div class="head">Tranquila</div><div class="head">Feliz</div><div class="head">Dormida</div><div class="lab">1 · Cachorro dorado</div><div class="cell"><svg class="pet dog1" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c1"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 172C200 170 212 150 200 132C193 123 182 130 187 141C191 151 184 158 170 158Z" fill="#e8961f" /></g>
+<g class="ear l"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ffc23d" />
+<g clip-path="url(#c1)"><ellipse cx="152" cy="90" rx="40" ry="42" fill="#e8961f" opacity=".55"/><ellipse cx="120" cy="206" rx="52" ry="26" fill="#fff3cd" /></g>
+<path d="M114 38C110 24 120 22 126 28C124 36 122 38 114 38Z" fill="#e8961f" />
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="136" rx="30" ry="21" fill="#fff3cd" />
+<path d="M109 125q11-6 22 0q-1 10-11 13q-10-3-11-13z" fill="#2f2626" /><ellipse cx="116" cy="127" rx="3.2" ry="1.8" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 142q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g><g class="tongue"><path d="M113 149q7 12 14 0z" fill="#ff7d98" /></g>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/>
+<path d="M66 160Q120 188 174 160L172 174Q120 202 68 174Z" fill="#35b3a6"/><ellipse cx="120" cy="190" rx="9" ry="9" fill="#ffd64a" /><ellipse cx="120" cy="190" rx="3.4" ry="3.4" fill="#e3a61f" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet dog1" data-mood="happy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c1"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 172C200 170 212 150 200 132C193 123 182 130 187 141C191 151 184 158 170 158Z" fill="#e8961f" /></g>
+<g class="ear l"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ffc23d" />
+<g clip-path="url(#c1)"><ellipse cx="152" cy="90" rx="40" ry="42" fill="#e8961f" opacity=".55"/><ellipse cx="120" cy="206" rx="52" ry="26" fill="#fff3cd" /></g>
+<path d="M114 38C110 24 120 22 126 28C124 36 122 38 114 38Z" fill="#e8961f" />
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="136" rx="30" ry="21" fill="#fff3cd" />
+<path d="M109 125q11-6 22 0q-1 10-11 13q-10-3-11-13z" fill="#2f2626" /><ellipse cx="116" cy="127" rx="3.2" ry="1.8" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 142q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g><g class="tongue"><path d="M113 149q7 12 14 0z" fill="#ff7d98" /></g>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/>
+<path d="M66 160Q120 188 174 160L172 174Q120 202 68 174Z" fill="#35b3a6"/><ellipse cx="120" cy="190" rx="9" ry="9" fill="#ffd64a" /><ellipse cx="120" cy="190" rx="3.4" ry="3.4" fill="#e3a61f" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet dog1" data-mood="sleepy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c1"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 172C200 170 212 150 200 132C193 123 182 130 187 141C191 151 184 158 170 158Z" fill="#e8961f" /></g>
+<g class="ear l"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M72 64C46 54 30 86 36 122C40 140 64 136 70 112Z" fill="#e8961f" /><path d="M66 78C52 74 44 94 48 114C51 124 61 120 64 108Z" fill="#f7b64a" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e8961f" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ffc23d" />
+<g clip-path="url(#c1)"><ellipse cx="152" cy="90" rx="40" ry="42" fill="#e8961f" opacity=".55"/><ellipse cx="120" cy="206" rx="52" ry="26" fill="#fff3cd" /></g>
+<path d="M114 38C110 24 120 22 126 28C124 36 122 38 114 38Z" fill="#e8961f" />
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffe08a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="136" rx="30" ry="21" fill="#fff3cd" />
+<path d="M109 125q11-6 22 0q-1 10-11 13q-10-3-11-13z" fill="#2f2626" /><ellipse cx="116" cy="127" rx="3.2" ry="1.8" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 142q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g><g class="tongue"><path d="M113 149q7 12 14 0z" fill="#ff7d98" /></g>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8fa3" opacity=".7"/>
+<path d="M66 160Q120 188 174 160L172 174Q120 202 68 174Z" fill="#35b3a6"/><ellipse cx="120" cy="190" rx="9" ry="9" fill="#ffd64a" /><ellipse cx="120" cy="190" rx="3.4" ry="3.4" fill="#e3a61f" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff3cd" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="lab">2 · Shiba</div><div class="cell"><svg class="pet dog2" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c2"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 176C208 182 224 150 206 128C196 118 184 128 192 140C200 154 188 164 170 160Z" fill="#e86f1c" /><path d="M200 132C190 124 184 132 190 142C194 146 200 144 202 138Z" fill="#fff0d6" /></g>
+<g class="ear l"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ff9638" />
+<g clip-path="url(#c2)"><ellipse cx="120" cy="150" rx="60" ry="30" fill="#fff0d6" /><ellipse cx="120" cy="210" rx="40" ry="30" fill="#fff0d6" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="86" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" /><ellipse cx="154" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" />
+<path d="M114 122q6-5 12 0q-1 7-6 8q-5-1-6-8z" fill="#2f2626" />
+<path d="M120 130v4M120 134q-6 8-13 3M120 134q6 8 13 3" fill="none" stroke="#2f2626" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/>
+<path d="M92 168Q120 180 148 168L120 194Z" fill="#ff4d57" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet dog2" data-mood="happy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c2"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 176C208 182 224 150 206 128C196 118 184 128 192 140C200 154 188 164 170 160Z" fill="#e86f1c" /><path d="M200 132C190 124 184 132 190 142C194 146 200 144 202 138Z" fill="#fff0d6" /></g>
+<g class="ear l"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ff9638" />
+<g clip-path="url(#c2)"><ellipse cx="120" cy="150" rx="60" ry="30" fill="#fff0d6" /><ellipse cx="120" cy="210" rx="40" ry="30" fill="#fff0d6" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="86" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" /><ellipse cx="154" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" />
+<path d="M114 122q6-5 12 0q-1 7-6 8q-5-1-6-8z" fill="#2f2626" />
+<path d="M120 130v4M120 134q-6 8-13 3M120 134q6 8 13 3" fill="none" stroke="#2f2626" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/>
+<path d="M92 168Q120 180 148 168L120 194Z" fill="#ff4d57" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet dog2" data-mood="sleepy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c2"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 176C208 182 224 150 206 128C196 118 184 128 192 140C200 154 188 164 170 160Z" fill="#e86f1c" /><path d="M200 132C190 124 184 132 190 142C194 146 200 144 202 138Z" fill="#fff0d6" /></g>
+<g class="ear l"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="ear r"><path d="M70 70L60 18C59 10 68 10 76 15L114 42Z" fill="#ff9638" /><path d="M72 56L66 28C65 24 70 24 75 27L96 42Z" fill="#ffb3c4" /></g></g>
+<g class="arm l"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g>
+<g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M68 122C42 130 24 152 28 178C54 180 78 170 88 152Z" fill="#e86f1c" /><path d="M40 174v5M46 173v6M52 174v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/></g></g>
+<g class="body"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#ff9638" />
+<g clip-path="url(#c2)"><ellipse cx="120" cy="150" rx="60" ry="30" fill="#fff0d6" /><ellipse cx="120" cy="210" rx="40" ry="30" fill="#fff0d6" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#ffc27a" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="86" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" /><ellipse cx="154" cy="50" rx="4.8" ry="4.8" fill="#fff0d6" />
+<path d="M114 122q6-5 12 0q-1 7-6 8q-5-1-6-8z" fill="#2f2626" />
+<path d="M120 130v4M120 134q-6 8-13 3M120 134q6 8 13 3" fill="none" stroke="#2f2626" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff7f8f" opacity=".7"/>
+<path d="M92 168Q120 180 148 168L120 194Z" fill="#ff4d57" />
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#fff0d6" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="lab">3 · De pie con su piedrita</div><div class="cell"><svg class="pet otter3" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c3"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 192C210 200 232 178 222 152C217 143 206 148 209 159C212 172 196 182 172 178Z" fill="#8c5530" /><path d="M200 184q10-4 16-14M192 188q4-2 8-4" fill="none" stroke="#b0733f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/></g>
+<g class="body">
+<ellipse cx="78" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="78" cy="48" rx="7" ry="7" fill="#8c5530" /><ellipse cx="162" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="162" cy="48" rx="7" ry="7" fill="#8c5530" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#b0733f" />
+<g clip-path="url(#c3)"><ellipse cx="120" cy="176" rx="42" ry="32" fill="#f6e0bd" /></g>
+<path d="M82 56C92 44 110 40 124 42" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".28"/>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="35" ry="24" fill="#f6e0bd" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 134q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g fill="#8c5530" opacity=".7"><circle cx="100" cy="130" r="1.8"/><circle cx="106" cy="135" r="1.8"/><circle cx="140" cy="130" r="1.8"/><circle cx="134" cy="135" r="1.8"/></g>
+<path d="M86 124l-14-3M86 130l-14 4M154 124l14-3M154 130l14 4" fill="none" stroke="#8c5530" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/>
+<g class="heart"><path d="M120 190C84 168 100 148 120 162C140 148 156 168 120 190Z" fill="#ff7ea3" /></g>
+<g class="hands"><g class="arm l"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet otter3" data-mood="happy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c3"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 192C210 200 232 178 222 152C217 143 206 148 209 159C212 172 196 182 172 178Z" fill="#8c5530" /><path d="M200 184q10-4 16-14M192 188q4-2 8-4" fill="none" stroke="#b0733f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/></g>
+<g class="body">
+<ellipse cx="78" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="78" cy="48" rx="7" ry="7" fill="#8c5530" /><ellipse cx="162" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="162" cy="48" rx="7" ry="7" fill="#8c5530" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#b0733f" />
+<g clip-path="url(#c3)"><ellipse cx="120" cy="176" rx="42" ry="32" fill="#f6e0bd" /></g>
+<path d="M82 56C92 44 110 40 124 42" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".28"/>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="35" ry="24" fill="#f6e0bd" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 134q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g fill="#8c5530" opacity=".7"><circle cx="100" cy="130" r="1.8"/><circle cx="106" cy="135" r="1.8"/><circle cx="140" cy="130" r="1.8"/><circle cx="134" cy="135" r="1.8"/></g>
+<path d="M86 124l-14-3M86 130l-14 4M154 124l14-3M154 130l14 4" fill="none" stroke="#8c5530" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/>
+<g class="heart"><path d="M120 190C84 168 100 148 120 162C140 148 156 168 120 190Z" fill="#ff7ea3" /></g>
+<g class="hands"><g class="arm l"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet otter3" data-mood="sleepy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c3"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M172 192C210 200 232 178 222 152C217 143 206 148 209 159C212 172 196 182 172 178Z" fill="#8c5530" /><path d="M200 184q10-4 16-14M192 188q4-2 8-4" fill="none" stroke="#b0733f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/></g>
+<g class="body">
+<ellipse cx="78" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="78" cy="48" rx="7" ry="7" fill="#8c5530" /><ellipse cx="162" cy="46" rx="15" ry="15" fill="#b0733f" /><ellipse cx="162" cy="48" rx="7" ry="7" fill="#8c5530" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#b0733f" />
+<g clip-path="url(#c3)"><ellipse cx="120" cy="176" rx="42" ry="32" fill="#f6e0bd" /></g>
+<path d="M82 56C92 44 110 40 124 42" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".28"/>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#d7a06c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="35" ry="24" fill="#f6e0bd" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M110 134q10 10.5 20 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g fill="#8c5530" opacity=".7"><circle cx="100" cy="130" r="1.8"/><circle cx="106" cy="135" r="1.8"/><circle cx="140" cy="130" r="1.8"/><circle cx="134" cy="135" r="1.8"/></g>
+<path d="M86 124l-14-3M86 130l-14 4M154 124l14-3M154 130l14 4" fill="none" stroke="#8c5530" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff8f9f" opacity=".7"/>
+<g class="heart"><path d="M120 190C84 168 100 148 120 162C140 148 156 168 120 190Z" fill="#ff7ea3" /></g>
+<g class="hands"><g class="arm l"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 132C48 142 44 170 66 180C86 186 102 172 104 156Z" fill="#8c5530" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#8c5530" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="lab">4 · Nutria marina con bufanda</div><div class="cell"><svg class="pet otter4" data-mood="idle" viewBox="0 0 240 225" role="img"><defs><clipPath id="c4"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M170 190C204 196 224 178 216 158C212 150 202 154 205 163C207 174 192 180 172 176Z" fill="#5f493d" /></g>
+<g class="body">
+<ellipse cx="80" cy="46" rx="13" ry="13" fill="#5f493d" /><ellipse cx="160" cy="46" rx="13" ry="13" fill="#5f493d" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#7d6253" />
+<g clip-path="url(#c4)"><ellipse cx="120" cy="92" rx="70" ry="60" fill="#ead7bf" /><ellipse cx="120" cy="184" rx="38" ry="26" fill="#a98672" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="33" ry="22" fill="#f8ecd9" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M111 134q9 9.450000000000001 18 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<path d="M88 124l-12-3M88 130l-12 4M152 124l12-3M152 130l12 4" fill="none" stroke="#8a6a55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/>
+<g class="scarf"><path d="M62 156Q120 186 178 156L176 172Q120 202 64 172Z" fill="#5fd1b4" /><g class="scarf-end"><path d="M150 178l12 0 8 26-14-2z" fill="#5fd1b4" /><path d="M150 178l12 0 2 8-12-1z" fill="#3fb095" /></g></g>
+<ellipse cx="120" cy="184" rx="16" ry="16" fill="#ffd64a" /><ellipse cx="120" cy="184" rx="10.5" ry="10.5" fill="none" stroke="#e3a61f" stroke-width="2.4"/><text x="120" y="190" font-size="15" font-weight="900" text-anchor="middle" fill="#b87d10" font-family="Nunito,system-ui,sans-serif">$</text>
+<g class="hands"><g class="arm l"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet otter4" data-mood="happy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c4"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M170 190C204 196 224 178 216 158C212 150 202 154 205 163C207 174 192 180 172 176Z" fill="#5f493d" /></g>
+<g class="body">
+<ellipse cx="80" cy="46" rx="13" ry="13" fill="#5f493d" /><ellipse cx="160" cy="46" rx="13" ry="13" fill="#5f493d" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#7d6253" />
+<g clip-path="url(#c4)"><ellipse cx="120" cy="92" rx="70" ry="60" fill="#ead7bf" /><ellipse cx="120" cy="184" rx="38" ry="26" fill="#a98672" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="33" ry="22" fill="#f8ecd9" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M111 134q9 9.450000000000001 18 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<path d="M88 124l-12-3M88 130l-12 4M152 124l12-3M152 130l12 4" fill="none" stroke="#8a6a55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/>
+<g class="scarf"><path d="M62 156Q120 186 178 156L176 172Q120 202 64 172Z" fill="#5fd1b4" /><g class="scarf-end"><path d="M150 178l12 0 8 26-14-2z" fill="#5fd1b4" /><path d="M150 178l12 0 2 8-12-1z" fill="#3fb095" /></g></g>
+<ellipse cx="120" cy="184" rx="16" ry="16" fill="#ffd64a" /><ellipse cx="120" cy="184" rx="10.5" ry="10.5" fill="none" stroke="#e3a61f" stroke-width="2.4"/><text x="120" y="190" font-size="15" font-weight="900" text-anchor="middle" fill="#b87d10" font-family="Nunito,system-ui,sans-serif">$</text>
+<g class="hands"><g class="arm l"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div><div class="cell"><svg class="pet otter4" data-mood="sleepy" viewBox="0 0 240 225" role="img"><defs><clipPath id="c4"><path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z"/></clipPath></defs><g class="shadow"><ellipse cx="120" cy="212" rx="58" ry="7" fill="#7a5a3a" opacity=".15"/></g><g class="zz"><text x="186" y="44" font-size="22" font-weight="900" fill="#8d77c9" font-family="Nunito,system-ui,sans-serif">Z</text><text x="204" y="26" font-size="15" font-weight="900" fill="#b3a2de" font-family="Nunito,system-ui,sans-serif">z</text></g>
+<g class="all">
+<g class="tail"><path d="M170 190C204 196 224 178 216 158C212 150 202 154 205 163C207 174 192 180 172 176Z" fill="#5f493d" /></g>
+<g class="body">
+<ellipse cx="80" cy="46" rx="13" ry="13" fill="#5f493d" /><ellipse cx="160" cy="46" rx="13" ry="13" fill="#5f493d" />
+<path d="M56 84C56 52 84 34 120 34C156 34 184 52 184 84L190 156C192 188 160 204 120 204C80 204 48 188 50 156Z" fill="#7d6253" />
+<g clip-path="url(#c4)"><ellipse cx="120" cy="92" rx="70" ry="60" fill="#ead7bf" /><ellipse cx="120" cy="184" rx="38" ry="26" fill="#a98672" /></g>
+<g class="eyes"><ellipse cx="88" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="88" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="94" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="97.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M73 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M73 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g><ellipse cx="152" cy="88" rx="28" ry="32" fill="#cfb08c" />
+<g class="e-open"><ellipse cx="152" cy="88" rx="23" ry="27" fill="#fff" /><g class="pupil"><ellipse cx="146" cy="92" rx="9.5" ry="14" fill="#2f2626" /><circle cx="149.4" cy="85" r="4.2" fill="#fff"/></g></g>
+<g class="e-happy"><path d="M137 96q15-24 30 0" fill="none" stroke="#2f2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g class="e-sleepy"><path d="M137 90q15 14 30 0" fill="none" stroke="#2f2626" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+<ellipse cx="120" cy="128" rx="33" ry="22" fill="#f8ecd9" />
+<path d="M110 118q10-6 20 0q-1 9-10 11q-9-2-10-11z" fill="#2f2626" /><ellipse cx="116" cy="120" rx="3" ry="1.7" fill="#fff" opacity=".6"/>
+<g class="mouth"><path d="M111 134q9 9.450000000000001 18 0" fill="none" stroke="#2f2626" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+<path d="M88 124l-12-3M88 130l-12 4M152 124l12-3M152 130l12 4" fill="none" stroke="#8a6a55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="58" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/><ellipse cx="182" cy="124" rx="10" ry="7" fill="#ff9aa8" opacity=".7"/>
+<g class="scarf"><path d="M62 156Q120 186 178 156L176 172Q120 202 64 172Z" fill="#5fd1b4" /><g class="scarf-end"><path d="M150 178l12 0 8 26-14-2z" fill="#5fd1b4" /><path d="M150 178l12 0 2 8-12-1z" fill="#3fb095" /></g></g>
+<ellipse cx="120" cy="184" rx="16" ry="16" fill="#ffd64a" /><ellipse cx="120" cy="184" rx="10.5" ry="10.5" fill="none" stroke="#e3a61f" stroke-width="2.4"/><text x="120" y="190" font-size="15" font-weight="900" text-anchor="middle" fill="#b87d10" font-family="Nunito,system-ui,sans-serif">$</text>
+<g class="hands"><g class="arm l"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g><g class="mir" transform="translate(240 0) scale(-1 1)"><g class="arm r"><path d="M72 134C48 144 44 172 66 182C86 188 102 174 104 158Z" fill="#5f493d" /></g></g></g>
+<ellipse cx="92" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M86 204v5M92 203v6M98 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/><ellipse cx="148" cy="205" rx="19" ry="8" fill="#5f493d" /><path d="M142 204v5M148 203v6M154 204v5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>
+</g></g></svg></div></div></div>
+<script>
+const bar=document.getElementById("bar");
+function setMood(m){document.querySelectorAll("#main .pet").forEach(s=>s.dataset.mood=m);bar.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===m)))}
+bar.addEventListener("click",e=>{const b=e.target.closest("button");if(b)setMood(b.dataset.m)});
+if(location.hash==="#hoja"){document.body.classList.add("hoja");document.getElementById("main").hidden=true;bar.hidden=true;document.querySelector(".lead").hidden=true;document.querySelector("h1").hidden=true;document.getElementById("hoja").hidden=false}
+</script></body></html>

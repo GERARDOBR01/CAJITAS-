@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { api, connectGmail } from "../platform.js";
+import { api } from "../platform.js";
+import { connectGmail } from "../gmail/connection.js";
+import { money, reachedTarget } from "../domain.js";
 import {
   addReceipt,
-  balance,
-  money,
   possibleReceiptMatches,
   reconcileReceipt,
-} from "../domain.js";
+} from "../receipts/gmail.js";
 import LocalMailImport from "./LocalMailImport.jsx";
 
 export default function Connections({
@@ -73,14 +73,10 @@ export default function Connections({
         !updated.importedIds.includes(receipt.id) &&
         !matches.length
       ) {
-        const before = balance(goal);
-        updated = addReceipt(updated, receipt, goalId);
+        const added = addReceipt(updated, receipt, goalId);
+        if (reachedTarget(updated, added, goalId)) achieved = true;
+        updated = added;
         automatic++;
-        if (
-          before < goal.targetCents &&
-          before + receipt.amountCents >= goal.targetCents
-        )
-          achieved = true;
       }
     }
     if (automatic && !setData(updated)) {
@@ -138,11 +134,7 @@ export default function Connections({
       if (remember[receipt.id])
         next.assignments = { ...next.assignments, [receipt.patternId]: goalId };
       if (!setData(next)) return;
-      if (
-        balance(goal) < goal.targetCents &&
-        balance(next.goals.find((g) => g.id === goalId)) >= goal.targetCents
-      )
-        celebrate();
+      if (reachedTarget(data, next, goalId)) celebrate();
       setReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
       notify("Depósito registrado una sola vez.");
     } catch (error) {

@@ -114,9 +114,7 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   yesterday.setDate(yesterday.getDate() - 1);
   const date = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
   await page.getByLabel("Fecha del movimiento").fill(date);
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await expect(card).toContainText("Te faltan $900.00");
   const entry = (await saved(page)).goals[0].entries[0];
   expect(entry.cents).toBe(10000);
@@ -139,7 +137,13 @@ test("una meta sin fecha se crea, se guarda como null y se ahorra a tu ritmo", a
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
   const card = page.locator(".goal-card");
   await expect(card).toContainText("Sin fecha objetivo");
-  await expect(card.locator(".plan")).toContainText("A tu ritmo");
+  await card
+    .getByRole("button", { name: "Ver detalle de Mi colchoncito" })
+    .click();
+  await expect(page.locator(".detail-plan")).toContainText(
+    "Sin fecha objetivo: aporta lo que te acomode.",
+  );
+  await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
   expect((await saved(page)).goals[0].unlockDate).toBeNull();
   const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
   await next.getByRole("button", { name: "Registrar mi pasito" }).click();
@@ -342,7 +346,7 @@ test("ningún retiro entristece ni pide confirmar, antes o después de la fecha"
   await page.getByLabel("Monto (MXN)").fill("50");
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
@@ -353,7 +357,7 @@ test("ningún retiro entristece ni pide confirmar, antes o después de la fecha"
   await page.getByLabel("Fecha del movimiento").fill(local(daysAgo(2)));
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(card.locator(".saved")).toContainText("$175.00");

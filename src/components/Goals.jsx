@@ -15,15 +15,18 @@ import {
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
 import Illustration from "./Illustration.jsx";
+import Money from "./Money.jsx";
+import { ArrowRight, Backspace, CheckCircle, InfoCircle } from "./icons.jsx";
+import { cleanAmount, nextAmount } from "../amount.js";
 import Modal from "./Modal.jsx";
 
-const destinations = {
+export const destinations = {
   Nu: "https://nu.com.mx/",
   "Mercado Pago": "https://www.mercadopago.com.mx/",
   Bitso: "https://bitso.com/",
 };
-const symbols = { star: "✦", flower: "✿", cloud: "☁" };
-const dateLabel = (date) =>
+export const symbols = { star: "✦", flower: "✿", cloud: "☁" };
+export const dateLabel = (date) =>
   new Date(`${date}T12:00:00`).toLocaleDateString("es-MX", {
     day: "numeric",
     month: "short",
@@ -292,7 +295,8 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
   );
 }
 export function MovementForm({
-  goal,
+  goal: initialGoal,
+  goals = [],
   withdraw,
   onSave,
   onClose,
@@ -300,11 +304,18 @@ export function MovementForm({
   onImport,
   weekday,
 }) {
-  const [amount, setAmount] = useState(
+  const [goalId, setGoalId] = useState(initialGoal.id),
+    [amount, setAmount] = useState(
       initialCents ? (initialCents / 100).toFixed(2) : "",
     ),
     [date, setDate] = useState(today()),
     [error, setError] = useState("");
+  const choices = goals.some((g) => g.id === initialGoal.id)
+      ? goals
+      : [initialGoal, ...goals],
+    goal = choices.find((g) => g.id === goalId) ?? initialGoal,
+    step = plan(goal, goal.frequency, Date.now(), weekday) ?? 0,
+    value = Number(amount) > 0 ? Math.round(Number(amount) * 100) : 0;
   function submit(e) {
     e.preventDefault();
     try {
@@ -319,65 +330,116 @@ export function MovementForm({
         date === today()
           ? new Date().toISOString()
           : new Date(`${date}T12:00:00`).toISOString();
-      onSave({ cents: withdraw ? -value : value, at });
+      onSave({ cents: withdraw ? -value : value, at, goalId: goal.id });
     } catch (err) {
       setError(err.message);
     }
   }
   return (
     <Modal
-      title={withdraw ? "Registrar un retiro" : "Un poquito más cerca"}
+      sheet
+      title={withdraw ? "Registrar retiro" : "Registrar ahorro"}
+      subtitle={
+        withdraw
+          ? "Registra lo que usaste de tu ahorro en tu app externa. Usarlo cuando lo necesitas también es cumplir su propósito."
+          : "Anota lo que apartaste en tu otra app o banco."
+      }
       onClose={onClose}
     >
-      <p className="muted">
-        {withdraw
-          ? "Registra lo que usaste de tu ahorro en tu app externa. Usarlo cuando lo necesitas también es cumplir su propósito."
-          : "Primero aparta el dinero en tu app externa; después regístralo aquí."}
-      </p>
       <form onSubmit={submit}>
         <label>
-          Monto (MXN)
-          <input
-            type="number"
-            min="0.01"
-            step="0.01"
-            required
-            autoFocus
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+          ¿A qué cajita va?
+          <select
+            value={goal.id}
+            onChange={(e) => {
+              setGoalId(e.target.value);
+              setError("");
+            }}
+          >
+            {choices.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
         </label>
+        <div className="amount-box">
+          <label className="amount-label">
+            Monto (MXN)
+            <span className="amount-field">
+              <span aria-hidden="true">$</span>
+              <input
+                type="text"
+                inputMode="none"
+                autoComplete="off"
+                placeholder="0"
+                required
+                autoFocus
+                value={amount}
+                onChange={(e) => setAmount(cleanAmount(e.target.value))}
+              />
+            </span>
+          </label>
+          {amount && (
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setAmount("")}
+            >
+              Borrar
+            </button>
+          )}
+        </div>
         {!withdraw && (
           <div
             className="quick-amounts"
             role="group"
             aria-label="Montos rápidos"
           >
-            {[5000, 10000, 20000].map((value) => (
+            {[5000, 10000, 20000].map((quick) => (
               <button
                 type="button"
-                key={value}
-                onClick={() => setAmount(String(value / 100))}
+                key={quick}
+                onClick={() => setAmount(String(quick / 100))}
               >
-                {money(value)}
+                {money(quick)}
               </button>
             ))}
-            {(plan(goal, goal.frequency, Date.now(), weekday) ?? 0) > 0 && (
+            {step > 0 && (
               <button
                 type="button"
-                onClick={() =>
-                  setAmount(
-                    (
-                      plan(goal, goal.frequency, Date.now(), weekday) / 100
-                    ).toFixed(2),
-                  )
-                }
+                onClick={() => setAmount((step / 100).toFixed(2))}
               >
                 Mi siguiente pasito
               </button>
             )}
           </div>
         )}
+        {withdraw ? (
+          <CommitmentNotice provider={goal.provider} />
+        ) : (
+          <p className="notice sheet-notice">
+            <InfoCircle />
+            <span>
+              Tu dinero sigue disponible en {goal.provider}. Guardadito solo
+              lleva el registro; no realiza transferencias.
+            </span>
+          </p>
+        )}
+        <div className="keypad" role="group" aria-label="Teclado numérico">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"].map(
+            (key) => (
+              <button
+                type="button"
+                key={key}
+                aria-label={key === "back" ? "Borrar un dígito" : undefined}
+                onClick={() => setAmount((current) => nextAmount(current, key))}
+              >
+                {key === "back" ? <Backspace /> : key}
+              </button>
+            ),
+          )}
+        </div>
         <label>
           Fecha del movimiento
           <input
@@ -388,21 +450,15 @@ export function MovementForm({
             onChange={(e) => setDate(e.target.value)}
           />
         </label>
-        {withdraw ? (
-          <CommitmentNotice provider={goal.provider} />
-        ) : (
-          <p className="notice">
-            Tu dinero sigue disponible en {goal.provider}. Guardadito solo lleva
-            el registro; no realiza transferencias.
-          </p>
-        )}
         {error && (
           <p className="error" role="alert">
             {error}
           </p>
         )}
         <button className={withdraw ? "secondary full" : "primary full"}>
-          {withdraw ? "Registrar retiro" : "Registrar ahorro"}
+          <CheckCircle />
+          {withdraw ? "Retirar" : "Guardar"}
+          {value > 0 && ` ${money(value)}`}
         </button>
         {!withdraw && onImport && (
           <button
@@ -417,26 +473,33 @@ export function MovementForm({
     </Modal>
   );
 }
-export function GoalCard({
-  goal,
-  onMove,
-  onEdit,
-  now,
-  onFrequency,
-  weekday,
-  guardian,
-}) {
+export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
   const saved = balance(goal),
     progress = Math.min(1, saved / goal.targetCents);
-  const frequency = goal.frequency;
   const status = goalStatus(goal, now);
   return (
     <article className={`goal-card ${goal.icon}`}>
       <div className="goal-heading">
         <span className="goal-symbol">{symbols[goal.icon]}</span>
-        <span className={`provider ${goal.provider === "Nu" ? "nu" : ""}`}>
-          {goal.provider}
-        </span>
+        <button
+          className="goal-open"
+          aria-label={`Ver detalle de ${goal.name}`}
+          onClick={() => onOpen(goal.id)}
+        >
+          <h3>{goal.name}</h3>
+          <span className="goal-meta">
+            <span className={`provider ${goal.provider === "Nu" ? "nu" : ""}`}>
+              {goal.provider}
+            </span>
+            {goal.unlockDate
+              ? `Meta: ${dateLabel(goal.unlockDate)}`
+              : "A tu ritmo"}
+          </span>
+        </button>
+        <p className="saved">
+          <span className="visually-hidden">Ahorro registrado </span>
+          <Money cents={saved} />
+        </p>
         <button
           className="icon-button"
           aria-label={`Editar ${goal.name}`}
@@ -445,11 +508,6 @@ export function GoalCard({
           ⋯
         </button>
       </div>
-      <h3>{goal.name}</h3>
-      <span className="saved-label">Ahorro registrado</span>
-      <p className="saved">
-        {money(saved)} <span>de {money(goal.targetCents)}</span>
-      </p>
       <div
         className="progress"
         role="progressbar"
@@ -461,68 +519,35 @@ export function GoalCard({
         <span style={{ width: `${progress * 100}%` }} />
       </div>
       <div className="progress-caption">
-        <span>
-          {status.complete
-            ? "Ahorro registrado"
-            : `Te faltan ${money(status.remaining)}`}
-        </span>
-        <strong>{Math.round(progress * 100)}%</strong>
+        <strong>{Math.round(progress * 100)}% logrado</strong>
+        <span>de {money(goal.targetCents)}</span>
       </div>
-      <div className="lock">
+      <p className="remaining">
+        {status.complete
+          ? "Ahorro registrado"
+          : `Te faltan ${money(status.remaining)}`}
+      </p>
+      <p className="goal-lock">
         <span aria-hidden="true">
           {unlockTime(goal.unlockDate) > now ? "♧" : "✓"}
         </span>
-        <div>
-          <strong>{countdown(goal.unlockDate, now)}</strong>
-          <span>
-            {goal.unlockDate
-              ? `Fecha objetivo · ${dateLabel(goal.unlockDate)}`
-              : "A tu ritmo, sin prisa"}
-          </span>
-        </div>
-      </div>
+        {countdown(goal.unlockDate, now)}
+      </p>
       <CommitmentNotice
         provider={goal.provider}
         keeper={
           guardian &&
-          (guardian.pending || goal.entries.some((e) => e.source === "guardian"))
+          (guardian.pending ||
+            goal.entries.some((e) => e.source === "guardian"))
             ? guardian.name
             : ""
         }
       />
-      {guardian?.pending?.in > 0 && (
-        <p className="on-the-way">
-          ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
-          {guardian.name}
-        </p>
-      )}
-      {guardian?.pending?.out > 0 && (
-        <p className="on-the-way">
-          ⏳ Pediste {money(guardian.pending.out)} a {guardian.name}
-        </p>
-      )}
-      {progress >= 1 ? (
+      <Pending guardian={guardian} />
+      {progress >= 1 && (
         <div className="complete-scene">
           <Illustration kind="complete" />
           <p className="complete">✦ ¡Lo lograste! Tu esfuerzo floreció.</p>
-        </div>
-      ) : (
-        <div className="plan">
-          <span>Tu siguiente pasito</span>
-          <strong>
-            {goal.unlockDate
-              ? money(plan(goal, frequency, now, weekday))
-              : "A tu ritmo"}
-          </strong>
-          <select
-            aria-label={`Frecuencia de ${goal.name}`}
-            value={frequency}
-            onChange={(e) => onFrequency(goal.id, Number(e.target.value))}
-          >
-            <option value={7}>{RHYTHM_LABEL.weekly}</option>
-            <option value={15}>{RHYTHM_LABEL.biweekly}</option>
-            <option value={30}>{RHYTHM_LABEL.monthly}</option>
-          </select>
         </div>
       )}
       {status.pastDue && (
@@ -535,80 +560,65 @@ export function GoalCard({
           Recuperar cajita
         </button>
       ) : (
-        <>
-          <div className="card-actions">
-            <button className="primary" onClick={() => onMove(goal, false)}>
-              + Registrar ahorro
-            </button>
-            {destinations[goal.provider] ? (
-              <a
-                className="external"
-                href={destinations[goal.provider]}
-                onClick={
-                  isNative
-                    ? (e) => {
-                        e.preventDefault();
-                        openExternal(destinations[goal.provider]);
-                      }
-                    : undefined
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ir a apartar ↗
-              </a>
-            ) : (
-              <span className="muted small-text">Aparta en tu app</span>
-            )}
-          </div>
-          {guardian && (
-            <div className="guardian-actions">
-              <button
-                className="secondary"
-                onClick={() => guardian.onDeposit(goal, false)}
-              >
-                Depositar con {guardian.name}
-              </button>
-              <button
-                className="text-button"
-                disabled={saved - (guardian.pending?.out ?? 0) <= 0}
-                onClick={() => guardian.onDeposit(goal, true)}
-              >
-                Pedir retiro a {guardian.name}
-              </button>
-            </div>
-          )}
+        <div className="card-actions">
+          <button className="primary" onClick={() => onMove(goal, false)}>
+            + Registrar ahorro
+          </button>
           <button
-            className="text-button withdraw"
+            className="secondary withdraw"
             disabled={!saved}
             onClick={() => onMove(goal, true)}
           >
             Registrar retiro
           </button>
-        </>
+        </div>
       )}
-      {goal.entries.length > 0 && (
-        <details>
-          <summary>Ver movimientos ({goal.entries.length})</summary>
-          <ul className="movements">
-            {goal.entries
-              .slice()
-              .reverse()
-              .map((e) => (
-                <li key={e.id}>
-                  <span>
-                    {new Date(e.at).toLocaleDateString("es-MX")} ·{" "}
-                    {SOURCE_LABEL[e.source] ?? "Manual"}
-                  </span>
-                  <strong>
-                    {e.cents > 0 ? "+" : ""}
-                    {money(e.cents)}
-                  </strong>
-                </li>
-              ))}
-          </ul>
-        </details>
-      )}
+      <GuardianActions goal={goal} guardian={guardian} saved={saved} />
+      <button className="goal-more" onClick={() => onOpen(goal.id)}>
+        Ver plan y movimientos
+        {goal.entries.length > 0 && ` (${goal.entries.length})`}
+        <ArrowRight />
+      </button>
     </article>
+  );
+}
+
+/** What the guardian has not confirmed yet, for a goal. */
+export function Pending({ guardian }) {
+  return (
+    <>
+      {guardian?.pending?.in > 0 && (
+        <p className="on-the-way">
+          ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
+          {guardian.name}
+        </p>
+      )}
+      {guardian?.pending?.out > 0 && (
+        <p className="on-the-way">
+          ⏳ Pediste {money(guardian.pending.out)} a {guardian.name}
+        </p>
+      )}
+    </>
+  );
+}
+
+export function GuardianActions({ goal, guardian, saved }) {
+  if (!guardian || goal.archived) return null;
+  return (
+    <div className="guardian-actions">
+      <button
+        className="secondary"
+        onClick={() => guardian.onDeposit(goal, false)}
+      >
+        Depositar con {guardian.name}
+      </button>
+      <button
+        className="text-button"
+        disabled={saved - (guardian.pending?.out ?? 0) <= 0}
+        onClick={() => guardian.onDeposit(goal, true)}
+      >
+        Pedir retiro a {guardian.name}
+      </button>
+    </div>
   );
 }

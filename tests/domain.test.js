@@ -4,7 +4,6 @@ import {
   plan,
   streak,
   initialData,
-  addReceipt,
   validateBackup,
   cents,
   countdown,
@@ -12,7 +11,9 @@ import {
   activityCSV,
   goalStatus,
   nextGoal,
+  projection,
 } from "../src/domain.js";
+import { addReceipt } from "../src/receipts/gmail.js";
 const goal = {
   id: "g1",
   name: "Viaje",
@@ -141,5 +142,51 @@ describe("metas sin fecha objetivo", () => {
       '""',
       '"2026-11-01"',
     ]);
+  });
+});
+
+describe("projection", () => {
+  const DAY = 86400000,
+    now = Date.parse("2026-10-19T12:00:00");
+  const goal = (entries, targetCents = 100000) => ({
+    id: "g",
+    name: "Viaje",
+    targetCents,
+    entries: entries.map(([daysAgo, cents], i) => ({
+      id: `e${i}`,
+      cents,
+      at: new Date(now - daysAgo * DAY).toISOString(),
+      source: "manual",
+    })),
+  });
+  it("sin movimientos no inventa una fecha", () => {
+    expect(projection(goal([]), now)).toEqual({ kind: "none" });
+  });
+  it("una meta cumplida ya no se proyecta", () => {
+    expect(projection(goal([[5, 100000]]), now)).toEqual({ kind: "done" });
+  });
+  it("estima con el ritmo de los últimos días", () => {
+    // $200 en 20 días = $10 al día; faltan $800 → 80 días.
+    const result = projection(goal([[20, 20000]]), now);
+    expect(result).toMatchObject({ kind: "pace", days: 80 });
+    expect(result.date).toBe("2027-01-07");
+  });
+  it("los retiros bajan el ritmo y, si lo anulan, no hay estimación", () => {
+    expect(
+      projection(
+        goal([
+          [20, 20000],
+          [3, -20000],
+        ]),
+        now,
+      ),
+    ).toEqual({
+      kind: "none",
+    });
+  });
+  it("no promete fechas a más de diez años", () => {
+    expect(projection(goal([[20, 100]], 100000000), now)).toEqual({
+      kind: "none",
+    });
   });
 });

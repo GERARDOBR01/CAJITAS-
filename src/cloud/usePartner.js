@@ -36,7 +36,7 @@ const SUMMARY_DELAY_MS = 1500;
  * between them and how the partner's cajitas are going. `update(fn)` saves
  * a change computed from the latest journal.
  */
-export function usePartner({ user, data, update, notify }) {
+export function usePartner({ user, data, update, notify, celebrate }) {
   const [pair, setPair] = useState(null),
     [gifts, setGifts] = useState([]),
     [summary, setSummary] = useState([]),
@@ -53,7 +53,7 @@ export function usePartner({ user, data, update, notify }) {
     seenDeposits = useRef(null),
     applying = useRef(new Set()),
     callbacks = useRef();
-  callbacks.current = { update, notify };
+  callbacks.current = { update, notify, celebrate };
   const uid = user?.uid ?? null;
   const partnerUid = pair?.members.find((m) => m !== uid) ?? null;
   const partnerName = (partnerUid && pair?.names?.[partnerUid]) || "";
@@ -181,22 +181,27 @@ export function usePartner({ user, data, update, notify }) {
     const fresh = deposits.filter((d) => !applying.current.has(d.id));
     const { marks, added } = applyConfirmed(data, fresh, uid);
     if (!marks.length) return;
+    // The latest journal decides whether this deposit reached the target.
+    let completed = false;
     if (
       added.length &&
-      callbacks.current.update(
-        (current) => applyConfirmed(current, added, uid).data,
-      ) === false
+      callbacks.current.update((current) => {
+        const result = applyConfirmed(current, added, uid);
+        completed = result.completed;
+        return result.data;
+      }) === false
     )
       return;
     marks.forEach((d) => applying.current.add(d.id));
     if (added.length) {
       const total = added.reduce((sum, d) => sum + d.cents, 0);
       const who = partnerName || "Tu guardián";
-      callbacks.current.notify(
+      const message =
         total > 0
           ? `${who} confirmó tu depósito: +${money(total)} 💞`
-          : `${who} confirmó tu retiro de ${money(-total)}.`,
-      );
+          : `${who} confirmó tu retiro de ${money(-total)}.`;
+      if (completed) callbacks.current.celebrate(message);
+      else callbacks.current.notify(message);
       if (total > 0) setSaved((n) => n + 1);
     }
     lib()

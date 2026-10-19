@@ -2,7 +2,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./styles.css";
-import { setupNativeEvents, hydrateSavings } from "./platform.js";
+import { setupNativeEvents } from "./nativeEvents.js";
+import { hydrateSavings } from "./journal/nativeReplica.js";
 import { migrateStorageKey } from "./domain.js";
 async function start() {
   try {

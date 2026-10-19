@@ -1,8 +1,10 @@
+import { ClockCircle, MenuDots, SmileCircle, Wallet } from "./icons.jsx";
+
 const navigation = [
-  ["goals", "▦", "Mis cajitas"],
-  ["pet", "♡", "Mi mascota"],
-  ["activity", "↗", "Actividad"],
-  ["more", "⋯", "Más"],
+  ["goals", <Wallet />, "Mis cajitas"],
+  ["pet", <SmileCircle />, "Mi mascota"],
+  ["activity", <ClockCircle />, "Actividad"],
+  ["more", <MenuDots />, "Más"],
 ];
 const tools = [
   "simulator",
@@ -25,7 +27,9 @@ export default function AppShell({
       <nav className={className} aria-label={label}>
         {navigation.map(([key, icon, title]) => {
           const selected =
-            tab === key || (key === "more" && tools.includes(tab));
+            tab === key ||
+            (key === "goals" && tab === "goal") ||
+            (key === "more" && tools.includes(tab));
           return (
             <button
               key={key}
@@ -82,7 +86,11 @@ export default function AppShell({
                     ? "🐮"
                     : pet.pet === "bunny"
                       ? "🐰"
-                      : "🌱"}
+                      : pet.pet === "dog"
+                        ? "🐶"
+                        : pet.pet === "otter"
+                          ? "🦦"
+                          : "🌱"}
             </span>
           </button>
         </header>

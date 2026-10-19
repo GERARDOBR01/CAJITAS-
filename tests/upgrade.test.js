@@ -13,7 +13,7 @@ import {
   STORAGE_KEY,
   migrateStorageKey,
 } from "../src/domain.js";
-import { reminderCalendar } from "../src/platform.js";
+import { reminderCalendar } from "../src/pet/reminders.js";
 const goal = {
   id: "g",
   name: "Mi viaje",

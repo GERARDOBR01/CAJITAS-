@@ -93,9 +93,7 @@ test("registrar desde el aviso: la mascota salta y deja de esperar", async ({
   const home = await open(page, seed());
   await home.getByRole("button", { name: "Registrar lo que aparté" }).click();
   await page.getByLabel("Monto (MXN)").fill("500");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await expect(mascot(home)).toHaveAttribute("data-mood", "excited");
   await page.screenshot({ path: `${shots}/excited.png` });
   await expect(mascot(home)).not.toHaveAttribute("data-mood", "excited", {
@@ -129,7 +127,7 @@ test("retiro antes de la fecha: la mascota sigue tranquila", async ({
   await page.getByLabel("Monto (MXN)").fill("100");
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(page.locator(".toast")).toContainText("cumplir su propósito");
   await expect(mascot(home)).not.toHaveAttribute("data-mood", "sad");

@@ -1,6 +1,7 @@
 import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
 import { DEFAULT_WEEKDAY, countScheduleDays } from "./calendar.js";
 export const STORAGE_KEY = "guardadito:v1";
+export const PROVIDERS = ["Nu", "Mercado Pago", "Bitso", "Otra"];
 // Before the rename the app saved under this key; copy it once so nobody
 // loses their cajitas. The old copy stays as a fallback.
 export const LEGACY_STORAGE_KEY = "cajitas:v1";
@@ -37,6 +38,42 @@ export function cents(value) {
 }
 export function balance(goal) {
   return goal.entries.reduce((sum, e) => sum + e.cents, 0);
+}
+/** Did the change from `before` to `after` take this goal from under its
+ * target to reaching it? */
+export function reachedTarget(before, after, goalId) {
+  const was = before.goals.find((g) => g.id === goalId),
+    now = after.goals.find((g) => g.id === goalId);
+  return Boolean(
+    was &&
+    now &&
+    balance(was) < was.targetCents &&
+    balance(now) >= now.targetCents,
+  );
+}
+/**
+ * The one way to add a movement (a deposit or, when `cents` is negative, a
+ * withdrawal) to a goal. Throws if the result would not be a valid journal;
+ * `reachedTarget` says whether it completed the goal. `id` is only passed when
+ * the same movement must never be added twice.
+ */
+export function recordEntry(
+  data,
+  goalId,
+  { cents, at, source = "manual", id = crypto.randomUUID() },
+) {
+  if (!data.goals.some((goal) => goal.id === goalId))
+    throw new Error("Elige una cajita para este movimiento.");
+  const next = {
+    ...data,
+    goals: data.goals.map((goal) =>
+      goal.id === goalId
+        ? { ...goal, entries: [...goal.entries, { id, cents, at, source }] }
+        : goal,
+    ),
+  };
+  validateBackup(next);
+  return { data: next, reachedTarget: reachedTarget(data, next, goalId) };
 }
 /** A goal without a target date never "arrives": it sorts last and is never
  * past due. */
@@ -75,6 +112,24 @@ export function plan(
     countScheduleDays(frequency, now, unlockTime(goal.unlockDate), weekday),
   );
   return Math.ceil(Math.max(0, goal.targetCents - balance(goal)) / periods);
+}
+/** An estimate of when a goal would be reached at the pace of its recent
+ * recorded savings (last 60 days, at least 14). Never a promise: with no
+ * recent net savings there is no estimate and the screen says so. */
+export function projection(goal, now = Date.now()) {
+  const remaining = Math.max(0, goal.targetCents - balance(goal));
+  if (!remaining) return { kind: "done" };
+  const DAY = 86400000,
+    times = goal.entries.map((e) => Date.parse(e.at)).filter(Number.isFinite);
+  if (!times.length) return { kind: "none" };
+  const span = Math.min(60 * DAY, Math.max(14 * DAY, now - Math.min(...times))),
+    net = goal.entries
+      .filter((e) => Date.parse(e.at) >= now - span)
+      .reduce((sum, e) => sum + e.cents, 0);
+  if (net <= 0) return { kind: "none" };
+  const days = Math.ceil(remaining / (net / (span / DAY)));
+  if (days > 3650) return { kind: "none" };
+  return { kind: "pace", days, date: localDate(new Date(now + days * DAY)) };
 }
 export function streak(goals, now = new Date()) {
   const days = new Set(
@@ -123,6 +178,18 @@ export const PETS = {
     label: "Vaquita",
     color: "#d9d5ef",
     motto: "Vamos a tu ritmo, muuuy bien.",
+  },
+  dog: {
+    name: "Taro",
+    label: "Shiba",
+    color: "#ffb36b",
+    motto: "Meneo la cola por cada pasito.",
+  },
+  otter: {
+    name: "Nuri",
+    label: "Nutria",
+    color: "#c99467",
+    motto: "Guardo mi piedrita, y tú tus sueños.",
   },
   bunny: {
     name: "Luna",
@@ -303,7 +370,7 @@ function validDate(value) {
     localDate(new Date(`${value}T12:00:00`)) === value
   );
 }
-function validMovementDate(value) {
+export function validMovementDate(value) {
   if (typeof value !== "string") return false;
   const match =
     /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?)?$/.exec(
@@ -386,7 +453,7 @@ export function validateBackup(data) {
       g.targetCents <= 0 ||
       g.targetCents > 1e11 ||
       (!noDate(g.unlockDate) && !validDate(g.unlockDate)) ||
-      !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(g.provider) ||
+      !PROVIDERS.includes(g.provider) ||
       !Array.isArray(g.entries) ||
       g.entries.length > 10000 ||
       !["star", "flower", "cloud"].includes(g.icon) ||
@@ -517,72 +584,6 @@ export function restoreEntry(data, entryId, now = Date.now()) {
   }
   return next;
 }
-function validateReceipt(receipt) {
-  if (!receipt || typeof receipt.id !== "string" || !receipt.id.trim())
-    throw new Error("Identificador de correo inválido.");
-  if (
-    !Number.isSafeInteger(receipt.amountCents) ||
-    receipt.amountCents <= 0 ||
-    receipt.amountCents > 1e11
-  )
-    throw new Error("Monto de correo inválido.");
-  if (!validMovementDate(receipt.at))
-    throw new Error("Fecha de correo inválida o futura.");
-  if (
-    (receipt.provider !== undefined &&
-      !["Nu", "Mercado Pago", "Bitso", "Otra"].includes(receipt.provider)) ||
-    (receipt.validated !== undefined && typeof receipt.validated !== "boolean")
-  )
-    throw new Error("El comprobante de correo no es válido.");
-}
-export function possibleReceiptMatches(data, receipt) {
-  validateReceipt(receipt);
-  if (data.importedIds.includes(receipt.id) || !receipt.provider) return [];
-  const receiptDay = localDate(new Date(receipt.at));
-  return data.goals
-    .filter((goal) => goal.provider === receipt.provider)
-    .flatMap((goal) =>
-      goal.entries
-        .filter(
-          (entry) =>
-            (entry.source === undefined || entry.source === "manual") &&
-            entry.cents === receipt.amountCents &&
-            localDate(new Date(entry.at)) === receiptDay,
-        )
-        .map((entry) => ({
-          goalId: goal.id,
-          goalName: goal.name,
-          entryId: entry.id,
-          at: entry.at,
-        })),
-    );
-}
-export function reconcileReceipt(data, receipt, goalId, entryId) {
-  validateReceipt(receipt);
-  if (data.importedIds.includes(receipt.id)) return data;
-  if (
-    !possibleReceiptMatches(data, receipt).some(
-      (match) => match.goalId === goalId && match.entryId === entryId,
-    )
-  )
-    throw new Error("Elige un movimiento manual del mismo monto, app y día.");
-  const next = {
-    ...data,
-    importedIds: [...data.importedIds, receipt.id],
-    goals: data.goals.map((goal) =>
-      goal.id === goalId
-        ? {
-            ...goal,
-            entries: goal.entries.map((entry) =>
-              entry.id === entryId ? { ...entry, source: "gmail" } : entry,
-            ),
-          }
-        : goal,
-    ),
-  };
-  validateBackup(next);
-  return next;
-}
 function changeManualEntry(data, goalId, entryId, change) {
   const goal = data.goals.find((item) => item.id === goalId);
   const entry = goal?.entries.find((item) => item.id === entryId);
@@ -624,48 +625,6 @@ export function removeManualEntry(data, goalId, entryId, now = Date.now()) {
       ...trashItems(data, now).filter((t) => t.entry.id !== entryId),
     ].slice(0, TRASH_MAX),
   };
-}
-export function addReceipt(
-  data,
-  receipt,
-  goalId,
-  { allowPossibleDuplicate = false } = {},
-) {
-  if (
-    data.importedIds.includes(receipt.id) ||
-    !data.goals.some((g) => g.id === goalId)
-  )
-    return data;
-  validateReceipt(receipt);
-  const goal = data.goals.find((item) => item.id === goalId);
-  if (goal.archived || (receipt.provider && goal.provider !== receipt.provider))
-    throw new Error("Elige una cajita activa de la misma app del comprobante.");
-  if (!allowPossibleDuplicate && possibleReceiptMatches(data, receipt).length)
-    throw new Error(
-      "Revisa los movimientos manuales que podrían corresponder a este correo.",
-    );
-  const next = {
-    ...data,
-    importedIds: [...data.importedIds, receipt.id],
-    goals: data.goals.map((g) =>
-      g.id === goalId
-        ? {
-            ...g,
-            entries: [
-              ...g.entries,
-              {
-                id: crypto.randomUUID(),
-                cents: receipt.amountCents,
-                at: receipt.at,
-                source: "gmail",
-              },
-            ],
-          }
-        : g,
-    ),
-  };
-  validateBackup(next);
-  return next;
 }
 export function estimate(principalCents, annualRate, days) {
   return Math.round((((principalCents * annualRate) / 100) * days) / 365);

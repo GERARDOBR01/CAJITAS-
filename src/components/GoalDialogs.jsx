@@ -33,6 +33,7 @@ export default function GoalDialogs({
         <MovementForm
           weekday={data.preferences.reminder.day}
           goal={data.goals.find((g) => g.id === modal.goal.id)}
+          goals={data.goals.filter((g) => !g.archived)}
           withdraw={modal.withdraw}
           onClose={() => setModal(null)}
           onSave={movement}

@@ -295,3 +295,53 @@ export function answerCheckIn(data, now = new Date()) {
     },
   };
 }
+
+/** A restored backup never arrives with reminders on: the device has to ask
+ * for notification permission again before they can be turned back on. */
+export function restoreWithoutReminders(data) {
+  return {
+    ...data,
+    preferences: {
+      ...data.preferences,
+      reminder: { ...data.preferences.reminder, enabled: false },
+    },
+  };
+}
+
+/** An .ics file with the next reminder, for calendars outside the app. */
+export function reminderCalendar(reminder, now = new Date()) {
+  const frequency = reminder.frequency ?? "weekly";
+  // The first event is the same next reminder the app and the plan use.
+  const [date] = nextOccurrences({ ...reminder, frequency }, now, 1);
+  const stamp = (d) =>
+    `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
+  const rule = {
+    weekly: `RRULE:FREQ=WEEKLY;BYDAY=${["SU", "MO", "TU", "WE", "TH", "FR", "SA"][reminder.day]}`,
+    biweekly: "RRULE:FREQ=MONTHLY;BYMONTHDAY=15,-1",
+    monthly: "RRULE:FREQ=MONTHLY;BYMONTHDAY=-1",
+  }[frequency];
+  const summary = {
+    weekly: "Un ratito para tus cajitas",
+    biweekly: "Quincena: un ratito para tus cajitas",
+    monthly: "Fin de mes: un ratito para tus cajitas",
+  }[frequency];
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Guardadito//Ahorro//ES",
+    "BEGIN:VEVENT",
+    `UID:guardadito-${frequency}-reminder@mx.guardadito.ahorro`,
+    `DTSTAMP:${now
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "")}`,
+    `DTSTART:${stamp(date)}`,
+    rule,
+    "DURATION:PT10M",
+    `SUMMARY:${summary}`,
+    "DESCRIPTION:Abre Guardadito y registra lo que apartaste. Sin transferencias automaticas.",
+    "END:VEVENT",
+    "END:VCALENDAR",
+    "",
+  ].join("\r\n");
+}

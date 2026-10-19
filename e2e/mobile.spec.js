@@ -38,9 +38,7 @@ test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×
   });
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("600");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await card
     .getByRole("button", { name: "Registrar retiro", exact: true })
     .click();
@@ -54,7 +52,7 @@ test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×
   });
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(card.locator(".saved")).toContainText("$500.00");
   await expect(page.locator(".toast")).toContainText("cumplir su propósito");
@@ -64,9 +62,7 @@ test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×
   );
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("500");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await expect(card).toContainText("¡Lo lograste!");
   await expect(page.locator(".confetti")).toBeAttached();
   await expect

@@ -1,14 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  addReceipt,
   balance,
   correctManualEntry,
   initialData,
-  possibleReceiptMatches,
-  reconcileReceipt,
   removeManualEntry,
   validateBackup,
 } from "../src/domain.js";
+import {
+  addReceipt,
+  possibleReceiptMatches,
+  reconcileReceipt,
+} from "../src/receipts/gmail.js";
 
 const deposit = {
   id: "manual-deposit",

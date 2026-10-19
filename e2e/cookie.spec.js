@@ -110,7 +110,9 @@ test("con movimiento reducido el mensaje sigue, sin animaciones", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   const home = await open(page, seed());
   await home.getByRole("button", { name: "Acariciar a Cookie" }).click();
-  await expect(home.locator(".cookie-love strong")).toHaveText("¡Te quiero, Ana!");
+  await expect(home.locator(".cookie-love strong")).toHaveText(
+    "¡Te quiero, Ana!",
+  );
   await expect(page.locator(".love-rain")).toHaveCount(0);
   const moving = await home
     .locator(".mascot")
