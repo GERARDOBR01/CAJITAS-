@@ -76,9 +76,7 @@ test("una cuenta lleva las cajitas de un teléfono a otro", async ({
   // Un ahorro en B aparece solo en A.
   await cardB.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await phoneB.getByLabel("Monto (MXN)").fill("150");
-  await phoneB
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await phoneB.getByRole("button", { name: /^Guardar/ }).click();
   await phoneA
     .getByRole("button", { name: "Mis cajitas", exact: true })
     .first()

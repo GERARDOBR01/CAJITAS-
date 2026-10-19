@@ -119,9 +119,7 @@ test("una pareja se vincula y se manda a Cookie, notitas y premios", async ({
     .getByRole("button", { name: "+ Registrar ahorro" })
     .click();
   await ana.getByLabel("Monto (MXN)").fill("600");
-  await ana
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await ana.getByRole("button", { name: /^Guardar/ }).click();
   const reward = ana.getByRole("dialog", { name: "🎁 Cupón para una cita" });
   await expect(reward).toContainText("Tú eliges el lugar");
   await shot(ana, info, "premio");
