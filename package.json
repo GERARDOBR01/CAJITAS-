@@ -1,6 +1,6 @@
 {
   "name": "cajitas-ahorro",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -21,7 +21,11 @@
     "deploy:pages": "node scripts/deploy-pages.mjs",
     "preview:pages": "vite preview --mode pages --host 0.0.0.0",
     "check:setup": "node scripts/check-setup.mjs",
-    "verify": "npm test && npm run build:pages && npm run test:e2e"
+    "verify": "npm test && npm run build:pages && npm run test:e2e",
+    "test:rules": "firebase --project demo-guardadito emulators:exec --only firestore \"vitest run --config vitest.rules.config.js\"",
+    "test:e2e:cloud": "firebase --project demo-guardadito emulators:exec --only auth,firestore \"playwright test --config playwright.cloud.config.js\"",
+    "emulators": "firebase --project demo-guardadito emulators:start --only auth,firestore",
+    "deploy:rules": "firebase deploy --only firestore:rules --project guardadito-94c49"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
@@ -35,6 +39,7 @@
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/share": "^8.0.3",
     "@fontsource-variable/nunito": "^5.3.0",
+    "firebase": "^13.0.0",
     "google-auth-library": "^10.3.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -42,8 +47,10 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@capacitor/cli": "^8.5.3",
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "^1.56.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "firebase-tools": "^14.27.0",
     "vite": "^7.1.0",
     "vite-plugin-pwa": "^1.0.3",
     "vitest": "^5.0.4"

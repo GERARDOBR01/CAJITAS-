@@ -2,7 +2,7 @@ import { ANDROID_DOWNLOAD_URL, ANDROID_VERSION } from "../downloads.js";
 import { haptic, isNative } from "../platform.js";
 import { balance, checkIn, companionship, streak, today } from "../domain.js";
 
-export default function More({ data, onSave, notify, onNavigate }) {
+export default function More({ cloud, data, onSave, notify, onNavigate }) {
   const friend = companionship(data),
     completed = data.goals.filter(
       (goal) => balance(goal) >= goal.targetCents,
@@ -25,6 +25,14 @@ export default function More({ data, onSave, notify, onNavigate }) {
       </div>
       <div className="more-grid">
         {[
+          cloud?.configured && [
+            "account",
+            "☺",
+            "Mi cuenta",
+            cloud.user
+              ? "Tus cajitas, guardadas en la nube."
+              : "Guarda tus cajitas en la nube.",
+          ],
           [
             "tutorial",
             "▷",
@@ -45,21 +53,23 @@ export default function More({ data, onSave, notify, onNavigate }) {
             "Instalar app",
             "Guardadito en tu pantalla de inicio.",
           ],
-        ].map(([key, icon, title, description]) => (
-          <button
-            className="panel more-card"
-            key={key}
-            aria-label={title}
-            onClick={() => onNavigate(key)}
-          >
-            <span aria-hidden="true">{icon}</span>
-            <span>
-              <strong>{title}</strong>
-              <small>{description}</small>
-            </span>
-            <span aria-hidden="true">→</span>
-          </button>
-        ))}
+        ]
+          .filter(Boolean)
+          .map(([key, icon, title, description]) => (
+            <button
+              className="panel more-card"
+              key={key}
+              aria-label={title}
+              onClick={() => onNavigate(key)}
+            >
+              <span aria-hidden="true">{icon}</span>
+              <span>
+                <strong>{title}</strong>
+                <small>{description}</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </button>
+          ))}
       </div>
       {!isNative && (
         <aside className="download-banner" aria-label="Descargar Guardadito">

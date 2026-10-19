@@ -4,7 +4,14 @@ const navigation = [
   ["activity", "↗", "Actividad"],
   ["more", "⋯", "Más"],
 ];
-const tools = ["simulator", "connections", "backup", "install", "tutorial"];
+const tools = [
+  "simulator",
+  "connections",
+  "backup",
+  "install",
+  "tutorial",
+  "account",
+];
 export default function AppShell({
   tab,
   onNavigate,
