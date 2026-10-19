@@ -387,6 +387,21 @@
     },
     {
       "theme": "light",
+      "screen": "early-withdrawal-confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
       "screen": "withdrawal-recorded",
       "violations": [],
       "incomplete": [
@@ -467,6 +482,9 @@
             ],
             [
               ".lock > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".toast"
             ]
           ]
         }
@@ -494,12 +512,6 @@
             ],
             [
               ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
-            ],
-            [
-              "button[aria-label=\"Mi cuenta\"] > span[aria-hidden=\"true\"]:nth-child(3)"
-            ],
-            [
-              "button[aria-label=\"Mi pareja\"] > span[aria-hidden=\"true\"]:nth-child(3)"
             ],
             [
               "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(1)"
@@ -1122,6 +1134,21 @@
     },
     {
       "theme": "dark",
+      "screen": "early-withdrawal-confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
       "screen": "withdrawal-recorded",
       "violations": [],
       "incomplete": [
@@ -1202,6 +1229,9 @@
             ],
             [
               ".lock > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".toast"
             ]
           ]
         }
@@ -1229,12 +1259,6 @@
             ],
             [
               ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
-            ],
-            [
-              "button[aria-label=\"Mi cuenta\"] > span[aria-hidden=\"true\"]:nth-child(3)"
-            ],
-            [
-              "button[aria-label=\"Mi pareja\"] > span[aria-hidden=\"true\"]:nth-child(3)"
             ],
             [
               "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(1)"
