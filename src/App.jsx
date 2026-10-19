@@ -20,6 +20,7 @@ import SharedGoals from "./components/SharedGoals.jsx";
 import { DepositDialog, DepositInbox } from "./components/Guardian.jsx";
 import { journal } from "./journal/index.js";
 import { useJournal } from "./journal/useJournal.js";
+import { useNavigation } from "./navigation/useNavigation.js";
 import {
   haptic,
   isNative,
@@ -84,15 +85,8 @@ export default function App() {
   const store = journal();
   const { data, recovery } = useJournal(store);
   const loadError = RECOVERY_MESSAGES[recovery] ?? "";
-  const [tab, setTab] = useState(() => {
-      const params = new URLSearchParams(location.search);
-      if (params.get("tutorial") === "1") return "tutorial";
-      // Links from the privacy pages open Mi cuenta directly.
-      return params.get("tab") === "account" && cloudConfigured
-        ? "account"
-        : "goals";
-    }),
-    [modal, setModal] = useState(null),
+  const { tab, go, launch } = useNavigation({ cloudConfigured });
+  const [modal, setModal] = useState(null),
     [deposit, setDeposit] = useState(null),
     [toast, setToast] = useState(""),
     [now, setNow] = useState(Date.now()),
@@ -127,10 +121,6 @@ export default function App() {
     update: (change) => setData(change(latestData.current)),
     notify,
   });
-  // A partner's invite link: ?pareja=CODE opens Mi pareja with the code.
-  const [inviteCode] = useState(
-    () => new URLSearchParams(location.search).get("pareja") ?? "",
-  );
   function notify(message) {
     clearTimeout(toastTimer.current);
     setToast(message);
@@ -186,23 +176,12 @@ export default function App() {
     [],
   );
   useEffect(() => {
-    if (!inviteCode) return;
-    setTab("partner");
-    const url = new URL(location.href);
-    url.searchParams.delete("pareja");
-    history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  }, []);
-  useEffect(() => {
-    const gmail = new URLSearchParams(location.search).get("gmail");
-    if (gmail) {
-      setTab("connections");
+    if (launch.gmail)
       notify(
-        gmail === "connected"
+        launch.gmail === "connected"
           ? "Gmail conectado. Ya puedes buscar comprobantes."
           : "Conexión cancelada.",
       );
-      history.replaceState({}, "", location.pathname);
-    }
   }, []);
   function movement({ cents: value, at }) {
     let recorded;
@@ -254,7 +233,7 @@ export default function App() {
       const goal =
         current.goals.find((g) => g.id === goalId && !g.archived) ??
         dueCheckIn(current)?.goal;
-      changeTab("goals");
+      go("goals");
       if (goal) setModal({ type: "movement", goal, withdraw: false });
     }).catch(() => {});
   }, []);
@@ -264,36 +243,23 @@ export default function App() {
       if (e.detail?.error) notify(e.detail.error);
       else {
         setConnectionVersion((v) => v + 1);
-        setTab("connections");
+        go("connections");
         notify("Gmail conectado. Ya puedes buscar comprobantes.");
       }
     };
-    const back = () => changeTab("goals");
     window.addEventListener("guardadito:connection", connected);
     const pending = consumeConnectionResult();
     if (pending) connected({ detail: pending });
-    window.addEventListener("guardadito:back", back);
-    return () => {
-      window.removeEventListener("guardadito:connection", connected);
-      window.removeEventListener("guardadito:back", back);
-    };
+    return () => window.removeEventListener("guardadito:connection", connected);
   }, []);
   const pet = data.preferences;
-  const changeTab = (key) => {
-    setTab(key);
-    const url = new URL(location.href);
-    if (key === "tutorial") url.searchParams.set("tutorial", "1");
-    else url.searchParams.delete("tutorial");
-    history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
   return (
     <div
       className={`app ${!pet.animations ? "reduced-motion" : ""} ${isNative ? "native-app" : ""}`}
     >
       <AppShell
         tab={tab}
-        onNavigate={changeTab}
+        onNavigate={go}
         goalCount={data.goals.length}
         pet={pet}
       >
@@ -418,9 +384,9 @@ export default function App() {
           >
             <Tutorial
               preferences={pet}
-              onNavigate={changeTab}
+              onNavigate={go}
               onCreate={() => {
-                changeTab("goals");
+                go("goals");
                 setModal({ type: "new" });
               }}
             />
@@ -435,8 +401,8 @@ export default function App() {
             cloud={cloud}
             partner={partner}
             notify={notify}
-            onNavigate={changeTab}
-            initialCode={inviteCode}
+            onNavigate={go}
+            initialCode={launch.inviteCode}
           />
         )}
         {tab === "more" && (
@@ -445,7 +411,7 @@ export default function App() {
             data={data}
             onSave={setData}
             notify={notify}
-            onNavigate={changeTab}
+            onNavigate={go}
           />
         )}
         {tab === "simulator" && <Simulator />}
