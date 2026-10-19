@@ -110,6 +110,23 @@ describe("a confirmed deposit becomes a movement", () => {
     expect(again.added).toHaveLength(0);
     expect(again.marks).toHaveLength(1);
   });
+  it("says when the deposit completes the cajita", () => {
+    const short = journal([
+      { id: "a", cents: 90000, at: "2026-10-01T12:00:00.000Z" },
+    ]);
+    expect(applyConfirmed(short, [deposit()], J).completed).toBe(true);
+    expect(applyConfirmed(short, [deposit({ cents: 5000 })], J).completed).toBe(
+      false,
+    );
+    // Already complete before: nothing new to celebrate.
+    const done = journal([
+      { id: "a", cents: 100000, at: "2026-10-01T12:00:00.000Z" },
+    ]);
+    expect(applyConfirmed(done, [deposit()], J).completed).toBe(false);
+    // A deposit that was already recorded is only marked.
+    const first = applyConfirmed(short, [deposit()], J).data;
+    expect(applyConfirmed(first, [deposit()], J).completed).toBe(false);
+  });
   it("ignores pending, rejected, applied and other people's deposits", () => {
     const list = [
       deposit({ id: "p", status: "pending" }),

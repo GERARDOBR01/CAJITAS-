@@ -118,6 +118,7 @@ export default function App() {
     data,
     update: (change) => setData(change(latestData.current)),
     notify,
+    celebrate: (detail) => celebrate(detail),
   });
   function notify(message) {
     clearTimeout(toastTimer.current);
@@ -135,11 +136,13 @@ export default function App() {
     return result.ok;
   }
   const setData = (next) => report(store.save(next));
-  function celebrate() {
+  // `detail` goes before the message when something else caused the goal.
+  function celebrate(detail) {
     clearTimeout(celebrationTimer.current);
     setConfetti(true);
     haptic(true);
-    notify("¡Meta alcanzada! Poquito a poquito, lo lograste ✦");
+    const done = "¡Meta alcanzada! Poquito a poquito, lo lograste ✦";
+    notify(typeof detail === "string" ? `${detail} ${done}` : done);
     celebrationTimer.current = setTimeout(() => setConfetti(false), 5000);
   }
   useEffect(() => {
