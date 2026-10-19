@@ -165,6 +165,20 @@ service cloud.firestore {
           && (resource.data.status != "confirmed" || "appliedAt" in resource.data);
       }
 
+      // Phones that get notices. Each person adds only their own; either
+      // one may remove a phone that stopped accepting them.
+      match /devices/{deviceId} {
+        allow read, delete: if member(pairId);
+        allow create, update: if member(pairId)
+          && request.resource.data.keys().hasOnly(["uid", "endpoint", "p256dh", "auth", "updatedAt"])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.endpoint is string
+          && request.resource.data.endpoint.matches("^https://.{1,900}$")
+          && shortText(request.resource.data.p256dh, 200)
+          && shortText(request.resource.data.auth, 100)
+          && (resource == null || resource.data.uid == request.auth.uid);
+      }
+
       // Surprises from one to the other: a special pet, notes, rewards.
       match /gifts/{giftId} {
         allow read: if member(pairId);

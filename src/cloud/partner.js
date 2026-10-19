@@ -130,7 +130,8 @@ export async function sendGift(pairId, gift, id) {
   const data = { ...gift, createdAt: Date.now() };
   const col = s.collection(db, "pairs", pairId, "gifts");
   if (id) await s.setDoc(s.doc(col, id), data);
-  else await s.addDoc(col, data);
+  else id = (await s.addDoc(col, data)).id;
+  return id;
 }
 
 export async function deleteGift(pairId, id) {
@@ -191,10 +192,11 @@ export async function saveSharedGoal(pairId, goal, id) {
 
 export async function addSharedEntry(pairId, entry) {
   const { db, storeLib: s } = await cloud();
-  await s.addDoc(s.collection(db, "pairs", pairId, "entries"), {
+  const ref = await s.addDoc(s.collection(db, "pairs", pairId, "entries"), {
     ...entry,
     createdAt: Date.now(),
   });
+  return ref.id;
 }
 
 export async function deleteSharedEntry(pairId, id) {
@@ -239,11 +241,12 @@ export async function deletePayout(pairId, uid) {
 
 export async function requestDeposit(pairId, deposit) {
   const { db, storeLib: s } = await cloud();
-  await s.addDoc(s.collection(db, "pairs", pairId, "deposits"), {
+  const ref = await s.addDoc(s.collection(db, "pairs", pairId, "deposits"), {
     ...deposit,
     status: "pending",
     createdAt: Date.now(),
   });
+  return ref.id;
 }
 
 export async function decideDeposit(pairId, id, confirmed) {

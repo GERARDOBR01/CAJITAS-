@@ -3006,3 +3006,15 @@ summary {
   width: auto;
   accent-color: var(--primary);
 }
+
+/* Avisos en el teléfono (0.13) */
+.install-steps {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-1);
+  font-weight: 700;
+}
+.notices p {
+  margin: 0;
+}

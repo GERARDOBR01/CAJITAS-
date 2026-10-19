@@ -9,8 +9,10 @@ import {
 import { checkEntry, splitFor, withEntries } from "./shared.js";
 import { applyConfirmed, checkDeposit, pendingByGoal } from "./deposits.js";
 import { money } from "../domain.js";
+import { pushConfigured } from "./config.js";
 
 const lib = () => import("./partner.js");
+const pushLib = () => import("./push.js");
 const INVITE_KEY = "guardadito:invite";
 function stored() {
   try {
@@ -205,6 +207,14 @@ export function usePartner({ user, data, update, notify }) {
       .catch(() => marks.forEach((d) => applying.current.delete(d.id)));
   }, [deposits, data.savedAt, pair?.id, uid]);
 
+  // A phone that already allowed notices stays registered with the couple.
+  useEffect(() => {
+    if (!pair || !uid || !pushConfigured) return;
+    pushLib()
+      .then(({ refreshPush }) => refreshPush(pair.id, uid))
+      .catch(() => {});
+  }, [pair?.id, uid]);
+
   // Once paired, the code I shared is no longer needed.
   useEffect(() => {
     if (!pair || !invite) return;
@@ -269,6 +279,18 @@ export function usePartner({ user, data, update, notify }) {
     }
   }
 
+  // After a write the partner should hear about, tell their phones too.
+  function tell(kind) {
+    return (id) => {
+      const pairId = pair?.id;
+      if (pairId && id)
+        pushLib()
+          .then(({ notifyPartner }) => notifyPartner(pairId, kind, id))
+          .catch(() => {});
+      return id;
+    };
+  }
+
   async function run(fn, success) {
     try {
       const value = await fn(await lib());
@@ -323,7 +345,7 @@ export function usePartner({ user, data, update, notify }) {
             id,
           ),
         message,
-      ),
+      ).then(tell("gift")),
     remove: (id) => run((p) => p.deleteGift(pair.id, id)),
     shared: withEntries(sharedGoals, sharedEntries ?? []),
     saveShared: (
@@ -361,7 +383,7 @@ export function usePartner({ user, data, update, notify }) {
         cents > 0
           ? "Aporte registrado. ¡Un pasito juntos! 💞"
           : "Retiro registrado. Usarlo también es cumplir su propósito.",
-      ),
+      ).then(tell("entry")),
     removeEntry: (id) =>
       run((p) => p.deleteSharedEntry(pair.id, id), "Aporte borrado."),
     unpair: () => run((p) => p.unpair(pair.id, uid), "Se deshizo el vínculo."),
@@ -397,7 +419,7 @@ export function usePartner({ user, data, update, notify }) {
         cents > 0
           ? `Avisamos a ${partnerName || "tu pareja"}. Cuenta en tu cajita cuando confirme que llegó.`
           : `Le pedimos ${money(-cents)} a ${partnerName || "tu pareja"}.`,
-      ),
+      ).then(tell("deposit")),
     decide: (deposit, confirmed) =>
       run(
         (p) => p.decideDeposit(pair.id, deposit.id, confirmed),
@@ -406,7 +428,7 @@ export function usePartner({ user, data, update, notify }) {
             ? "Confirmado. Ya cuenta en su cajita 💞"
             : "Retiro confirmado."
           : "Le avisamos que todavía no.",
-      ),
+      ).then(() => tell("deposit")(deposit.id)),
     cancelDeposit: (id) =>
       run((p) => p.deleteDeposit(pair.id, id), "Aviso cancelado."),
   };
