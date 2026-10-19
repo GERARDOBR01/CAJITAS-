@@ -1,5 +1,11 @@
 import { useEffect, useId, useRef } from "react";
-export default function Modal({ title, children, onClose }) {
+export default function Modal({
+  title,
+  subtitle,
+  sheet = false,
+  children,
+  onClose,
+}) {
   const ref = useRef(),
     id = useId();
   useEffect(() => {
@@ -10,15 +16,19 @@ export default function Modal({ title, children, onClose }) {
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={`modal ${sheet ? "sheet" : ""}`}
       aria-labelledby={id}
       onCancel={onClose}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
+      {sheet && <span className="sheet-handle" aria-hidden="true" />}
       <div className="modal-head">
-        <h2 id={id}>{title}</h2>
+        <div>
+          <h2 id={id}>{title}</h2>
+          {subtitle && <p className="muted modal-sub">{subtitle}</p>}
+        </div>
         <button className="icon-button" aria-label="Cerrar" onClick={onClose}>
           ×
         </button>

@@ -207,9 +207,7 @@ for (const theme of ["light", "dark"]) {
     await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
     await page.getByLabel("Monto (MXN)").fill("300");
     await audit(page, theme, "deposit-dialog");
-    await page
-      .getByRole("button", { name: "Registrar ahorro", exact: true })
-      .click();
+    await page.getByRole("button", { name: /^Guardar/ }).click();
     await expect(home.locator(".home-greeting")).toHaveClass(/is-cheering/);
     await expect(home.locator(".mascot")).toHaveClass(/mood-excited/);
     await expect(home.locator(".mascot")).toBeInViewport();
@@ -230,7 +228,7 @@ for (const theme of ["light", "dark"]) {
     await audit(page, theme, "withdraw-dialog");
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "Registrar retiro", exact: true })
+      .getByRole("button", { name: /^Retirar/ })
       .click();
     await expect(card.locator(".saved")).toContainText("$200.00");
     // A withdrawal is not a reaction: the pet stays calm and the page stays put.
@@ -238,9 +236,7 @@ for (const theme of ["light", "dark"]) {
     await audit(page, theme, "withdrawal-recorded");
     await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
     await page.getByLabel("Monto (MXN)").fill("800");
-    await page
-      .getByRole("button", { name: "Registrar ahorro", exact: true })
-      .click();
+    await page.getByRole("button", { name: /^Guardar/ }).click();
     await expect(card.getByRole("progressbar")).toHaveAttribute(
       "aria-valuenow",
       "100",

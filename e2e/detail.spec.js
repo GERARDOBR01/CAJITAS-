@@ -112,9 +112,7 @@ test("Depositar y Retirar desde el detalle cambian el ahorro y regresan", async 
     .click();
   await detail(page).getByRole("button", { name: "Depositar" }).click();
   await page.getByLabel("Monto (MXN)").fill("800");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await expect(detail(page).locator(".detail-amount")).toContainText(
     "$7,000.00",
   );
@@ -122,7 +120,7 @@ test("Depositar y Retirar desde el detalle cambian el ahorro y regresan", async 
   await page.getByLabel("Monto (MXN)").fill("100");
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(detail(page).locator(".detail-amount")).toContainText(
     "$6,900.00",
@@ -178,6 +176,84 @@ for (const theme of ["light", "dark"])
     expect(axe.violations.map((v) => v.id)).toEqual([]);
     const short = await page.evaluate(() =>
       [...document.querySelectorAll("button")]
+        .filter(
+          (el) =>
+            el.checkVisibility() && el.getBoundingClientRect().height < 48,
+        )
+        .map((el) => el.getAttribute("aria-label") || el.textContent.trim()),
+    );
+    expect(short).toEqual([]);
+  });
+
+test("la hoja de ahorro: teclado, cambio de cajita y guardar", async ({
+  page,
+}) => {
+  await open(page);
+  await page
+    .locator(".goal-card")
+    .first()
+    .getByRole("button", { name: "+ Registrar ahorro" })
+    .click();
+  const sheet = page.getByRole("dialog");
+  await expect(
+    sheet.getByRole("heading", { name: "Registrar ahorro" }),
+  ).toBeVisible();
+  await expect(sheet.getByRole("button", { name: /^Guardar/ })).toHaveText(
+    "Guardar",
+  );
+  for (const key of ["1", "2", "5", ".", "5", "0", "9"])
+    await sheet.getByRole("button", { name: key, exact: true }).click();
+  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("125.50");
+  await sheet.getByRole("button", { name: "Borrar un dígito" }).click();
+  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("125.5");
+  await expect(sheet.getByRole("button", { name: /^Guardar/ })).toContainText(
+    "$125.50",
+  );
+  await sheet
+    .getByLabel("¿A qué cajita va?")
+    .selectOption({ label: "Cajita vacía" });
+  await sheet.getByRole("button", { name: /^Guardar/ }).click();
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("guardadito:v1")),
+  );
+  expect(saved.goals[0].entries).toHaveLength(4);
+  expect(saved.goals[1].entries).toHaveLength(1);
+  expect(saved.goals[1].entries[0].cents).toBe(12550);
+});
+
+test("la hoja de retiro no pasa de lo registrado y avisa", async ({ page }) => {
+  await open(page);
+  await page
+    .locator(".goal-card")
+    .first()
+    .getByRole("button", { name: "Registrar retiro" })
+    .click();
+  await page.getByLabel("Monto (MXN)").fill("99999");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: /^Retirar/ })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "El retiro supera lo registrado",
+  );
+});
+
+for (const theme of ["light", "dark"])
+  test(`hoja de ahorro ${theme}: contraste AA y botones de 48 px`, async ({
+    page,
+  }) => {
+    await open(page, theme);
+    await page
+      .locator(".goal-card")
+      .first()
+      .getByRole("button", { name: "+ Registrar ahorro" })
+      .click();
+    const axe = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa"])
+      .analyze();
+    expect(axe.violations.map((v) => v.id)).toEqual([]);
+    const short = await page.evaluate(() =>
+      [...document.querySelectorAll("dialog button")]
         .filter(
           (el) =>
             el.checkVisibility() && el.getBoundingClientRect().height < 48,

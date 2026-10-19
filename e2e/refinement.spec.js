@@ -114,9 +114,7 @@ test("el plan se ve antes de crear y los montos rápidos requieren registrar el 
   yesterday.setDate(yesterday.getDate() - 1);
   const date = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
   await page.getByLabel("Fecha del movimiento").fill(date);
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await expect(card).toContainText("Te faltan $900.00");
   const entry = (await saved(page)).goals[0].entries[0];
   expect(entry.cents).toBe(10000);
@@ -348,7 +346,7 @@ test("ningún retiro entristece ni pide confirmar, antes o después de la fecha"
   await page.getByLabel("Monto (MXN)").fill("50");
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
@@ -359,7 +357,7 @@ test("ningún retiro entristece ni pide confirmar, antes o después de la fecha"
   await page.getByLabel("Fecha del movimiento").fill(local(daysAgo(2)));
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro", exact: true })
+    .getByRole("button", { name: /^Retirar/ })
     .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(card.locator(".saved")).toContainText("$175.00");

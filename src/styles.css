@@ -3715,3 +3715,191 @@ summary {
   font-size: inherit;
   font-weight: inherit;
 }
+
+/* Rediseño · Registrar ahorro y retiro como hoja inferior (diseño de Sleek). */
+.modal.sheet {
+  width: min(480px, 100%);
+  padding: var(--space-3) var(--space-5) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+}
+.sheet-handle {
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 0 auto var(--space-3);
+  border-radius: 999px;
+  background: var(--line);
+}
+.modal.sheet .modal-head {
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+}
+.modal.sheet .modal-head h2 {
+  font-size: 24px;
+}
+.modal-sub {
+  margin-top: 2px;
+  font-size: var(--small);
+}
+.modal.sheet .icon-button {
+  flex: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  background: var(--surface-soft);
+}
+.modal.sheet form > label:first-child {
+  margin-block: var(--space-3);
+}
+.amount-box {
+  position: relative;
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.amount-box .amount-label {
+  margin: 0;
+  align-items: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+.amount-field {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  color: var(--text);
+}
+.amount-field > span {
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.amount-field input {
+  width: auto;
+  field-sizing: content;
+  min-width: 1ch;
+  max-width: 9ch;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 48px;
+  font-weight: 950;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  caret-color: var(--primary);
+}
+.amount-field input:focus-visible {
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.amount-box .link-button {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-3);
+  min-height: 48px;
+}
+.modal.sheet .quick-amounts {
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.keypad button {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.keypad button:active {
+  translate: 0 2px;
+  box-shadow: 0 1px 0 var(--line);
+}
+.keypad button:last-child,
+.keypad button:nth-child(10) {
+  background: var(--surface-soft);
+}
+.keypad svg {
+  width: 26px;
+  height: 26px;
+}
+.sheet-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border: 0;
+  border-radius: 16px;
+  margin-block: var(--space-3);
+}
+.sheet-notice svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+.modal.sheet form > .primary,
+.modal.sheet form > .secondary {
+  min-height: 56px;
+  border-radius: 16px;
+  font-size: 1.1rem;
+}
+.modal.sheet form > .primary svg,
+.modal.sheet form > .secondary svg {
+  width: 24px;
+  height: 24px;
+}
+@keyframes sheet-up {
+  from {
+    translate: 0 40px;
+    opacity: 0;
+  }
+}
+@media (max-width: 760px) {
+  .modal.sheet {
+    width: 100%;
+    max-width: none;
+    max-height: 94dvh;
+    margin: auto 0 0;
+    padding-bottom: calc(
+      var(--space-5) +
+        var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
+    );
+    border-radius: 28px 28px 0 0;
+    animation: sheet-up 0.25s ease-out;
+  }
+}
+.modal.sheet .quick-amounts {
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.modal.sheet .quick-amounts button {
+  padding: 8px 12px;
+  font-size: var(--small);
+}
+.modal.sheet form > .primary,
+.modal.sheet form > .secondary {
+  position: sticky;
+  bottom: calc(var(--space-3) - var(--space-5));
+  z-index: 2;
+}

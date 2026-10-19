@@ -185,10 +185,13 @@ export default function App() {
           : "Conexión cancelada.",
       );
   }, []);
-  function movement({ cents: value, at }) {
+  function movement({ cents: value, at, goalId }) {
     let recorded;
     try {
-      recorded = recordEntry(data, modal.goal.id, { cents: value, at });
+      recorded = recordEntry(data, goalId ?? modal.goal.id, {
+        cents: value,
+        at,
+      });
     } catch (error) {
       notify(error.message || "No pudimos guardar el cambio.");
       return;

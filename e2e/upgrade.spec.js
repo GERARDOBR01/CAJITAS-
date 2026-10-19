@@ -83,9 +83,7 @@ test("plan persistente, edición y archivo reversible conservan dinero e histori
   await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
   await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
   await page.getByLabel("Monto (MXN)").fill("100");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await card.getByRole("button", { name: "Editar Una escapadita" }).click();
   await page.getByLabel("Nombre de tu meta").fill("Mi viaje bonito");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
@@ -128,9 +126,7 @@ test("actividad, CSV y calendario ofrecen descargas reales sin transferencias", 
     .getByRole("button", { name: "+ Registrar ahorro" })
     .click();
   await page.getByLabel("Monto (MXN)").fill("250");
-  await page
-    .getByRole("button", { name: "Registrar ahorro", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Guardar/ }).click();
   await page.getByRole("button", { name: "Actividad", exact: true }).click();
   await expect(
     page.getByRole("img", { name: /Historial del ahorro registrado/ }),
