@@ -102,7 +102,7 @@ export default function PetRoom({ data, onSave, notify }) {
     <section className="pet-room">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">UNA AMISTAD QUE FLORECE</p>
+          <p className="eyebrow">Una amistad que florece</p>
           <h1>Tu pequeño gran compañero</h1>
           <p className="muted">
             Cuida tus hábitos. El dinero no mide tu amistad.
@@ -111,10 +111,6 @@ export default function PetRoom({ data, onSave, notify }) {
       </div>
       <div className="pet-room-layout">
         <div className="pet-garden panel">
-          <span className="garden-cloud cloud-one">☁</span>
-          <span className="garden-cloud cloud-two">☁</span>
-          <span className="garden-flower flower-one">✿</span>
-          <span className="garden-flower flower-two">✿</span>
           <span className="pet-level">
             Nivel {friend.level} · {friend.title}
           </span>
@@ -184,8 +180,11 @@ export default function PetRoom({ data, onSave, notify }) {
                   aria-label={`Elegir ${pet.label}`}
                   onClick={() => choose(key)}
                 >
-                  <Mascot pet={key} small accessory="leaf" />
+                  <span className="pet-thumb" style={{ "--tint": pet.color }}>
+                    <Mascot pet={key} small accessory="leaf" />
+                  </span>
                   <strong>{pet.label}</strong>
+                  <small>{pet.name}</small>
                 </button>
               ))}
           </div>
