@@ -1,6 +1,7 @@
 import AppShell from "./components/AppShell.jsx";
 import GoalDialogs from "./components/GoalDialogs.jsx";
 import Home from "./screens/Home.jsx";
+import GoalDetail from "./screens/GoalDetail.jsx";
 import More from "./screens/More.jsx";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
@@ -94,6 +95,7 @@ export default function App() {
     [excited, setExcited] = useState(false),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
+  const [detailId, setDetailId] = useState(null);
   const [connectionVersion, setConnectionVersion] = useState(0);
   // The cloud hook reads the newest journal through `.current`.
   const latestData = useMemo(
@@ -252,10 +254,27 @@ export default function App() {
     if (pending) connected({ detail: pending });
     return () => window.removeEventListener("guardadito:connection", connected);
   }, []);
+  const detailGoal =
+    tab === "goal" ? data.goals.find((goal) => goal.id === detailId) : null;
+  useEffect(() => {
+    if (tab === "goal" && !detailGoal) go("goals");
+  }, [tab, detailGoal, go]);
+  function openGoal(id) {
+    setDetailId(id);
+    go("goal");
+  }
+  function setFrequency(id, frequency) {
+    setData({
+      ...data,
+      goals: data.goals.map((goal) =>
+        goal.id === id ? { ...goal, frequency } : goal,
+      ),
+    });
+  }
   const pet = data.preferences;
   return (
     <div
-      className={`app ${!pet.animations ? "reduced-motion" : ""} ${isNative ? "native-app" : ""}`}
+      className={`app ${!pet.animations ? "reduced-motion" : ""} ${isNative ? "native-app" : ""} ${tab === "goal" ? "detail-open" : ""}`}
     >
       <AppShell
         tab={tab}
@@ -322,8 +341,7 @@ export default function App() {
               partner.guardian && {
                 name: partner.partnerName || "tu guardián",
                 pending: partner.pending,
-                onDeposit: (goal, withdraw) =>
-                  setDeposit({ goal, withdraw }),
+                onDeposit: (goal, withdraw) => setDeposit({ goal, withdraw }),
               }
             }
             onEdit={(goal) => setModal({ type: "edit", goal })}
@@ -335,14 +353,7 @@ export default function App() {
                 initialCents,
               })
             }
-            onFrequency={(id, frequency) =>
-              setData({
-                ...data,
-                goals: data.goals.map((goal) =>
-                  goal.id === id ? { ...goal, frequency } : goal,
-                ),
-              })
-            }
+            onOpen={openGoal}
             onPet={() => haptic()}
           />
         )}
@@ -352,6 +363,27 @@ export default function App() {
             uid={cloud.user?.uid}
             now={now}
             onCelebrate={celebrate}
+          />
+        )}
+        {detailGoal && (
+          <GoalDetail
+            goal={detailGoal}
+            now={now}
+            weekday={data.preferences.reminder.day}
+            guardian={
+              partner.guardian && {
+                name: partner.partnerName || "tu guardián",
+                pending: partner.pending[detailGoal.id],
+                onDeposit: (goal, withdraw) => setDeposit({ goal, withdraw }),
+              }
+            }
+            onBack={() => go("goals")}
+            onMove={(goal, withdraw) =>
+              setModal({ type: "movement", goal, withdraw })
+            }
+            onEdit={(goal) => setModal({ type: "edit", goal })}
+            onFrequency={setFrequency}
+            onActivity={() => go("activity")}
           />
         )}
         {tab === "pet" && (

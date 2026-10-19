@@ -33,7 +33,7 @@ export default function Home({
   guardian,
   onEdit,
   onRecord,
-  onFrequency,
+  onOpen,
   onPet,
   checkIn,
   onCheckIn,
@@ -214,8 +214,7 @@ export default function Home({
                 key={goal.id}
                 goal={goal}
                 now={now}
-                onFrequency={onFrequency}
-                weekday={data.preferences.reminder.day}
+                onOpen={onOpen}
                 onMove={onMove}
                 onEdit={onEdit}
                 guardian={

@@ -113,6 +113,24 @@ export function plan(
   );
   return Math.ceil(Math.max(0, goal.targetCents - balance(goal)) / periods);
 }
+/** An estimate of when a goal would be reached at the pace of its recent
+ * recorded savings (last 60 days, at least 14). Never a promise: with no
+ * recent net savings there is no estimate and the screen says so. */
+export function projection(goal, now = Date.now()) {
+  const remaining = Math.max(0, goal.targetCents - balance(goal));
+  if (!remaining) return { kind: "done" };
+  const DAY = 86400000,
+    times = goal.entries.map((e) => Date.parse(e.at)).filter(Number.isFinite);
+  if (!times.length) return { kind: "none" };
+  const span = Math.min(60 * DAY, Math.max(14 * DAY, now - Math.min(...times))),
+    net = goal.entries
+      .filter((e) => Date.parse(e.at) >= now - span)
+      .reduce((sum, e) => sum + e.cents, 0);
+  if (net <= 0) return { kind: "none" };
+  const days = Math.ceil(remaining / (net / (span / DAY)));
+  if (days > 3650) return { kind: "none" };
+  return { kind: "pace", days, date: localDate(new Date(now + days * DAY)) };
+}
 export function streak(goals, now = new Date()) {
   const days = new Set(
     goals.flatMap((g) =>

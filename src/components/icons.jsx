@@ -129,3 +129,152 @@ export const ShieldCheck = (props) => (
     </g>
   </svg>
 );
+
+export const ArrowLeft = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M20 12H4M10 18L4 12L10 6"
+    />
+  </svg>
+);
+
+export const Pen = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth="1.5"
+      d="M14.3601 4.07866L15.2869 3.15178C16.8226 1.61607 19.3125 1.61607 20.8482 3.15178C22.3839 4.68748 22.3839 7.17735 20.8482 8.71306L19.9213 9.63993M14.3601 4.07866C14.3601 4.07866 14.4759 6.04828 16.2138 7.78618C17.9517 9.52407 19.9213 9.63993 19.9213 9.63993M19.9213 9.63993L11.4001 18.1612C10.8229 18.7383 10.5344 19.0269 10.2162 19.2751C9.84082 19.5679 9.43469 19.8189 9.00498 20.0237C8.6407 20.1973 8.25352 20.3263 7.47918 20.5844L4.19792 21.6782L3.39584 21.9456C3.01478 22.0726 2.59466 21.9734 2.31063 21.6894C2.0266 21.4053 1.92743 20.9852 2.05445 20.6042L2.32181 19.8021L3.41556 16.5208C3.67368 15.7465 3.80273 15.3593 3.97634 14.995C4.18114 14.5653 4.43213 14.1592 4.7249 13.7838C4.97308 13.4656 5.26166 13.1771 5.83882 12.5999L14.3601 4.07866M4.19792 21.6782L2.32181 19.8021"
+    />
+  </svg>
+);
+
+export const Calendar = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth="1.5"
+    >
+      <path d="M2 12C2 8.22876 2 6.34315 3.17157 5.17157C4.34315 4 6.22876 4 10 4H14C17.7712 4 19.6569 4 20.8284 5.17157C22 6.34315 22 8.22876 22 12V14C22 17.7712 22 19.6569 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14V12Z" />
+      <path d="M7 4V2.5" />
+      <path d="M17 4V2.5" />
+      <path d="M2.5 9H21.5" />
+      <path strokeLinejoin="round" d="M17 13H17.0001" />
+      <path strokeLinejoin="round" d="M12 13H12.0001" />
+      <path strokeLinejoin="round" d="M7 13H7.0001" />
+      <path strokeLinejoin="round" d="M17 17.0234H17.0001" />
+      <path strokeLinejoin="round" d="M12 17.0234H12.0001" />
+      <path strokeLinejoin="round" d="M7 17.0234H7.0001" />
+    </g>
+  </svg>
+);
+
+export const ArrowDown = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M12 4L12 20M6 14L12 20L18 14"
+    />
+  </svg>
+);
+
+export const ArrowUp = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M12 20L12 4M6 10L12 4L18 10"
+    />
+  </svg>
+);
+
+export const MinusCircle = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth="1.5"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M15 12H9" />
+    </g>
+  </svg>
+);
+
+export const ArrowRight = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M4 12H20M14 18L20 12L14 6"
+    />
+  </svg>
+);

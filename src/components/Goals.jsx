@@ -16,15 +16,16 @@ import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
 import Illustration from "./Illustration.jsx";
 import Money from "./Money.jsx";
+import { ArrowRight } from "./icons.jsx";
 import Modal from "./Modal.jsx";
 
-const destinations = {
+export const destinations = {
   Nu: "https://nu.com.mx/",
   "Mercado Pago": "https://www.mercadopago.com.mx/",
   Bitso: "https://bitso.com/",
 };
-const symbols = { star: "✦", flower: "✿", cloud: "☁" };
-const dateLabel = (date) =>
+export const symbols = { star: "✦", flower: "✿", cloud: "☁" };
+export const dateLabel = (date) =>
   new Date(`${date}T12:00:00`).toLocaleDateString("es-MX", {
     day: "numeric",
     month: "short",
@@ -418,34 +419,29 @@ export function MovementForm({
     </Modal>
   );
 }
-export function GoalCard({
-  goal,
-  onMove,
-  onEdit,
-  now,
-  onFrequency,
-  weekday,
-  guardian,
-}) {
+export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
   const saved = balance(goal),
     progress = Math.min(1, saved / goal.targetCents);
-  const frequency = goal.frequency;
   const status = goalStatus(goal, now);
   return (
     <article className={`goal-card ${goal.icon}`}>
       <div className="goal-heading">
         <span className="goal-symbol">{symbols[goal.icon]}</span>
-        <div className="goal-title">
+        <button
+          className="goal-open"
+          aria-label={`Ver detalle de ${goal.name}`}
+          onClick={() => onOpen(goal.id)}
+        >
           <h3>{goal.name}</h3>
-          <p className="goal-meta">
+          <span className="goal-meta">
             <span className={`provider ${goal.provider === "Nu" ? "nu" : ""}`}>
               {goal.provider}
             </span>
             {goal.unlockDate
               ? `Meta: ${dateLabel(goal.unlockDate)}`
               : "A tu ritmo"}
-          </p>
-        </div>
+          </span>
+        </button>
         <p className="saved">
           <span className="visually-hidden">Ahorro registrado </span>
           <Money cents={saved} />
@@ -477,17 +473,23 @@ export function GoalCard({
           ? "Ahorro registrado"
           : `Te faltan ${money(status.remaining)}`}
       </p>
-      {guardian?.pending?.in > 0 && (
-        <p className="on-the-way">
-          ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
-          {guardian.name}
-        </p>
-      )}
-      {guardian?.pending?.out > 0 && (
-        <p className="on-the-way">
-          ⏳ Pediste {money(guardian.pending.out)} a {guardian.name}
-        </p>
-      )}
+      <p className="goal-lock">
+        <span aria-hidden="true">
+          {unlockTime(goal.unlockDate) > now ? "♧" : "✓"}
+        </span>
+        {countdown(goal.unlockDate, now)}
+      </p>
+      <CommitmentNotice
+        provider={goal.provider}
+        keeper={
+          guardian &&
+          (guardian.pending ||
+            goal.entries.some((e) => e.source === "guardian"))
+            ? guardian.name
+            : ""
+        }
+      />
+      <Pending guardian={guardian} />
       {progress >= 1 && (
         <div className="complete-scene">
           <Illustration kind="complete" />
@@ -517,115 +519,52 @@ export function GoalCard({
           </button>
         </div>
       )}
-      {!goal.archived && guardian && (
-        <div className="guardian-actions">
-          <button
-            className="secondary"
-            onClick={() => guardian.onDeposit(goal, false)}
-          >
-            Depositar con {guardian.name}
-          </button>
-          <button
-            className="text-button"
-            disabled={saved - (guardian.pending?.out ?? 0) <= 0}
-            onClick={() => guardian.onDeposit(goal, true)}
-          >
-            Pedir retiro a {guardian.name}
-          </button>
-        </div>
-      )}
-      <details className="goal-more">
-        <summary>Plan, candado y movimientos</summary>
-        <div className="lock">
-          <span aria-hidden="true">
-            {unlockTime(goal.unlockDate) > now ? "♧" : "✓"}
-          </span>
-          <div>
-            <strong>{countdown(goal.unlockDate, now)}</strong>
-            <span>
-              {goal.unlockDate
-                ? `Fecha objetivo · ${dateLabel(goal.unlockDate)}`
-                : "A tu ritmo, sin prisa"}
-            </span>
-          </div>
-        </div>
-        <CommitmentNotice
-          provider={goal.provider}
-          keeper={
-            guardian &&
-            (guardian.pending ||
-              goal.entries.some((e) => e.source === "guardian"))
-              ? guardian.name
-              : ""
-          }
-        />
-        {progress < 1 && (
-          <div className="plan">
-            <span>Tu siguiente pasito</span>
-            <strong>
-              {goal.unlockDate
-                ? money(plan(goal, frequency, now, weekday))
-                : "A tu ritmo"}
-            </strong>
-            <select
-              aria-label={`Frecuencia de ${goal.name}`}
-              value={frequency}
-              onChange={(e) => onFrequency(goal.id, Number(e.target.value))}
-            >
-              <option value={7}>{RHYTHM_LABEL.weekly}</option>
-              <option value={15}>{RHYTHM_LABEL.biweekly}</option>
-              <option value={30}>{RHYTHM_LABEL.monthly}</option>
-            </select>
-          </div>
-        )}
-        {!goal.archived && (
-          <div className="card-actions">
-            {destinations[goal.provider] ? (
-              <a
-                className="external"
-                href={destinations[goal.provider]}
-                onClick={
-                  isNative
-                    ? (e) => {
-                        e.preventDefault();
-                        openExternal(destinations[goal.provider]);
-                      }
-                    : undefined
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ir a apartar ↗
-              </a>
-            ) : (
-              <span className="muted small-text">Aparta en tu app</span>
-            )}
-          </div>
-        )}
-        {!goal.archived && <></>}
-        {goal.entries.length > 0 && (
-          <details>
-            <summary>Ver movimientos ({goal.entries.length})</summary>
-            <ul className="movements">
-              {goal.entries
-                .slice()
-                .reverse()
-                .map((e) => (
-                  <li key={e.id}>
-                    <span>
-                      {new Date(e.at).toLocaleDateString("es-MX")} ·{" "}
-                      {SOURCE_LABEL[e.source] ?? "Manual"}
-                    </span>
-                    <strong>
-                      {e.cents > 0 ? "+" : ""}
-                      {money(e.cents)}
-                    </strong>
-                  </li>
-                ))}
-            </ul>
-          </details>
-        )}
-      </details>
+      <GuardianActions goal={goal} guardian={guardian} saved={saved} />
+      <button className="goal-more" onClick={() => onOpen(goal.id)}>
+        Ver plan y movimientos
+        {goal.entries.length > 0 && ` (${goal.entries.length})`}
+        <ArrowRight />
+      </button>
     </article>
+  );
+}
+
+/** What the guardian has not confirmed yet, for a goal. */
+export function Pending({ guardian }) {
+  return (
+    <>
+      {guardian?.pending?.in > 0 && (
+        <p className="on-the-way">
+          ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
+          {guardian.name}
+        </p>
+      )}
+      {guardian?.pending?.out > 0 && (
+        <p className="on-the-way">
+          ⏳ Pediste {money(guardian.pending.out)} a {guardian.name}
+        </p>
+      )}
+    </>
+  );
+}
+
+export function GuardianActions({ goal, guardian, saved }) {
+  if (!guardian || goal.archived) return null;
+  return (
+    <div className="guardian-actions">
+      <button
+        className="secondary"
+        onClick={() => guardian.onDeposit(goal, false)}
+      >
+        Depositar con {guardian.name}
+      </button>
+      <button
+        className="text-button"
+        disabled={saved - (guardian.pending?.out ?? 0) <= 0}
+        onClick={() => guardian.onDeposit(goal, true)}
+      >
+        Pedir retiro a {guardian.name}
+      </button>
+    </div>
   );
 }

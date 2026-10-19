@@ -139,7 +139,13 @@ test("una meta sin fecha se crea, se guarda como null y se ahorra a tu ritmo", a
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
   const card = page.locator(".goal-card");
   await expect(card).toContainText("Sin fecha objetivo");
-  await expect(card.locator(".plan")).toContainText("A tu ritmo");
+  await card
+    .getByRole("button", { name: "Ver detalle de Mi colchoncito" })
+    .click();
+  await expect(page.locator(".detail-plan")).toContainText(
+    "Sin fecha objetivo: aporta lo que te acomode.",
+  );
+  await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
   expect((await saved(page)).goals[0].unlockDate).toBeNull();
   const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
   await next.getByRole("button", { name: "Registrar mi pasito" }).click();

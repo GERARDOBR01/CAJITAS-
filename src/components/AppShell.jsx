@@ -27,7 +27,9 @@ export default function AppShell({
       <nav className={className} aria-label={label}>
         {navigation.map(([key, icon, title]) => {
           const selected =
-            tab === key || (key === "more" && tools.includes(tab));
+            tab === key ||
+            (key === "goals" && tab === "goal") ||
+            (key === "more" && tools.includes(tab));
           return (
             <button
               key={key}
