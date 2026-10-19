@@ -27,7 +27,13 @@ import {
 } from "./platform.js";
 import { answerCheckIn, dueCheckIn, easeReminders } from "./pet/reminders.js";
 import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
-import { STORAGE_KEY, balance, initialData, validateBackup } from "./domain.js";
+import {
+  STORAGE_KEY,
+  balance,
+  initialData,
+  restoreEntry,
+  validateBackup,
+} from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
@@ -450,6 +456,14 @@ export default function App() {
           <Activity
             data={data}
             notify={notify}
+            onRestore={(entryId) => {
+              try {
+                if (setData(restoreEntry(data, entryId)))
+                  notify("Movimiento restaurado. ✓");
+              } catch (error) {
+                notify(error.message);
+              }
+            }}
             onCorrect={(entry) =>
               setModal({
                 type: "correct",

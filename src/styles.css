@@ -3018,3 +3018,27 @@ summary {
 .notices p {
   margin: 0;
 }
+
+/* Papelera (0.14) */
+.trash {
+  margin-top: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+}
+.trash summary {
+  font-weight: 850;
+  cursor: pointer;
+}
+.trash .partner-list {
+  margin-top: var(--space-3);
+}
+.held {
+  display: grid;
+  margin: 0;
+}
+.held strong {
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+.held small {
+  color: var(--muted);
+}

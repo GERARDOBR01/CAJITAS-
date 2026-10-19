@@ -481,7 +481,15 @@ export function GoalCard({
           </span>
         </div>
       </div>
-      <CommitmentNotice provider={goal.provider} />
+      <CommitmentNotice
+        provider={goal.provider}
+        keeper={
+          guardian &&
+          (guardian.pending || goal.entries.some((e) => e.source === "guardian"))
+            ? guardian.name
+            : ""
+        }
+      />
       {guardian?.pending?.in > 0 && (
         <p className="on-the-way">
           ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
