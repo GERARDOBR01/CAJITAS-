@@ -28,11 +28,7 @@ export default function Home({
   now,
   cheering,
   celebrating,
-  onCreate,
-  onMove,
-  guardian,
-  onEdit,
-  onRecord,
+  actions,
   onOpen,
   onPet,
   checkIn,
@@ -168,8 +164,7 @@ export default function Home({
         )}
         <NextStep
           goal={nextGoal(data)}
-          onRecord={onRecord}
-          onEdit={onEdit}
+          actions={actions}
           weekday={data.preferences.reminder.day}
         />
       </header>
@@ -214,14 +209,7 @@ export default function Home({
                 goal={goal}
                 now={now}
                 onOpen={onOpen}
-                onMove={onMove}
-                onEdit={onEdit}
-                guardian={
-                  guardian && {
-                    ...guardian,
-                    pending: guardian.pending[goal.id],
-                  }
-                }
+                actions={actions}
               />
             ))}
           </div>
@@ -238,7 +226,7 @@ export default function Home({
             </p>
           </div>
         )}
-        <button className="primary new-goal" onClick={onCreate}>
+        <button className="primary new-goal" onClick={actions.create}>
           + Nueva cajita
         </button>
         {!empty && (

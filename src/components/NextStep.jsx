@@ -2,7 +2,7 @@ import { goalSummary, money, plan } from "../domain.js";
 import { rhythmLabel } from "../calendar.js";
 import Illustration from "./Illustration.jsx";
 
-export default function NextStep({ goal, onRecord, onEdit, weekday }) {
+export default function NextStep({ goal, actions, weekday }) {
   if (!goal) return null;
   const status = goalSummary(goal),
     amount = plan(goal, goal.frequency, Date.now(), weekday);
@@ -28,7 +28,9 @@ export default function NextStep({ goal, onRecord, onEdit, weekday }) {
       <button
         className={status.pastDue ? "secondary" : "primary"}
         onClick={() =>
-          status.pastDue ? onEdit(goal) : onRecord(goal, amount ?? undefined)
+          status.pastDue
+            ? actions.edit(goal)
+            : actions.move(goal, { initialCents: amount ?? undefined })
         }
       >
         {status.pastDue ? "Revisar mi plan" : "Registrar mi pasito"}

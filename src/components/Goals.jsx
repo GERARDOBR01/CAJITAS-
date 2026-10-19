@@ -472,9 +472,10 @@ export function MovementForm({
     </Modal>
   );
 }
-export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
+export function GoalCard({ goal, actions, onOpen, now }) {
   const summary = goalSummary(goal, now),
-    { saved } = summary;
+    { saved } = summary,
+    guardian = actions.guardianFor(goal.id);
   return (
     <article className={`goal-card ${goal.icon}`}>
       <div className="goal-heading">
@@ -501,7 +502,7 @@ export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
         <button
           className="icon-button"
           aria-label={`Editar ${goal.name}`}
-          onClick={() => onEdit(goal)}
+          onClick={() => actions.edit(goal)}
         >
           ⋯
         </button>
@@ -521,18 +522,18 @@ export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
       <GoalNotices goal={goal} summary={summary} guardian={guardian} />
       <GoalComplete summary={summary} />
       {goal.archived ? (
-        <button className="secondary full" onClick={() => onEdit(goal)}>
+        <button className="secondary full" onClick={() => actions.edit(goal)}>
           Recuperar cajita
         </button>
       ) : (
         <div className="card-actions">
-          <button className="primary" onClick={() => onMove(goal, false)}>
+          <button className="primary" onClick={() => actions.move(goal)}>
             + Registrar ahorro
           </button>
           <button
             className="secondary withdraw"
             disabled={!saved}
-            onClick={() => onMove(goal, true)}
+            onClick={() => actions.move(goal, { withdraw: true })}
           >
             Registrar retiro
           </button>
@@ -548,7 +549,6 @@ export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
   );
 }
 
-/** What the guardian has not confirmed yet, for a goal. */
 export function GuardianActions({ goal, guardian, saved }) {
   if (!guardian || goal.archived) return null;
   return (

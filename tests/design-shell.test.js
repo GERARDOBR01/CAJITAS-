@@ -56,6 +56,13 @@ describe("descarga en Más según la plataforma", () => {
   }
 });
 
+const actions = () => ({
+  create: vi.fn(),
+  move: vi.fn(),
+  edit: vi.fn(),
+  guardianFor: () => null,
+});
+
 describe("el siguiente aporte vive en Inicio", () => {
   const home = (data) =>
     renderToStaticMarkup(
@@ -64,10 +71,7 @@ describe("el siguiente aporte vive en Inicio", () => {
         filter: "active",
         onFilter: vi.fn(),
         now: Date.parse("2026-10-16T12:00:00"),
-        onCreate: vi.fn(),
-        onMove: vi.fn(),
-        onEdit: vi.fn(),
-        onRecord: vi.fn(),
+        actions: actions(),
         onFrequency: vi.fn(),
       }),
     );
@@ -116,10 +120,7 @@ describe("una meta sin fecha en Inicio", () => {
         filter: "active",
         onFilter: vi.fn(),
         now: Date.parse("2026-10-16T12:00:00"),
-        onCreate: vi.fn(),
-        onMove: vi.fn(),
-        onEdit: vi.fn(),
-        onRecord: vi.fn(),
+        actions: actions(),
         onFrequency: vi.fn(),
       }),
     );

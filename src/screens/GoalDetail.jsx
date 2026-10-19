@@ -76,15 +76,14 @@ export default function GoalDetail({
   goal,
   now,
   weekday,
-  guardian,
+  actions,
   onBack,
-  onMove,
-  onEdit,
   onFrequency,
   onActivity,
 }) {
   const summary = goalSummary(goal, now),
     { saved } = summary,
+    guardian = actions.guardianFor(goal.id),
     step = goal.unlockDate ? plan(goal, goal.frequency, now, weekday) : null,
     entries = goal.entries.slice().reverse().slice(0, 12);
   return (
@@ -100,7 +99,7 @@ export default function GoalDetail({
         <button
           className="round-button"
           aria-label={`Editar ${goal.name}`}
-          onClick={() => onEdit(goal)}
+          onClick={() => actions.edit(goal)}
         >
           <Pen />
         </button>
@@ -225,19 +224,19 @@ export default function GoalDetail({
       )}
       {goal.archived ? (
         <div className="detail-actions">
-          <button className="secondary full" onClick={() => onEdit(goal)}>
+          <button className="secondary full" onClick={() => actions.edit(goal)}>
             Recuperar cajita
           </button>
         </div>
       ) : (
         <div className="detail-actions">
-          <button className="primary" onClick={() => onMove(goal, false)}>
+          <button className="primary" onClick={() => actions.move(goal)}>
             <AddCircle /> Depositar
           </button>
           <button
             className="secondary"
             disabled={!saved}
-            onClick={() => onMove(goal, true)}
+            onClick={() => actions.move(goal, { withdraw: true })}
           >
             <MinusCircle /> Retirar
           </button>
