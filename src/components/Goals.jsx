@@ -8,17 +8,16 @@ import {
   countdown,
   plan,
   localDate,
-  goalStatus,
-  unlockTime,
+  goalSummary,
   SOURCE_LABEL,
 } from "../domain.js";
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
-import Illustration from "./Illustration.jsx";
 import Money from "./Money.jsx";
 import { ArrowRight, Backspace, CheckCircle, InfoCircle } from "./icons.jsx";
 import { cleanAmount, nextAmount } from "../amount.js";
 import Modal from "./Modal.jsx";
+import { GoalComplete, GoalNotices, GoalProgress } from "./GoalProgress.jsx";
 
 export const destinations = {
   Nu: "https://nu.com.mx/",
@@ -474,9 +473,8 @@ export function MovementForm({
   );
 }
 export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
-  const saved = balance(goal),
-    progress = Math.min(1, saved / goal.targetCents);
-  const status = goalStatus(goal, now);
+  const summary = goalSummary(goal, now),
+    { saved } = summary;
   return (
     <article className={`goal-card ${goal.icon}`}>
       <div className="goal-heading">
@@ -508,53 +506,20 @@ export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
           ⋯
         </button>
       </div>
-      <div
-        className="progress"
-        role="progressbar"
-        aria-label={`Progreso de ${goal.name}`}
-        aria-valuenow={Math.round(progress * 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <span style={{ width: `${progress * 100}%` }} />
-      </div>
-      <div className="progress-caption">
-        <strong>{Math.round(progress * 100)}% logrado</strong>
-        <span>de {money(goal.targetCents)}</span>
-      </div>
+      <GoalProgress goal={goal} summary={summary}>
+        de {money(goal.targetCents)}
+      </GoalProgress>
       <p className="remaining">
-        {status.complete
+        {summary.complete
           ? "Ahorro registrado"
-          : `Te faltan ${money(status.remaining)}`}
+          : `Te faltan ${money(summary.remaining)}`}
       </p>
       <p className="goal-lock">
-        <span aria-hidden="true">
-          {unlockTime(goal.unlockDate) > now ? "♧" : "✓"}
-        </span>
+        <span aria-hidden="true">{summary.locked ? "♧" : "✓"}</span>
         {countdown(goal.unlockDate, now)}
       </p>
-      <CommitmentNotice
-        provider={goal.provider}
-        keeper={
-          guardian &&
-          (guardian.pending ||
-            goal.entries.some((e) => e.source === "guardian"))
-            ? guardian.name
-            : ""
-        }
-      />
-      <Pending guardian={guardian} />
-      {progress >= 1 && (
-        <div className="complete-scene">
-          <Illustration kind="complete" />
-          <p className="complete">✦ ¡Lo lograste! Tu esfuerzo floreció.</p>
-        </div>
-      )}
-      {status.pastDue && (
-        <p className="past-due">
-          Tu fecha ya llegó. Puedes ajustar el plan; tu sueño sigue aquí.
-        </p>
-      )}
+      <GoalNotices goal={goal} summary={summary} guardian={guardian} />
+      <GoalComplete summary={summary} />
       {goal.archived ? (
         <button className="secondary full" onClick={() => onEdit(goal)}>
           Recuperar cajita
@@ -584,24 +549,6 @@ export function GoalCard({ goal, onMove, onEdit, onOpen, now, guardian }) {
 }
 
 /** What the guardian has not confirmed yet, for a goal. */
-export function Pending({ guardian }) {
-  return (
-    <>
-      {guardian?.pending?.in > 0 && (
-        <p className="on-the-way">
-          ⏳ En camino: {money(guardian.pending.in)} · esperando a{" "}
-          {guardian.name}
-        </p>
-      )}
-      {guardian?.pending?.out > 0 && (
-        <p className="on-the-way">
-          ⏳ Pediste {money(guardian.pending.out)} a {guardian.name}
-        </p>
-      )}
-    </>
-  );
-}
-
 export function GuardianActions({ goal, guardian, saved }) {
   if (!guardian || goal.archived) return null;
   return (

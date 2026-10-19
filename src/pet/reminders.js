@@ -1,6 +1,6 @@
 // Reminder schedule and the pet's message bank. Pure functions: the platform
 // layer turns the result into native notifications or an in-app check-in.
-import { balance, byTargetDate, plan, money } from "../domain.js";
+import { byTargetDate, isComplete, plan, money } from "../domain.js";
 import { isScheduleDay, previousScheduleDays } from "../calendar.js";
 import {
   FREQUENCIES,
@@ -122,7 +122,7 @@ export function nextOccurrences(reminder, from, count = 6) {
 
 function openGoals(data) {
   return data.goals
-    .filter((g) => !g.archived && balance(g) < g.targetCents)
+    .filter((g) => !g.archived && !isComplete(g))
     .sort(byTargetDate);
 }
 

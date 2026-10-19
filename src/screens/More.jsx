@@ -1,12 +1,16 @@
 import { ANDROID_DOWNLOAD_URL, ANDROID_VERSION } from "../downloads.js";
 import { haptic, isNative } from "../platform.js";
-import { balance, checkIn, companionship, streak, today } from "../domain.js";
+import {
+  checkIn,
+  companionship,
+  isComplete,
+  streak,
+  today,
+} from "../domain.js";
 
 export default function More({ cloud, data, onSave, notify, onNavigate }) {
   const friend = companionship(data),
-    completed = data.goals.filter(
-      (goal) => balance(goal) >= goal.targetCents,
-    ).length,
+    completed = data.goals.filter(isComplete).length,
     racha = streak(data.goals),
     checked = data.checkins.includes(today());
   const counters = [

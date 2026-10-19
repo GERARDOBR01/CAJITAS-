@@ -7,7 +7,7 @@ import {
   activityCSV,
   balance,
   balanceHistory,
-  goalStatus,
+  goalSummary,
   activeGoals,
   LEGACY_STORAGE_KEY,
   STORAGE_KEY,
@@ -99,7 +99,7 @@ describe("hábitos, mascotas y registros honestos", () => {
         (p) => p.cents,
       ),
     ).toEqual([15000, 12000, 12000]);
-    expect(goalStatus(goal, new Date("2027-01-01").getTime())).toMatchObject({
+    expect(goalSummary(goal, new Date("2027-01-01").getTime())).toMatchObject({
       pastDue: true,
       remaining: 85000,
     });

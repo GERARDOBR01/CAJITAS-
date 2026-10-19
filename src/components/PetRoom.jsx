@@ -7,7 +7,7 @@ import {
   companionship,
   checkIn,
   today,
-  balance,
+  isComplete,
   streak,
 } from "../domain.js";
 import { saveFile, isNative, haptic } from "../platform.js";
@@ -89,7 +89,7 @@ export default function PetRoom({ data, onSave, notify }) {
     {
       icon: "✿",
       title: "Una meta cumplida",
-      unlocked: data.goals.some((g) => balance(g) >= g.targetCents),
+      unlocked: data.goals.some(isComplete),
     },
     {
       icon: "☀",
@@ -394,7 +394,7 @@ function ReminderPreview({ data, draft }) {
       preferences: { ...draft, reminder: { ...draft.reminder, enabled: true } },
     },
     next = nextOccurrences(preview.preferences.reminder, new Date(), 3),
-    goal = data.goals.find((g) => !g.archived && balance(g) < g.targetCents),
+    goal = data.goals.find((g) => !g.archived && !isComplete(g)),
     sample = goal && next[0] ? composeMessage(preview, goal, next[0]) : null;
   return (
     <div className="reminder-preview">

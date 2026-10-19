@@ -9,7 +9,8 @@ import {
   countdown,
   estimate,
   activityCSV,
-  goalStatus,
+  goalSummary,
+  isComplete,
   nextGoal,
   projection,
 } from "../src/domain.js";
@@ -114,10 +115,31 @@ describe("metas sin fecha objetivo", () => {
     const now = new Date("2030-01-01T00:00:00").getTime();
     expect(plan(open, 7, now)).toBeNull();
     expect(countdown(null, now)).toBe("Sin fecha objetivo");
-    expect(goalStatus(open, now)).toMatchObject({
+    expect(goalSummary(open, now)).toMatchObject({
       pastDue: false,
       remaining: 100000,
     });
+  });
+  it("el resumen solo dice 100 % cuando la cajita está cumplida", () => {
+    const now = new Date("2026-01-01T00:00:00").getTime();
+    const at = "2025-12-01T12:00:00.000Z";
+    const almost = { ...goal, entries: [{ id: "a", cents: 99600, at }] };
+    expect(goalSummary(almost, now)).toMatchObject({
+      saved: 99600,
+      percent: 99,
+      remaining: 400,
+      complete: false,
+    });
+    const done = { ...goal, entries: [{ id: "a", cents: 120000, at }] };
+    expect(goalSummary(done, now)).toMatchObject({
+      progress: 1,
+      percent: 100,
+      remaining: 0,
+      complete: true,
+      pastDue: false,
+    });
+    expect(isComplete(done)).toBe(true);
+    expect(isComplete(almost)).toBe(false);
   });
   it("el siguiente pasito prefiere la meta con fecha más cercana", () => {
     const later = { ...goal, id: "g3", unlockDate: "2027-01-01" };

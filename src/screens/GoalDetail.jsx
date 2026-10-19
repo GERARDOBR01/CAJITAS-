@@ -1,9 +1,11 @@
-import CommitmentNotice from "../components/CommitmentNotice.jsx";
-import Illustration from "../components/Illustration.jsx";
 import Money from "../components/Money.jsx";
 import {
+  GoalComplete,
+  GoalNotices,
+  GoalProgress,
+} from "../components/GoalProgress.jsx";
+import {
   GuardianActions,
-  Pending,
   dateLabel,
   destinations,
   symbols,
@@ -19,13 +21,11 @@ import {
 } from "../components/icons.jsx";
 import {
   SOURCE_LABEL,
-  balance,
   countdown,
-  goalStatus,
+  goalSummary,
   money,
   plan,
   projection,
-  unlockTime,
 } from "../domain.js";
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative, openExternal } from "../platform.js";
@@ -83,9 +83,8 @@ export default function GoalDetail({
   onFrequency,
   onActivity,
 }) {
-  const saved = balance(goal),
-    progress = Math.min(1, saved / goal.targetCents),
-    status = goalStatus(goal, now),
+  const summary = goalSummary(goal, now),
+    { saved } = summary,
     step = goal.unlockDate ? plan(goal, goal.frequency, now, weekday) : null,
     entries = goal.entries.slice().reverse().slice(0, 12);
   return (
@@ -122,32 +121,14 @@ export default function GoalDetail({
           de tu meta de {money(goal.targetCents)}
           {goal.unlockDate && ` · ${longDate(goal.unlockDate)}`}
         </p>
-        <div
-          className="progress thick"
-          role="progressbar"
-          aria-label={`Progreso de ${goal.name}`}
-          aria-valuenow={Math.round(progress * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <span style={{ width: `${progress * 100}%` }} />
-        </div>
-        <div className="progress-caption">
-          <strong>{Math.round(progress * 100)}% logrado</strong>
-          <span>
-            {status.complete
-              ? "Ahorro registrado"
-              : `Faltan ${money(status.remaining)}`}
-          </span>
-        </div>
+        <GoalProgress goal={goal} summary={summary} thick>
+          {summary.complete
+            ? "Ahorro registrado"
+            : `Faltan ${money(summary.remaining)}`}
+        </GoalProgress>
       </section>
-      {progress >= 1 && (
-        <div className="complete-scene">
-          <Illustration kind="complete" />
-          <p className="complete">✦ ¡Lo lograste! Tu esfuerzo floreció.</p>
-        </div>
-      )}
-      {progress < 1 && (
+      <GoalComplete summary={summary} />
+      {!summary.complete && (
         <section className="detail-plan">
           <h2>
             <Calendar /> Tu plan
@@ -178,29 +159,12 @@ export default function GoalDetail({
         </section>
       )}
       <p className="goal-lock">
-        <span aria-hidden="true">
-          {unlockTime(goal.unlockDate) > now ? "♧" : "✓"}
-        </span>
+        <span aria-hidden="true">{summary.locked ? "♧" : "✓"}</span>
         {goal.unlockDate
           ? `${countdown(goal.unlockDate, now)} · ${dateLabel(goal.unlockDate)}`
           : "A tu ritmo, sin prisa"}
       </p>
-      {status.pastDue && (
-        <p className="past-due">
-          Tu fecha ya llegó. Puedes ajustar el plan; tu sueño sigue aquí.
-        </p>
-      )}
-      <CommitmentNotice
-        provider={goal.provider}
-        keeper={
-          guardian &&
-          (guardian.pending ||
-            goal.entries.some((e) => e.source === "guardian"))
-            ? guardian.name
-            : ""
-        }
-      />
-      <Pending guardian={guardian} />
+      <GoalNotices goal={goal} summary={summary} guardian={guardian} />
       <GuardianActions goal={goal} guardian={guardian} saved={saved} />
       {!goal.archived &&
         (destinations[goal.provider] ? (
