@@ -10,6 +10,7 @@ import {
   localDate,
   money,
   PETS,
+  availablePets,
   plan,
   today,
 } from "../domain.js";
@@ -42,7 +43,7 @@ const lessons = [
   [
     "Tu mascota",
     "Una compañía a tu ritmo",
-    "Elige a Cookie el gatito, cerdito, vaquita, conejito o Caji, ponle nombre y un accesorio. Tu compañía cuenta aunque hoy no apartes dinero.",
+    "Elige un cerdito, vaquita, conejito o Caji, ponle nombre y un accesorio. Tu compañía cuenta aunque hoy no apartes dinero.",
   ],
   [
     "Herramientas",
@@ -637,16 +638,18 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
               role="group"
               aria-label="Mascotas de práctica"
             >
-              {Object.entries(PETS).map(([key, spec]) => (
-                <button
-                  aria-pressed={pet === key}
-                  key={key}
-                  onClick={() => setPet(key)}
-                >
-                  <Mascot pet={key} small />
-                  <span>{spec.label}</span>
-                </button>
-              ))}
+              {availablePets(preferences)
+                .map((key) => [key, PETS[key]])
+                .map(([key, spec]) => (
+                  <button
+                    aria-pressed={pet === key}
+                    key={key}
+                    onClick={() => setPet(key)}
+                  >
+                    <Mascot pet={key} small />
+                    <span>{spec.label}</span>
+                  </button>
+                ))}
             </div>
             <div className="tutorial-accessories">
               {[

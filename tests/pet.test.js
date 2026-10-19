@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { initialData, plan, validateBackup } from "../src/domain.js";
+import {
+  PET_WORDS,
+  availablePets,
+  initialData,
+  petWords,
+  plan,
+  validateBackup,
+} from "../src/domain.js";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import {
   MESSAGES,
   answerCheckIn,
@@ -314,20 +323,70 @@ describe("respuesta y paciencia", () => {
   });
 });
 
-describe("Cookie", () => {
-  it("el siguiente becho llega entre 9 y 16 segundos", async () => {
-    const { nextBechoDelay, BECHO_LINES, LOVE_TEXT } =
-      await import("../src/components/CookieCat.jsx");
-    expect(nextBechoDelay(() => 0)).toBe(9000);
-    expect(nextBechoDelay(() => 0.9999)).toBeLessThanOrEqual(16000);
-    expect(BECHO_LINES).toEqual(["¡BECHO!", "BECHO BECHO"]);
-    expect(LOVE_TEXT).toBe("¡Te amo Jade!");
+describe("Cookie, la mascota especial", () => {
+  it("dice su frase cada 9 a 16 segundos", async () => {
+    const { nextLineDelay } = await import("../src/components/CookieCat.jsx");
+    expect(nextLineDelay(() => 0)).toBe(9000);
+    expect(nextLineDelay(() => 0.9999)).toBeLessThanOrEqual(16000);
   });
-  it("es la mascota por defecto", () => {
-    expect(initialData().preferences).toMatchObject({
-      pet: "cat",
-      petName: "Cookie",
+  it("no es la mascota por defecto ni se elige sin regalo", () => {
+    const prefs = initialData().preferences;
+    expect(prefs).toMatchObject({ pet: "pig", petName: "Pipo" });
+    expect(availablePets(prefs)).not.toContain("cat");
+    expect(petWords({ ...prefs, pet: "cat" })).toMatchObject(PET_WORDS);
+  });
+  it("con el regalo de su pareja aparece y habla con sus palabras", () => {
+    const prefs = {
+      ...initialData().preferences,
+      special: {
+        from: "Alguien",
+        lines: ["¡Muack!"],
+        loveText: "¡Te quiero, Ana!",
+        motto: "",
+        pets: ["cat"],
+      },
+    };
+    expect(availablePets(prefs)).toContain("cat");
+    expect(petWords(prefs)).toMatchObject({
+      lines: ["¡Muack!"],
+      loveText: "¡Te quiero, Ana!",
+      from: "Alguien",
     });
+  });
+  it("quien ya tenía a Cookie la conserva", () => {
+    expect(
+      availablePets({ ...initialData().preferences, pet: "cat" }),
+    ).toContain("cat");
+  });
+  it("el respaldo guarda las palabras y descarta lo inválido", () => {
+    const data = {
+      ...initialData(),
+      preferences: {
+        ...initialData().preferences,
+        special: {
+          from: "Alguien",
+          lines: ["Hola", 5, "x".repeat(41)],
+          loveText: "¡Te quiero!",
+          pets: ["cat", "dragon"],
+        },
+      },
+    };
+    expect(validateBackup(data).preferences.special).toEqual({
+      from: "Alguien",
+      lines: ["Hola"],
+      loveText: "¡Te quiero!",
+      motto: "",
+      pets: ["cat"],
+    });
+  });
+  it("el código público no trae palabras de nadie en particular", () => {
+    const files = readdirSync("src", { recursive: true }).filter((f) =>
+      /\.(js|jsx)$/.test(f),
+    );
+    for (const file of files) {
+      const text = readFileSync(join("src", file), "utf8");
+      expect(text, file).not.toMatch(/Jade|BECHO/);
+    }
   });
 });
 

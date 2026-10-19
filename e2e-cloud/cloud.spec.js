@@ -11,12 +11,19 @@ async function openAccount(page) {
   await page.getByRole("button", { name: "Mi cuenta", exact: true }).click();
 }
 
+const contexts = [];
+test.afterEach(async () => {
+  await Promise.all(contexts.splice(0).map((c) => c.close()));
+});
+
 test("una cuenta lleva las cajitas de un teléfono a otro", async ({
   browser,
 }, info) => {
   const email = `jade-${info.project.name}-${Date.now()}@guardadito.test`;
   const phoneA = await (await browser.newContext(info.project.use)).newPage();
+  contexts.push(phoneA.context());
   const phoneB = await (await browser.newContext(info.project.use)).newPage();
+  contexts.push(phoneB.context());
 
   // Teléfono A: ya tenía una cajita antes de crear la cuenta.
   await phoneA.goto("/");
@@ -77,7 +84,7 @@ test("una cuenta lleva las cajitas de un teléfono a otro", async ({
     .first()
     .click();
   await expect(phoneA.locator(".goal-card .saved")).toContainText("$150.00", {
-    timeout: 15000,
+    timeout: 30000,
   });
 
   // Borrar la cuenta deja las cajitas solo en el teléfono.

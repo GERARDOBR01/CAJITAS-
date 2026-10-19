@@ -28,17 +28,19 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 [Capturas](docs/screenshots/v09/) · Posicionamiento y estudio de Splitwise con REA: [competencia](docs/research/competencia-2026-10.md), [Splitwise](docs/research/splitwise-rea.md).
 
-## Cookie, el gatito v0.8 🐱
+## En pareja v0.10 💞
 
-Guardadito se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
+- **Más → Mi pareja:** una persona crea un código de 6 letras (dura 2 días) y lo comparte por WhatsApp; la otra lo escribe o abre el enlace `?pareja=CÓDIGO`. Las dos necesitan cuenta.
+- **Cómo va cada quien:** cada persona ve el nombre y el avance de las cajitas de la otra, nunca sus movimientos.
+- **Sorpresas que solo ven ustedes dos:**
+  - **Cookie, la mascota especial.** No aparece para nadie hasta que su pareja se la manda con sus propias palabras: una frase cada ratito y un mensaje al tocarla, con lluvia de corazones. El código público solo trae frases genéricas.
+  - **Notitas** que se abren al abrir la app, la siguiente vez que ahorres o en una fecha. Quien la manda ve cuando ya la leíste.
+  - **Premios por meta**, con mensaje y foto opcional, que se abren al llegar al 25, 50 o 100 % de una cajita. Antes solo se ve «Te espera una sorpresa al 50 % de…».
+- La mascota por defecto ahora es **Pipo**. Quien ya tenía a Cookie la conserva.
+- Deshacer el vínculo borra las sorpresas que tú mandaste. Borrar la cuenta también deshace el vínculo.
+- Reglas en `firestore.rules`: un código no se puede listar, una pareja solo se crea con un código válido del otro, quien manda una sorpresa es quien la escribe y quien la recibe solo la marca como abierta. Hay 15 pruebas de reglas y un recorrido completo de pareja en Chrome de Android y Safari de iPhone.
 
-- Mueve la cola, mueve las orejas, parpadea, inclina la cabeza, se le mueven los bigotes y se balancea la placa. Saluda con la patita cuando espera tu actualización.
-- **Cada 9 a 16 segundos dice “¡BECHO!”, alternando con “BECHO BECHO”**, con un globito, boquita de beso y corazones.
-- **Al tocarlo dice “¡Te amo Jade!”**: ojos de corazón, salto, una explosión de corazones y un letrero grande con lluvia de corazones en toda la pantalla. Si lo mantienes presionado, ronronea.
-- Tiene todos los estados de la mascota (feliz, emocionado, dormido, esperando, celebración), el brote que crece y los accesorios (moñito, bufanda, estrella). Con movimiento reducido cambian las caras y el mensaje sigue apareciendo, pero sin animación.
-- Es la mascota por defecto; las demás (Pipo, Mila, Luna y Caji) siguen en Mi mascota.
-
-[Capturas](docs/screenshots/v08/).
+[Capturas](docs/screenshots/v10/)
 
 ## Mascota viva y recordatorios v0.7
 

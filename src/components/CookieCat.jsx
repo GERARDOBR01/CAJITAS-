@@ -10,6 +10,7 @@ import {
   petMood,
   registerTap,
 } from "../pet/state.js";
+import { PET_WORDS } from "../domain.js";
 
 // Cookie, el gatito café: la mascota principal de Guardadito. Original art,
 // drawn as layered SVG so each part (ears, tail, paws, face) can move.
@@ -22,8 +23,6 @@ const FUR = "#c98b5b",
   INNER_EAR = "#f7b9c6",
   EYE = "#3a2216";
 
-export const BECHO_LINES = ["¡BECHO!", "BECHO BECHO"];
-export const LOVE_TEXT = "¡Te amo Jade!";
 export const LOVE_MS = 3200;
 const KISS_MS = 2400;
 
@@ -31,8 +30,8 @@ const reducedMotion = () =>
   typeof matchMedia === "function" &&
   matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Next “becho” in 9–16 s, so it feels spontaneous but frequent. */
-export function nextBechoDelay(random = Math.random) {
+/** Next little line in 9–16 s, so it feels spontaneous but frequent. */
+export function nextLineDelay(random = Math.random) {
   return 9000 + Math.floor(random() * 7000);
 }
 
@@ -245,6 +244,9 @@ export default function CookieCat({
   motion = true,
   onPet,
   onTrick,
+  // What Cookie says: the partner's words when given as a gift.
+  lines = PET_WORDS.lines,
+  loveText = PET_WORDS.loveText,
 }) {
   const id = useId().replaceAll(":", "");
   const [happy, setHappy] = useState(false),
@@ -256,8 +258,10 @@ export default function CookieCat({
   const taps = useRef([]),
     timers = useRef({}),
     longPress = useRef(false),
-    bechoCount = useRef(0),
+    lineCount = useRef(0),
+    words = useRef(lines),
     svg = useRef();
+  words.current = lines.length ? lines : PET_WORDS.lines;
   const shown = name ?? "Cookie",
     stage = stageProp ?? growthStage(progress),
     growth = 0.88 + Math.min(1, Math.max(0, progress)) * 0.12;
@@ -277,7 +281,7 @@ export default function CookieCat({
         ? "happy"
         : mood;
   const label = loving
-    ? `${shown} dice: ${LOVE_TEXT}`
+    ? `${shown} dice: ${loveText}`
     : `${shown}, tu gatito, ${MOOD_LABEL[mood]}`;
   const lively = motion && !reducedMotion();
 
@@ -290,27 +294,27 @@ export default function CookieCat({
     return () => Object.values(all).forEach(clearTimeout);
   }, []);
 
-  // ¡BECHO! cada poco tiempo, alternando con BECHO BECHO.
+  // A little line every few seconds, taking turns through the lines.
   useEffect(() => {
     if (!interactive) return;
     let alive = true;
     function schedule() {
       later(
-        "becho",
+        "line",
         () => {
           if (!alive) return;
-          setKiss(BECHO_LINES[bechoCount.current++ % BECHO_LINES.length]);
+          setKiss(words.current[lineCount.current++ % words.current.length]);
           later("kiss", () => setKiss(""), KISS_MS);
           schedule();
         },
-        nextBechoDelay(),
+        nextLineDelay(),
       );
     }
     later(
       "first",
       () => {
         if (!alive) return;
-        setKiss(BECHO_LINES[bechoCount.current++ % BECHO_LINES.length]);
+        setKiss(words.current[lineCount.current++ % words.current.length]);
         later("kiss", () => setKiss(""), KISS_MS);
         schedule();
       },
@@ -319,7 +323,7 @@ export default function CookieCat({
     return () => {
       alive = false;
       clearTimeout(timers.current.first);
-      clearTimeout(timers.current.becho);
+      clearTimeout(timers.current.line);
     };
   }, [interactive]);
 
@@ -712,7 +716,7 @@ export default function CookieCat({
         <span
           className={`cookie-bubble ${kiss.startsWith("prrr") ? "purr" : ""}`}
           role="status"
-          key={kiss + bechoCount.current}
+          key={kiss + lineCount.current}
         >
           {kiss}
         </span>
@@ -721,9 +725,9 @@ export default function CookieCat({
         <span className="cookie-love" role="status" key={love}>
           {/* With motion, the big message lives in the full-screen overlay. */}
           {lively ? (
-            <span className="visually-hidden">{LOVE_TEXT}</span>
+            <span className="visually-hidden">{loveText}</span>
           ) : (
-            <strong>{LOVE_TEXT}</strong>
+            <strong>{loveText}</strong>
           )}
           {lively &&
             Array.from({ length: 12 }, (_, i) => (
@@ -768,7 +772,7 @@ export default function CookieCat({
           <div className="love-rain" aria-hidden="true" key={love}>
             <strong className="love-banner">
               <small>{shown} dice</small>
-              {LOVE_TEXT}
+              {loveText}
             </strong>
             {Array.from({ length: 26 }, (_, i) => (
               <span

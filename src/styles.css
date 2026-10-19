@@ -2795,3 +2795,83 @@ summary {
 .modal > .full + .full {
   margin-top: var(--space-2);
 }
+
+/* Mi pareja y sorpresas (0.10) */
+.partner-panel {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-5);
+}
+.partner-panel h2 {
+  margin: 0;
+}
+.partner-panel textarea,
+.partner-panel select {
+  width: 100%;
+}
+.partner-code {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-align: center;
+  color: var(--primary);
+}
+.partner-subtitle {
+  margin: var(--space-5) 0 var(--space-3);
+}
+.partner-privacy {
+  margin-top: var(--space-2);
+}
+.partner-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.partner-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+.partner-list li > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+.partner-list small {
+  color: var(--muted);
+}
+.partner-percent {
+  font-weight: 900;
+  color: var(--primary);
+}
+.reward-preview,
+.reward-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+.surprise {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+.surprise-illustration {
+  width: 160px;
+}
+.surprise-text {
+  font-size: 1.15rem;
+  font-weight: 800;
+  white-space: pre-line;
+}
+.surprise-pet .mascot {
+  max-width: 180px;
+}

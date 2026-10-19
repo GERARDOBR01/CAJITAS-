@@ -2,6 +2,8 @@ import { useState } from "react";
 import Mascot from "./Mascot.jsx";
 import {
   PETS,
+  availablePets,
+  petWords,
   companionship,
   checkIn,
   today,
@@ -124,6 +126,8 @@ export default function PetRoom({ data, onSave, notify }) {
             mood={petMood({ daysAway: daysAway(data) })}
             motion={draft.animations}
             interactive
+            lines={petWords(data.preferences).lines}
+            loveText={petWords(data.preferences).loveText}
             onTrick={() => setBubble("¡Ta-dá! Mi truco secreto ✦")}
             onPet={() => {
               haptic();
@@ -135,7 +139,9 @@ export default function PetRoom({ data, onSave, notify }) {
             🌱 Su brote: {STAGE_NAMES[growthStage(overallProgress(data))]}.
             Crece con el avance de tus cajitas.
           </p>
-          <p className="pet-speech">{bubble || PETS[draft.pet].motto}</p>
+          <p className="pet-speech">
+            {bubble || petWords({ ...data.preferences, pet: draft.pet }).motto}
+          </p>
           <div className="friendship-meter">
             <div className="progress">
               <span style={{ width: `${friend.progress * 100}%` }} />
@@ -167,19 +173,21 @@ export default function PetRoom({ data, onSave, notify }) {
           <h2>¿Quién te acompaña?</h2>
           <p className="muted">Elige a tu cómplice de sueños.</p>
           <div className="pet-options">
-            {Object.entries(PETS).map(([key, pet]) => (
-              <button
-                className={draft.pet === key ? "selected" : ""}
-                type="button"
-                key={key}
-                aria-pressed={draft.pet === key}
-                aria-label={`Elegir ${pet.label}`}
-                onClick={() => choose(key)}
-              >
-                <Mascot pet={key} small accessory="leaf" />
-                <strong>{pet.label}</strong>
-              </button>
-            ))}
+            {availablePets(data.preferences)
+              .map((key) => [key, PETS[key]])
+              .map(([key, pet]) => (
+                <button
+                  className={draft.pet === key ? "selected" : ""}
+                  type="button"
+                  key={key}
+                  aria-pressed={draft.pet === key}
+                  aria-label={`Elegir ${pet.label}`}
+                  onClick={() => choose(key)}
+                >
+                  <Mascot pet={key} small accessory="leaf" />
+                  <strong>{pet.label}</strong>
+                </button>
+              ))}
           </div>
           <label>
             Su nombre

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Mascot from "../components/Mascot.jsx";
 import { GoalCard } from "../components/Goals.jsx";
 import NextStep from "../components/NextStep.jsx";
-import { balance, money, nextGoal } from "../domain.js";
+import { balance, money, nextGoal, petWords } from "../domain.js";
 import {
   STAGE_NAMES,
   daysAway,
@@ -47,6 +47,7 @@ export default function Home({
     lineTimer.current = setTimeout(() => setLine(""), 3200);
   }
   const pet = data.preferences,
+    words = petWords(pet),
     total = data.goals.reduce((sum, goal) => sum + balance(goal), 0),
     target = data.goals.reduce((sum, goal) => sum + goal.targetCents, 0),
     visibleGoals = data.goals.filter((goal) =>
@@ -123,11 +124,13 @@ export default function Home({
             mood={mood}
             motion={pet.animations}
             interactive={!empty || pet.pet === "cat"}
+            lines={words.lines}
+            loveText={words.loveText}
             onPet={(kind) => {
               onPet?.();
               if (Date.now() < trickUntil.current) return;
               if (kind === "love")
-                say(`${pet.petName} te dice: ¡Te amo Jade! 💖`);
+                say(`${pet.petName} te dice: ${words.loveText} 💖`);
               else if (kind === "cuddle")
                 say("Un abrazo para ti. Gracias por venir ♡");
               else say(TAP_LINES[taps.current++ % TAP_LINES.length]);

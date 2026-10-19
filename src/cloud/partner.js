@@ -1,0 +1,150 @@
+// Pairing two accounts and the surprises they send each other.
+import { cloud } from "./firebase.js";
+
+const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+// Rules allow 48 h; a little less leaves room for a phone's clock.
+const INVITE_MS = 47 * 3600 * 1000;
+
+export function makeCode(random = crypto.getRandomValues.bind(crypto)) {
+  return Array.from(random(new Uint32Array(6)), (n) => ALPHABET[n % 32]).join(
+    "",
+  );
+}
+export function normalizeCode(text) {
+  return String(text ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 6);
+}
+export const pairIdOf = (a, b) => [a, b].sort().join("_");
+export const displayName = (user) =>
+  (user.displayName || user.email?.split("@")[0] || "Tu pareja").slice(0, 40);
+
+export async function createInvite(user) {
+  const { db, storeLib: s } = await cloud();
+  const code = makeCode();
+  await s.setDoc(s.doc(db, "invites", code), {
+    from: user.uid,
+    fromName: displayName(user),
+    expiresAt: Date.now() + INVITE_MS,
+  });
+  return code;
+}
+
+export async function cancelInvite(code) {
+  const { db, storeLib: s } = await cloud();
+  await s.deleteDoc(s.doc(db, "invites", code)).catch(() => {});
+}
+
+export async function acceptInvite(user, text) {
+  const { db, storeLib: s } = await cloud();
+  const code = normalizeCode(text);
+  if (code.length !== 6) throw new Error("El código tiene 6 letras y números.");
+  const invite = await s.getDoc(s.doc(db, "invites", code));
+  if (!invite.exists() || invite.data().expiresAt < Date.now())
+    throw new Error("Ese código no existe o ya venció. Pide uno nuevo.");
+  const { from, fromName } = invite.data();
+  if (from === user.uid)
+    throw new Error("Ese código es tuyo: compártelo con tu pareja.");
+  const members = [from, user.uid].sort();
+  await s.setDoc(s.doc(db, "pairs", members.join("_")), {
+    members,
+    names: { [from]: fromName, [user.uid]: displayName(user) },
+    invite: code,
+  });
+  return fromName;
+}
+
+/** The couple this account belongs to (one at most), or null. */
+export async function watchPair(uid, callback) {
+  const { db, storeLib: s } = await cloud();
+  return s.onSnapshot(
+    s.query(
+      s.collection(db, "pairs"),
+      s.where("members", "array-contains", uid),
+    ),
+    // Also told when a pending write reaches the server.
+    { includeMetadataChanges: true },
+    (snap) => {
+      // Wait until the server has the couple: its rules depend on it.
+      if (snap.metadata.hasPendingWrites) return;
+      const first = snap.docs[0];
+      callback(first ? { id: first.id, ...first.data() } : null);
+    },
+    () => callback(null),
+  );
+}
+
+/** Leaves the couple: my surprises and summary go away with it. */
+export async function unpair(pairId, uid) {
+  const { db, storeLib: s } = await cloud();
+  const gifts = await s.getDocs(
+    s.query(
+      s.collection(db, "pairs", pairId, "gifts"),
+      s.where("from", "==", uid),
+    ),
+  );
+  await Promise.all(gifts.docs.map((d) => s.deleteDoc(d.ref)));
+  await s
+    .deleteDoc(s.doc(db, "pairs", pairId, "summaries", uid))
+    .catch(() => {});
+  await s.deleteDoc(s.doc(db, "pairs", pairId));
+}
+
+/** Before deleting an account: leave every couple. */
+export async function leaveAllPairs(uid) {
+  const { db, storeLib: s } = await cloud();
+  const pairs = await s.getDocs(
+    s.query(
+      s.collection(db, "pairs"),
+      s.where("members", "array-contains", uid),
+    ),
+  );
+  for (const pair of pairs.docs) await unpair(pair.id, uid);
+}
+
+export async function watchGifts(pairId, callback, onError) {
+  const { db, storeLib: s } = await cloud();
+  return s.onSnapshot(
+    s.collection(db, "pairs", pairId, "gifts"),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    onError,
+  );
+}
+
+export async function sendGift(pairId, gift, id) {
+  const { db, storeLib: s } = await cloud();
+  const data = { ...gift, createdAt: Date.now() };
+  const col = s.collection(db, "pairs", pairId, "gifts");
+  if (id) await s.setDoc(s.doc(col, id), data);
+  else await s.addDoc(col, data);
+}
+
+export async function deleteGift(pairId, id) {
+  const { db, storeLib: s } = await cloud();
+  await s.deleteDoc(s.doc(db, "pairs", pairId, "gifts", id));
+}
+
+export async function markOpened(pairId, id) {
+  const { db, storeLib: s } = await cloud();
+  await s.updateDoc(s.doc(db, "pairs", pairId, "gifts", id), {
+    openedAt: Date.now(),
+  });
+}
+
+export async function publishSummary(pairId, uid, goals) {
+  const { db, storeLib: s } = await cloud();
+  await s.setDoc(s.doc(db, "pairs", pairId, "summaries", uid), {
+    goals,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function watchSummary(pairId, uid, callback, onError) {
+  const { db, storeLib: s } = await cloud();
+  return s.onSnapshot(
+    s.doc(db, "pairs", pairId, "summaries", uid),
+    (snap) => callback(snap.exists() ? snap.data().goals : []),
+    onError,
+  );
+}

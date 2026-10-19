@@ -1,9 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function owner(uid) {
-      return request.auth != null && request.auth.uid == uid;
+    function signedIn() {
+      return request.auth != null;
     }
+    function owner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function pair(pairId) {
+      return get(/databases/$(database)/documents/pairs/$(pairId)).data;
+    }
+    function member(pairId) {
+      return signedIn() && request.auth.uid in pair(pairId).members;
+    }
+    function shortText(value, max) {
+      return value is string && value.size() > 0 && value.size() <= max;
+    }
+
     // The whole journal of one person, as the same JSON a backup has.
     match /users/{uid}/state/main {
       allow read, delete: if owner(uid);
@@ -12,6 +25,87 @@ service cloud.firestore {
         && request.resource.data.raw is string
         && request.resource.data.raw.size() < 1000000
         && request.resource.data.savedAt is number;
+    }
+
+    // A code one person shares with their partner. Anyone who knows the
+    // code can read it (it cannot be listed); it lasts at most 48 hours.
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && code.size() == 6
+        && request.resource.data.keys().hasOnly(["from", "fromName", "expiresAt"])
+        && request.resource.data.from == request.auth.uid
+        && shortText(request.resource.data.fromName, 40)
+        && request.resource.data.expiresAt is int
+        && request.resource.data.expiresAt <= request.time.toMillis() + 172800000;
+      allow delete: if signedIn() && resource.data.from == request.auth.uid;
+    }
+
+    // Two people. The id is both uids sorted and joined with "_", so a
+    // couple has exactly one. Created by the person who received a valid
+    // invite from the other one.
+    match /pairs/{pairId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(["members", "names", "invite"])
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.auth.uid in request.resource.data.members
+        && pairId == request.resource.data.members[0] + "_" + request.resource.data.members[1]
+        && request.resource.data.members[0] < request.resource.data.members[1]
+        && request.resource.data.invite is string
+        && get(/databases/$(database)/documents/invites/$(request.resource.data.invite)).data.from
+          in request.resource.data.members
+        && get(/databases/$(database)/documents/invites/$(request.resource.data.invite)).data.from
+          != request.auth.uid
+        && get(/databases/$(database)/documents/invites/$(request.resource.data.invite)).data.expiresAt
+          > request.time.toMillis();
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.members
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["names"])
+        && request.resource.data.names.diff(resource.data.names).affectedKeys()
+          .hasOnly([request.auth.uid]);
+      allow delete: if signedIn() && request.auth.uid in resource.data.members;
+
+      // How each one's cajitas are going, shared with the partner.
+      match /summaries/{uid} {
+        allow read: if member(pairId);
+        allow write: if owner(uid) && member(pairId)
+          && request.resource.data.keys().hasOnly(["goals", "updatedAt"])
+          && request.resource.data.goals is list
+          && request.resource.data.goals.size() <= 200;
+        allow delete: if owner(uid);
+      }
+
+      // Surprises from one to the other: a special pet, notes, rewards.
+      match /gifts/{giftId} {
+        allow read: if member(pairId);
+        allow create: if member(pairId)
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.to in pair(pairId).members
+          && request.resource.data.to != request.auth.uid
+          && request.resource.data.kind in ["pet", "note", "reward"]
+          && !("openedAt" in request.resource.data)
+          && request.resource.data.keys().hasOnly(["from", "to", "kind", "fromName",
+            "lines", "loveText", "motto", "text", "showOn", "date",
+            "goalId", "goalName", "threshold", "title", "image", "createdAt"])
+          && (!("text" in request.resource.data) || shortText(request.resource.data.text, 600))
+          && (!("image" in request.resource.data)
+            || (request.resource.data.image is string && request.resource.data.image.size() < 400000));
+        // The sender edits; the receiver can only mark it as opened.
+        allow update: if member(pairId) && (
+          (resource.data.from == request.auth.uid
+            && request.resource.data.from == resource.data.from
+            && request.resource.data.to == resource.data.to
+            && request.resource.data.kind == resource.data.kind
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["lines", "loveText",
+              "motto", "text", "showOn", "date", "goalId", "goalName", "threshold", "title",
+              "image", "createdAt", "openedAt", "fromName"]))
+          || (resource.data.to == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["openedAt"])));
+        allow delete: if member(pairId) && resource.data.from == request.auth.uid;
+      }
     }
   }
 }

@@ -88,6 +88,8 @@ export async function deleteAccount(password) {
     user,
     c.authLib.EmailAuthProvider.credential(user.email, password),
   );
+  const { leaveAllPairs } = await import("./partner.js");
+  await leaveAllPairs(user.uid);
   await c.storeLib.deleteDoc(stateRef(c, user.uid));
   await c.authLib.deleteUser(user);
 }

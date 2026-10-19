@@ -33,6 +33,12 @@ export default function More({ cloud, data, onSave, notify, onNavigate }) {
               ? "Tus cajitas, guardadas en la nube."
               : "Guarda tus cajitas en la nube.",
           ],
+          cloud?.configured && [
+            "partner",
+            "♥",
+            "Mi pareja",
+            "Ahorren juntos y mándense sorpresas.",
+          ],
           [
             "tutorial",
             "▷",

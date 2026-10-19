@@ -12,6 +12,9 @@ import Connections from "./components/Connections.jsx";
 import Backup from "./components/Backup.jsx";
 import Account, { SyncPrompt } from "./components/Account.jsx";
 import { useCloud } from "./cloud/useCloud.js";
+import { usePartner } from "./cloud/usePartner.js";
+import Partner from "./components/Partner.jsx";
+import SurpriseReveal from "./components/SurpriseReveal.jsx";
 import {
   haptic,
   isNative,
@@ -113,6 +116,16 @@ export default function App() {
     if (message) notify(message);
   }
   const cloud = useCloud({ latest: latestData, applyRemote, notify });
+  const partner = usePartner({
+    user: cloud.user,
+    data,
+    update: (change) => setData(change(latestData.current)),
+    notify,
+  });
+  // A partner's invite link: ?pareja=CODE opens Mi pareja with the code.
+  const [inviteCode] = useState(
+    () => new URLSearchParams(location.search).get("pareja") ?? "",
+  );
   function notify(message) {
     clearTimeout(toastTimer.current);
     setToast(message);
@@ -212,6 +225,13 @@ export default function App() {
     return () => window.removeEventListener("storage", changed);
   }, []);
   useEffect(() => {
+    if (!inviteCode) return;
+    setTab("partner");
+    const url = new URL(location.href);
+    url.searchParams.delete("pareja");
+    history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+  useEffect(() => {
     const gmail = new URLSearchParams(location.search).get("gmail");
     if (gmail) {
       setTab("connections");
@@ -253,6 +273,7 @@ export default function App() {
     )
       return;
     setModal(null);
+    if (value > 0) partner.onSaved();
     if (value < 0) notify(WITHDRAWAL_NOTE);
     else if (balance(g) < g.targetCents && balance(g) + value >= g.targetCents)
       celebrate();
@@ -414,7 +435,9 @@ export default function App() {
           />
         )}
         {tab === "tutorial" && (
-          <Suspense fallback={<p role="status">Cookie prepara tu paseíto…</p>}>
+          <Suspense
+            fallback={<p role="status">{pet.petName} prepara tu paseíto…</p>}
+          >
             <Tutorial
               preferences={pet}
               onNavigate={changeTab}
@@ -428,6 +451,15 @@ export default function App() {
         {tab === "install" && <Install notify={notify} />}
         {tab === "account" && cloud.configured && (
           <Account cloud={cloud} notify={notify} />
+        )}
+        {tab === "partner" && cloud.configured && (
+          <Partner
+            cloud={cloud}
+            partner={partner}
+            notify={notify}
+            onNavigate={changeTab}
+            initialCode={inviteCode}
+          />
         )}
         {tab === "more" && (
           <More
@@ -502,6 +534,22 @@ export default function App() {
         celebrate={celebrate}
         setGoalFilter={setGoalFilter}
       />
+      {partner.reveal && !cloud.prompt && (
+        <SurpriseReveal
+          gift={partner.reveal}
+          onClose={partner.closeReveal}
+          onMeetPet={() =>
+            setData({
+              ...latestData.current,
+              preferences: {
+                ...latestData.current.preferences,
+                pet: "cat",
+                petName: "Cookie",
+              },
+            })
+          }
+        />
+      )}
       {cloud.prompt && (
         <SyncPrompt
           prompt={cloud.prompt}

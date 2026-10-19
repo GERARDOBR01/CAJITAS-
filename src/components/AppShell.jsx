@@ -11,6 +11,7 @@ const tools = [
   "install",
   "tutorial",
   "account",
+  "partner",
 ];
 export default function AppShell({
   tab,
