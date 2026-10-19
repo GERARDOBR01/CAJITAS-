@@ -1,9 +1,7 @@
 import { useState } from "react";
 import Mascot from "./Mascot.jsx";
+import { PETS, availablePets, petWords } from "../pet/catalog.js";
 import {
-  PETS,
-  availablePets,
-  petWords,
   companionship,
   checkIn,
   today,
