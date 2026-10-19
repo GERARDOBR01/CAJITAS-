@@ -38,6 +38,42 @@ export function cents(value) {
 export function balance(goal) {
   return goal.entries.reduce((sum, e) => sum + e.cents, 0);
 }
+/** Did the change from `before` to `after` take this goal from under its
+ * target to reaching it? */
+export function reachedTarget(before, after, goalId) {
+  const was = before.goals.find((g) => g.id === goalId),
+    now = after.goals.find((g) => g.id === goalId);
+  return Boolean(
+    was &&
+    now &&
+    balance(was) < was.targetCents &&
+    balance(now) >= now.targetCents,
+  );
+}
+/**
+ * The one way to add a movement (a deposit or, when `cents` is negative, a
+ * withdrawal) to a goal. Throws if the result would not be a valid journal;
+ * `reachedTarget` says whether it completed the goal. `id` is only passed when
+ * the same movement must never be added twice.
+ */
+export function recordEntry(
+  data,
+  goalId,
+  { cents, at, source = "manual", id = crypto.randomUUID() },
+) {
+  if (!data.goals.some((goal) => goal.id === goalId))
+    throw new Error("Elige una cajita para este movimiento.");
+  const next = {
+    ...data,
+    goals: data.goals.map((goal) =>
+      goal.id === goalId
+        ? { ...goal, entries: [...goal.entries, { id, cents, at, source }] }
+        : goal,
+    ),
+  };
+  validateBackup(next);
+  return { data: next, reachedTarget: reachedTarget(data, next, goalId) };
+}
 /** A goal without a target date never "arrives": it sorts last and is never
  * past due. */
 export function unlockTime(date) {
@@ -644,28 +680,11 @@ export function addReceipt(
     throw new Error(
       "Revisa los movimientos manuales que podrían corresponder a este correo.",
     );
-  const next = {
-    ...data,
-    importedIds: [...data.importedIds, receipt.id],
-    goals: data.goals.map((g) =>
-      g.id === goalId
-        ? {
-            ...g,
-            entries: [
-              ...g.entries,
-              {
-                id: crypto.randomUUID(),
-                cents: receipt.amountCents,
-                at: receipt.at,
-                source: "gmail",
-              },
-            ],
-          }
-        : g,
-    ),
-  };
-  validateBackup(next);
-  return next;
+  return recordEntry(
+    { ...data, importedIds: [...data.importedIds, receipt.id] },
+    goalId,
+    { cents: receipt.amountCents, at: receipt.at, source: "gmail" },
+  ).data;
 }
 export function estimate(principalCents, annualRate, days) {
   return Math.round((((principalCents * annualRate) / 100) * days) / 365);

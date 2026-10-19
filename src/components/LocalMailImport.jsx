@@ -5,7 +5,7 @@ import {
   applyLocalReceipt,
   possibleLocalMatches,
 } from "../mail/receiptImport.js";
-import { balance, cents, localDate, money, today } from "../domain.js";
+import { cents, localDate, money, reachedTarget, today } from "../domain.js";
 
 export default function LocalMailImport({
   data,
@@ -130,10 +130,7 @@ export default function LocalMailImport({
         return;
       }
       if (!onSave(next)) return;
-      const completed =
-        !match &&
-        balance(goal) < goal.targetCents &&
-        balance(next.goals.find((g) => g.id === goalId)) >= goal.targetCents;
+      const completed = reachedTarget(data, next, goalId);
       setCandidate(null);
       setSaved(true);
       setReviewed(false);

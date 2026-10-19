@@ -1,6 +1,6 @@
 // Money kept by a guardian: the CLABE to send it to and how a confirmed
 // deposit becomes a movement in the sender's cajita.
-import { balance, validateBackup } from "../domain.js";
+import { balance, recordEntry } from "../domain.js";
 
 const WEIGHTS = [3, 7, 1];
 export const cleanClabe = (text) => String(text ?? "").replace(/\D/g, "");
@@ -68,28 +68,15 @@ export function applyConfirmed(data, deposits, uid, now = Date.now()) {
       marks.push(d);
       continue;
     }
-    const candidate = {
-      ...next,
-      goals: next.goals.map((g) =>
-        g.id === goal.id
-          ? {
-              ...g,
-              entries: [
-                ...g.entries,
-                {
-                  id,
-                  cents: d.cents,
-                  // The guardian's clock may run a little ahead of mine.
-                  at: new Date(Math.min(d.decidedAt ?? now, now)).toISOString(),
-                  source: "guardian",
-                },
-              ],
-            }
-          : g,
-      ),
-    };
+    let candidate;
     try {
-      validateBackup(candidate);
+      candidate = recordEntry(next, goal.id, {
+        id,
+        cents: d.cents,
+        // The guardian's clock may run a little ahead of mine.
+        at: new Date(Math.min(d.decidedAt ?? now, now)).toISOString(),
+        source: "guardian",
+      }).data;
     } catch {
       continue;
     }

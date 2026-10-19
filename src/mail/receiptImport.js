@@ -1,4 +1,4 @@
-import { balance, localDate, today, validateBackup } from "../domain.js";
+import { localDate, recordEntry, today, validateBackup } from "../domain.js";
 
 function validateReceipt(receipt) {
   if (
@@ -101,32 +101,9 @@ export function applyLocalReceipt(
   const goal = data.goals.find((item) => item.id === goalId);
   if (!goal || goal.archived || goal.provider !== receipt.provider)
     throw new Error("Elige una cajita activa de la misma app del correo.");
-  const next = {
-    ...data,
-    importedIds: [...data.importedIds, receipt.id],
-    goals: data.goals.map((item) =>
-      item.id === goal.id
-        ? {
-            ...item,
-            entries: [
-              ...item.entries,
-              {
-                id: crypto.randomUUID(),
-                cents: receipt.amountCents,
-                at: receipt.at,
-                source: "manual",
-              },
-            ],
-          }
-        : item,
-    ),
-  };
-  if (
-    !Number.isSafeInteger(
-      balance(next.goals.find((item) => item.id === goal.id)),
-    )
-  )
-    throw new Error("El saldo de la cajita supera el límite permitido.");
-  validateBackup(next);
-  return next;
+  return recordEntry(
+    { ...data, importedIds: [...data.importedIds, receipt.id] },
+    goal.id,
+    { cents: receipt.amountCents, at: receipt.at, source: "manual" },
+  ).data;
 }

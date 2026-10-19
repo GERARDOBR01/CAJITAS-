@@ -34,7 +34,7 @@ import {
   restoreWithoutReminders,
 } from "./pet/reminders.js";
 import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
-import { balance, restoreEntry } from "./domain.js";
+import { recordEntry, restoreEntry } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
@@ -205,26 +205,14 @@ export default function App() {
     }
   }, []);
   function movement({ cents: value, at }) {
-    const g = data.goals.find((g) => g.id === modal.goal.id);
-    const next = {
-      ...data,
-      goals: data.goals.map((goal) =>
-        goal.id === g.id
-          ? {
-              ...goal,
-              entries: [
-                ...goal.entries,
-                {
-                  id: crypto.randomUUID(),
-                  cents: value,
-                  at,
-                  source: "manual",
-                },
-              ],
-            }
-          : goal,
-      ),
-    };
+    let recorded;
+    try {
+      recorded = recordEntry(data, modal.goal.id, { cents: value, at });
+    } catch (error) {
+      notify(error.message || "No pudimos guardar el cambio.");
+      return;
+    }
+    const next = recorded.data;
     if (
       !setData(
         value > 0 && next.preferences.reminder.enabled
@@ -236,8 +224,7 @@ export default function App() {
     setModal(null);
     if (value > 0) partner.onSaved();
     if (value < 0) notify(WITHDRAWAL_NOTE);
-    else if (balance(g) < g.targetCents && balance(g) + value >= g.targetCents)
-      celebrate();
+    else if (recorded.reachedTarget) celebrate();
     else {
       haptic();
       setExcited(true);
