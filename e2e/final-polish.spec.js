@@ -97,6 +97,41 @@ test("un archivo requiere revisión, se registra una vez y no guarda el contenid
   expect((await saved(page)).goals[0].entries).toHaveLength(1);
 });
 
+test("un comprobante que completa la cajita celebra y cuenta como ahorro", async ({
+  page,
+}) => {
+  const seed = fixture();
+  seed.goals[0].targetCents = 120050;
+  seed.preferences = {
+    reminder: {
+      enabled: true,
+      frequency: "biweekly",
+      since: "2026-09-01T12:00:00.000Z",
+      ignored: 1,
+    },
+  };
+  await open(page, seed);
+  await page
+    .locator(".goal-card")
+    .getByRole("button", { name: "+ Registrar ahorro" })
+    .click();
+  await page
+    .getByRole("button", { name: "Usar un correo de depósito" })
+    .click();
+  await review(page).getByLabel("Archivo del correo").setInputFiles(file);
+  await confirm(page);
+  await review(page)
+    .getByRole("button", { name: "Confirmar e importar depósito" })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Meta alcanzada" }),
+  ).toContainText("Depósito revisado y registrado.");
+  await expect(page.getByLabel("Confeti por meta alcanzada")).toBeVisible();
+  const { reminder } = (await saved(page)).preferences;
+  expect(reminder.ignored).toBe(0);
+  expect(reminder.since > "2026-09-01T12:00:00.000Z").toBe(true);
+});
+
 test("en celular el texto pide fecha y permite vincular un registro archivado sin sumarlo", async ({
   page,
 }) => {

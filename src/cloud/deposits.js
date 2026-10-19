@@ -53,12 +53,10 @@ export function checkDeposit(goal, cents, pendingOut = 0) {
 /**
  * Records my deposits the guardian confirmed and I have not recorded yet.
  * Returns the new journal and the deposits to mark as applied; `added` are
- * the ones that changed the journal (the rest were already there), and
- * `completed` says whether any of them reached a cajita's target.
+ * the ones that changed the journal (the rest were already there).
  */
 export function applyConfirmed(data, deposits, uid, now = Date.now()) {
-  let next = data,
-    completed = false;
+  let next = data;
   const marks = [],
     added = [];
   for (const d of deposits) {
@@ -70,22 +68,21 @@ export function applyConfirmed(data, deposits, uid, now = Date.now()) {
       marks.push(d);
       continue;
     }
-    let recorded;
+    let candidate;
     try {
-      recorded = recordEntry(next, goal.id, {
+      candidate = recordEntry(next, goal.id, {
         id,
         cents: d.cents,
         // The guardian's clock may run a little ahead of mine.
         at: new Date(Math.min(d.decidedAt ?? now, now)).toISOString(),
         source: "guardian",
-      });
+      }).data;
     } catch {
       continue;
     }
-    next = recorded.data;
-    completed ||= recorded.reachedTarget;
+    next = candidate;
     marks.push(d);
     added.push(d);
   }
-  return { data: next, marks, added, completed };
+  return { data: next, marks, added };
 }

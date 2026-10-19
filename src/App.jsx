@@ -22,6 +22,8 @@ import { DepositDialog, DepositInbox } from "./components/Guardian.jsx";
 import { journal } from "./journal/index.js";
 import { useJournal } from "./journal/useJournal.js";
 import { useNavigation } from "./navigation/useNavigation.js";
+import { useFeedback } from "./feedback/useFeedback.js";
+import Feedback from "./feedback/Feedback.jsx";
 import { haptic, isNative } from "./platform.js";
 import { consumeConnectionResult } from "./gmail/connection.js";
 import { syncReminders, listenToReminders } from "./reminders/device.js";
@@ -31,7 +33,6 @@ import {
   easeReminders,
   restoreWithoutReminders,
 } from "./pet/reminders.js";
-import { EXCITED_MS, WITHDRAWAL_NOTE } from "./pet/state.js";
 import { recordEntry, restoreEntry } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
@@ -85,10 +86,7 @@ export default function App() {
   const { tab, go, launch } = useNavigation({ cloudConfigured });
   const [modal, setModal] = useState(null),
     [deposit, setDeposit] = useState(null),
-    [toast, setToast] = useState(""),
     [now, setNow] = useState(Date.now()),
-    [confetti, setConfetti] = useState(false),
-    [excited, setExcited] = useState(false),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
   const [detailId, setDetailId] = useState(null);
@@ -103,9 +101,11 @@ export default function App() {
     [store],
   );
   const cloudRef = useRef();
-  const toastTimer = useRef(),
-    celebrationTimer = useRef(),
-    excitedTimer = useRef();
+  const feedback = useFeedback({
+    save: (next) => setData(next),
+    onSaved: () => partner.onSaved(),
+  });
+  const { notify } = feedback;
   // A copy that came from the account (first sign-in or another device).
   function applyRemote(next, message) {
     store.replace(next, { remote: true });
@@ -117,14 +117,12 @@ export default function App() {
     user: cloud.user,
     data,
     update: (change) => setData(change(latestData.current)),
+    record: (change, detail) => {
+      const before = latestData.current;
+      return feedback.record(before, change(before), detail);
+    },
     notify,
-    celebrate: (detail) => celebrate(detail),
   });
-  function notify(message) {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), 7000);
-  }
   // Says why a change was not kept; true when it was.
   function report(result) {
     if (!result.ok)
@@ -136,15 +134,6 @@ export default function App() {
     return result.ok;
   }
   const setData = (next) => report(store.save(next));
-  // `detail` goes before the message when something else caused the goal.
-  function celebrate(detail) {
-    clearTimeout(celebrationTimer.current);
-    setConfetti(true);
-    haptic(true);
-    const done = "¡Meta alcanzada! Poquito a poquito, lo lograste ✦";
-    notify(typeof detail === "string" ? `${detail} ${done}` : done);
-    celebrationTimer.current = setTimeout(() => setConfetti(false), 5000);
-  }
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     const on = () => setOffline(!navigator.onLine);
@@ -154,9 +143,6 @@ export default function App() {
       clearInterval(timer);
       window.removeEventListener("online", on);
       window.removeEventListener("offline", on);
-      clearTimeout(toastTimer.current);
-      clearTimeout(celebrationTimer.current);
-      clearTimeout(excitedTimer.current);
     };
   }, []);
   useEffect(
@@ -184,37 +170,15 @@ export default function App() {
           : "Conexión cancelada.",
       );
   }, []);
-  function movement({ cents: value, at, goalId }) {
-    let recorded;
+  function movement({ cents, at, goalId }) {
+    let next;
     try {
-      recorded = recordEntry(data, goalId ?? modal.goal.id, {
-        cents: value,
-        at,
-      });
+      next = recordEntry(data, goalId ?? modal.goal.id, { cents, at }).data;
     } catch (error) {
       notify(error.message || "No pudimos guardar el cambio.");
       return;
     }
-    const next = recorded.data;
-    if (
-      !setData(
-        value > 0 && next.preferences.reminder.enabled
-          ? answerCheckIn(next, new Date())
-          : next,
-      )
-    )
-      return;
-    setModal(null);
-    if (value > 0) partner.onSaved();
-    if (value < 0) notify(WITHDRAWAL_NOTE);
-    else if (recorded.reachedTarget) celebrate();
-    else {
-      haptic();
-      setExcited(true);
-      clearTimeout(excitedTimer.current);
-      excitedTimer.current = setTimeout(() => setExcited(false), EXCITED_MS);
-      notify("Ahorro registrado. ¡Un pasito más!");
-    }
+    if (feedback.record(data, next)) setModal(null);
   }
   // Two unanswered reminders in a row: write less often instead of insisting.
   useEffect(() => {
@@ -325,8 +289,8 @@ export default function App() {
             filter={goalFilter}
             onFilter={setGoalFilter}
             now={now}
-            cheering={excited}
-            celebrating={confetti}
+            cheering={feedback.excited}
+            celebrating={feedback.confetti}
             checkIn={dueCheckIn(data, new Date(now))}
             onCheckIn={(goal) =>
               setModal({ type: "movement", goal, withdraw: false })
@@ -364,7 +328,7 @@ export default function App() {
             partner={partner}
             uid={cloud.user?.uid}
             now={now}
-            onCelebrate={celebrate}
+            onCelebrate={feedback.celebrate}
           />
         )}
         {detailGoal && (
@@ -455,7 +419,7 @@ export default function App() {
             data={data}
             setData={setData}
             notify={notify}
-            celebrate={celebrate}
+            record={feedback.record}
             onCreate={() => setModal({ type: "new" })}
           />
         )}
@@ -489,7 +453,7 @@ export default function App() {
         movement={movement}
         pet={pet}
         notify={notify}
-        celebrate={celebrate}
+        record={feedback.record}
         setGoalFilter={setGoalFilter}
       />
       {deposit && partner.guardian && (
@@ -534,29 +498,11 @@ export default function App() {
           notify={notify}
         />
       )}
-      {toast && (
-        <div className="toast" role="status">
-          {toast}
-          <button aria-label="Cerrar aviso" onClick={() => setToast("")}>
-            ×
-          </button>
-        </div>
-      )}
-      {confetti && (
-        <div className="confetti" aria-label="Confeti por meta alcanzada">
-          {Array.from({ length: 36 }, (_, i) => (
-            <i
-              key={i}
-              style={{
-                left: `${(i * 37) % 100}%`,
-                background: ["#9fc9a7", "#e6aa93", "#c2b5dd", "#e9cf80"][i % 4],
-                animationDelay: `${(i % 8) * 0.12}s`,
-                transform: `rotate(${i * 17}deg)`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <Feedback
+        toast={feedback.toast}
+        confetti={feedback.confetti}
+        onDismiss={feedback.dismiss}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { GoalForm, MovementForm } from "./Goals.jsx";
 import CorrectEntry from "./CorrectEntry.jsx";
 import Modal from "./Modal.jsx";
 import LocalMailImport from "./LocalMailImport.jsx";
-import { balance, correctManualEntry, removeManualEntry } from "../domain.js";
+import { correctManualEntry, removeManualEntry } from "../domain.js";
 
 export default function GoalDialogs({
   modal,
@@ -12,7 +12,7 @@ export default function GoalDialogs({
   movement,
   pet,
   notify,
-  celebrate,
+  record,
   setGoalFilter,
 }) {
   return (
@@ -49,9 +49,8 @@ export default function GoalDialogs({
         >
           <LocalMailImport
             data={data}
-            onSave={setData}
+            record={record}
             notify={notify}
-            celebrate={celebrate}
             initialGoalId={modal.goal.id}
             compact
             onDone={() => setModal(null)}
@@ -94,21 +93,17 @@ export default function GoalDialogs({
           goal={data.goals.find((g) => g.id === modal.goal.id)}
           onClose={() => setModal(null)}
           onSave={(goal) => {
-            const previous = data.goals.find((g) => g.id === goal.id);
             if (
-              setData({
-                ...data,
-                goals: data.goals.map((g) => (g.id === goal.id ? goal : g)),
-              })
-            ) {
-              setModal(null);
-              if (
-                balance(previous) < previous.targetCents &&
-                balance(goal) >= goal.targetCents
+              record(
+                data,
+                {
+                  ...data,
+                  goals: data.goals.map((g) => (g.id === goal.id ? goal : g)),
+                },
+                "Tu plan se ajustó. Seguimos a tu ritmo.",
               )
-                celebrate();
-              else notify("Tu plan se ajustó. Seguimos a tu ritmo.");
-            }
+            )
+              setModal(null);
           }}
           onArchive={(goal) => {
             if (

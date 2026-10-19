@@ -5,13 +5,12 @@ import {
   applyLocalReceipt,
   possibleLocalMatches,
 } from "../receipts/local.js";
-import { cents, localDate, money, reachedTarget, today } from "../domain.js";
+import { cents, localDate, money, today } from "../domain.js";
 
 export default function LocalMailImport({
   data,
-  onSave,
+  record,
   notify,
-  celebrate,
   initialGoalId = "",
   onDone,
   onCreate,
@@ -129,18 +128,19 @@ export default function LocalMailImport({
         notify("Este correo ya estaba registrado. No se volvió a sumar.");
         return;
       }
-      if (!onSave(next)) return;
-      const completed = reachedTarget(data, next, goalId);
-      setCandidate(null);
-      setSaved(true);
-      setReviewed(false);
-      if (completed) celebrate();
-      else
-        notify(
+      if (
+        !record(
+          data,
+          next,
           match
             ? "Comprobante vinculado. El monto registrado se mantiene igual."
             : "Depósito revisado y registrado. El correo quedó en tu dispositivo.",
-        );
+        )
+      )
+        return;
+      setCandidate(null);
+      setSaved(true);
+      setReviewed(false);
       onDone?.();
     } catch (e) {
       setError(e.message);
