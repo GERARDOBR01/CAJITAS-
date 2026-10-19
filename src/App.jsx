@@ -1,5 +1,6 @@
 import AppShell from "./components/AppShell.jsx";
-import GoalDialogs from "./components/GoalDialogs.jsx";
+import GoalDialogs from "./goals/GoalDialogs.jsx";
+import { useGoalActions } from "./goals/useGoalActions.js";
 import Home from "./screens/Home.jsx";
 import GoalDetail from "./screens/GoalDetail.jsx";
 import More from "./screens/More.jsx";
@@ -18,7 +19,7 @@ import { usePartner } from "./cloud/usePartner.js";
 import Partner from "./components/Partner.jsx";
 import SurpriseReveal from "./components/SurpriseReveal.jsx";
 import SharedGoals from "./components/SharedGoals.jsx";
-import { DepositDialog, DepositInbox } from "./components/Guardian.jsx";
+import { DepositInbox } from "./components/Guardian.jsx";
 import { journal } from "./journal/index.js";
 import { useJournal } from "./journal/useJournal.js";
 import { useNavigation } from "./navigation/useNavigation.js";
@@ -33,7 +34,7 @@ import {
   easeReminders,
   restoreWithoutReminders,
 } from "./pet/reminders.js";
-import { recordEntry, restoreEntry } from "./domain.js";
+import { restoreEntry } from "./domain.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
@@ -84,9 +85,7 @@ export default function App() {
   const { data, recovery } = useJournal(store);
   const loadError = RECOVERY_MESSAGES[recovery] ?? "";
   const { tab, go, launch } = useNavigation({ cloudConfigured });
-  const [modal, setModal] = useState(null),
-    [deposit, setDeposit] = useState(null),
-    [now, setNow] = useState(Date.now()),
+  const [now, setNow] = useState(Date.now()),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
   const [detailId, setDetailId] = useState(null);
@@ -123,6 +122,14 @@ export default function App() {
     },
     notify,
   });
+  const actions = useGoalActions({
+    data,
+    partner,
+    save: (next) => setData(next),
+    record: feedback.record,
+    notify,
+    onRestored: () => setGoalFilter("active"),
+  });
   // Says why a change was not kept; true when it was.
   function report(result) {
     if (!result.ok)
@@ -150,11 +157,11 @@ export default function App() {
       store.subscribe((event) => {
         if (event.type === "saved") cloudRef.current.save(event.data);
         else if (event.type === "external") {
-          setModal(null);
+          actions.close();
           notify(
             "Tus cajitas se actualizaron desde otra pestaña. Revisa el cambio antes de continuar.",
           );
-        } else if (event.type === "external-invalid") setModal(null);
+        } else if (event.type === "external-invalid") actions.close();
         else if (event.type === "replica-failed")
           notify(
             "El cambio está guardado en la app, pero no se pudo actualizar la copia adicional del dispositivo. Descarga un respaldo.",
@@ -170,16 +177,6 @@ export default function App() {
           : "Conexión cancelada.",
       );
   }, []);
-  function movement({ cents, at, goalId }) {
-    let next;
-    try {
-      next = recordEntry(data, goalId ?? modal.goal.id, { cents, at }).data;
-    } catch (error) {
-      notify(error.message || "No pudimos guardar el cambio.");
-      return;
-    }
-    if (feedback.record(data, next)) setModal(null);
-  }
   // Two unanswered reminders in a row: write less often instead of insisting.
   useEffect(() => {
     if (loadError) return;
@@ -202,7 +199,7 @@ export default function App() {
         current.goals.find((g) => g.id === goalId && !g.archived) ??
         dueCheckIn(current)?.goal;
       go("goals");
-      if (goal) setModal({ type: "movement", goal, withdraw: false });
+      if (goal) actions.move(goal);
     }).catch(() => {});
   }, []);
   useEffect(() => {
@@ -292,33 +289,12 @@ export default function App() {
             cheering={feedback.excited}
             celebrating={feedback.confetti}
             checkIn={dueCheckIn(data, new Date(now))}
-            onCheckIn={(goal) =>
-              setModal({ type: "movement", goal, withdraw: false })
-            }
+            onCheckIn={(goal) => actions.move(goal)}
             onLater={() => {
               if (setData(answerCheckIn(data)))
                 notify("¡Va! Aquí sigo cuando quieras 💛");
             }}
-            onCreate={() => setModal({ type: "new" })}
-            onMove={(goal, withdraw) =>
-              setModal({ type: "movement", goal, withdraw })
-            }
-            guardian={
-              partner.guardian && {
-                name: partner.partnerName || "tu guardián",
-                pending: partner.pending,
-                onDeposit: (goal, withdraw) => setDeposit({ goal, withdraw }),
-              }
-            }
-            onEdit={(goal) => setModal({ type: "edit", goal })}
-            onRecord={(goal, initialCents) =>
-              setModal({
-                type: "movement",
-                goal,
-                withdraw: false,
-                initialCents,
-              })
-            }
+            actions={actions}
             onOpen={openGoal}
             onPet={() => haptic()}
           />
@@ -336,18 +312,8 @@ export default function App() {
             goal={detailGoal}
             now={now}
             weekday={data.preferences.reminder.day}
-            guardian={
-              partner.guardian && {
-                name: partner.partnerName || "tu guardián",
-                pending: partner.pending[detailGoal.id],
-                onDeposit: (goal, withdraw) => setDeposit({ goal, withdraw }),
-              }
-            }
+            actions={actions}
             onBack={() => go("goals")}
-            onMove={(goal, withdraw) =>
-              setModal({ type: "movement", goal, withdraw })
-            }
-            onEdit={(goal) => setModal({ type: "edit", goal })}
             onFrequency={setFrequency}
             onActivity={() => go("activity")}
           />
@@ -367,13 +333,7 @@ export default function App() {
                 notify(error.message);
               }
             }}
-            onCorrect={(entry) =>
-              setModal({
-                type: "correct",
-                goalId: entry.goalId,
-                entryId: entry.id,
-              })
-            }
+            onCorrect={actions.correct}
           />
         )}
         {tab === "tutorial" && (
@@ -385,7 +345,7 @@ export default function App() {
               onNavigate={go}
               onCreate={() => {
                 go("goals");
-                setModal({ type: "new" });
+                actions.create();
               }}
             />
           </Suspense>
@@ -420,7 +380,7 @@ export default function App() {
             setData={setData}
             notify={notify}
             record={feedback.record}
-            onCreate={() => setModal({ type: "new" })}
+            onCreate={actions.create}
           />
         )}
         {tab === "backup" && (
@@ -446,35 +406,12 @@ export default function App() {
         )}
       </AppShell>
       <GoalDialogs
-        modal={modal}
+        actions={actions}
         data={data}
-        setData={setData}
-        setModal={setModal}
-        movement={movement}
         pet={pet}
         notify={notify}
         record={feedback.record}
-        setGoalFilter={setGoalFilter}
       />
-      {deposit && partner.guardian && (
-        <DepositDialog
-          goal={deposit.goal}
-          withdraw={deposit.withdraw}
-          guardian={partner.guardian}
-          name={partner.partnerName || "tu guardián"}
-          pendingOut={partner.pending[deposit.goal.id]?.out ?? 0}
-          onSend={(value, method) =>
-            partner.deposit(
-              deposit.goal,
-              value,
-              method,
-              partner.pending[deposit.goal.id]?.out ?? 0,
-            )
-          }
-          onClose={() => setDeposit(null)}
-          notify={notify}
-        />
-      )}
       {partner.reveal && !cloud.prompt && (
         <SurpriseReveal
           gift={partner.reveal}
