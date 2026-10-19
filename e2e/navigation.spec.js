@@ -34,3 +34,22 @@ test("el tutorial vive en la dirección solo mientras está abierto", async ({
   await page.getByRole("button", { name: "Mis cajitas" }).first().click();
   await expect.poll(() => search(page)).toBe("");
 });
+
+const pressBack = (page) =>
+  page.evaluate(() => {
+    const event = new Event("guardadito:back", { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+
+test("atrás en otra pantalla la lleva a Mis cajitas; ahí ya no responde", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Actividad" }).first().click();
+  expect(await pressBack(page)).toBe(true);
+  await expect(
+    page.getByRole("button", { name: "Actividad" }).first(),
+  ).not.toHaveAttribute("aria-current", "page");
+  expect(await pressBack(page)).toBe(false);
+});
