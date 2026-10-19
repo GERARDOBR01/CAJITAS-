@@ -448,9 +448,16 @@ function browser(hash = "") {
   vi.stubGlobal("crypto", webcrypto);
   return { values, win, location, history };
 }
+// The bridge client is spread over platform.js (api), the Gmail connection
+// and the native events; one fresh copy of all of them per test.
 async function platform() {
   vi.resetModules();
-  return import("../src/platform.js");
+  const modules = await Promise.all([
+    import("../src/platform.js"),
+    import("../src/gmail/connection.js"),
+    import("../src/nativeEvents.js"),
+  ]);
+  return Object.assign({}, ...modules);
 }
 describe("cliente web y móvil del puente", () => {
   it("Pages sin backend responde estado local y no llama /api ni navega", async () => {

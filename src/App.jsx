@@ -22,13 +22,9 @@ import { DepositDialog, DepositInbox } from "./components/Guardian.jsx";
 import { journal } from "./journal/index.js";
 import { useJournal } from "./journal/useJournal.js";
 import { useNavigation } from "./navigation/useNavigation.js";
-import {
-  haptic,
-  isNative,
-  syncReminders,
-  listenToReminders,
-  consumeConnectionResult,
-} from "./platform.js";
+import { haptic, isNative } from "./platform.js";
+import { consumeConnectionResult } from "./gmail/connection.js";
+import { syncReminders, listenToReminders } from "./reminders/device.js";
 import {
   answerCheckIn,
   dueCheckIn,

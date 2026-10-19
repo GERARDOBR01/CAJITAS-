@@ -7,8 +7,11 @@ import {
   rhythmLabel,
 } from "../src/calendar.js";
 import { plan } from "../src/domain.js";
-import { nextOccurrences, occurrences } from "../src/pet/reminders.js";
-import { reminderCalendar } from "../src/platform.js";
+import {
+  nextOccurrences,
+  occurrences,
+  reminderCalendar,
+} from "../src/pet/reminders.js";
 
 const local = (s) => new Date(s);
 const goal = (unlockDate, targetCents = 120000) => ({

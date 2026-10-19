@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, connectGmail } from "../platform.js";
+import { api } from "../platform.js";
+import { connectGmail } from "../gmail/connection.js";
 import { money, reachedTarget } from "../domain.js";
 import {
   addReceipt,

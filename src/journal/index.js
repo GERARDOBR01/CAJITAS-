@@ -1,5 +1,5 @@
 import { STORAGE_KEY } from "../domain.js";
-import { persistSavings } from "../platform.js";
+import { persistSavings } from "./nativeReplica.js";
 import { createJournalStore } from "./store.js";
 import { webStorage } from "./webStorage.js";
 

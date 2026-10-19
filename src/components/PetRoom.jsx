@@ -10,14 +10,13 @@ import {
   balance,
   streak,
 } from "../domain.js";
+import { saveFile, isNative, haptic } from "../platform.js";
+import { allowReminders } from "../reminders/device.js";
 import {
-  allowReminders,
+  composeMessage,
+  nextOccurrences,
   reminderCalendar,
-  saveFile,
-  isNative,
-  haptic,
-} from "../platform.js";
-import { composeMessage, nextOccurrences } from "../pet/reminders.js";
+} from "../pet/reminders.js";
 import { allowedTime } from "../pet/reminderSettings.js";
 import {
   daysAway,
