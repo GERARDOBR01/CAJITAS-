@@ -4,8 +4,12 @@ import {
   checkDeposit,
   cleanClabe,
   concept,
+  confirmationNote,
+  depositNews,
+  depositStatuses,
   formatClabe,
   guardianEntryId,
+  guardianView,
   pendingByGoal,
   validClabe,
 } from "../src/cloud/deposits.js";
@@ -145,5 +149,61 @@ describe("a confirmed deposit becomes a movement", () => {
     expect(() =>
       removeManualEntry(restored, "viaje", guardianEntryId("d1")),
     ).toThrow(/manuales/);
+  });
+});
+
+describe("what the guardian screens show", () => {
+  it("splits the couple's deposits for me and for the guardian", () => {
+    const list = [
+      deposit({ id: "mine-pending", status: "pending", createdAt: 1 }),
+      deposit({ id: "mine-rejected", status: "rejected", createdAt: 2 }),
+      deposit({ id: "mine-ok" }),
+      deposit({ id: "in-1", from: G, to: J, status: "pending", createdAt: 5 }),
+      deposit({ id: "in-0", from: G, to: J, status: "pending", createdAt: 3 }),
+      deposit({ id: "kept", from: G, to: J, cents: 30000 }),
+      deposit({ id: "given", from: G, to: J, cents: -10000 }),
+    ];
+    const view = guardianView(list, J);
+    expect(view.held).toBe(20000);
+    expect(view.toConfirm.map((d) => d.id)).toEqual(["in-0", "in-1"]);
+    expect(view.myDeposits.map((d) => d.id)).toEqual([
+      "mine-rejected",
+      "mine-pending",
+    ]);
+    expect(view.pending.viaje.in).toBe(20000);
+  });
+});
+
+describe("money news", () => {
+  const before = depositStatuses([
+    deposit({ id: "in", from: G, to: J, status: "pending" }),
+  ]);
+  it("tells me once when my partner sends or asks for money", () => {
+    const list = [
+      deposit({ id: "in", from: G, to: J, status: "pending" }),
+      deposit({ id: "new", from: G, to: J, status: "pending" }),
+      deposit({ id: "ask", from: G, to: J, status: "pending", cents: -5000 }),
+    ];
+    expect(depositNews(before, list, J, "Gerardo")).toEqual([
+      "Gerardo dice que te mandó $200.00 para Viaje. ¿Te llegó?",
+      "Gerardo te pide $50.00 de Viaje.",
+    ]);
+  });
+  it("tells me when my guardian has not seen my money yet", () => {
+    const mine = depositStatuses([deposit({ status: "pending" })]);
+    expect(
+      depositNews(mine, [deposit({ status: "rejected" })], J, "Gerardo"),
+    ).toEqual(["Gerardo todavía no ve tus $200.00. Revisa la transferencia."]);
+    expect(
+      depositNews(mine, [deposit({ status: "confirmed" })], J, "Gerardo"),
+    ).toEqual([]);
+  });
+  it("sums what the guardian confirmed", () => {
+    expect(
+      confirmationNote([deposit(), deposit({ cents: 5000 })], "Gerardo"),
+    ).toBe("Gerardo confirmó tu depósito: +$250.00 💞");
+    expect(confirmationNote([deposit({ cents: -5000 })], "Gerardo")).toBe(
+      "Gerardo confirmó tu retiro de $50.00.",
+    );
   });
 });

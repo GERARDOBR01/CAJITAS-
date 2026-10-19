@@ -1,6 +1,6 @@
 // Money kept by a guardian: the CLABE to send it to and how a confirmed
 // deposit becomes a movement in the sender's cajita.
-import { balance, recordEntry } from "../domain.js";
+import { balance, money, recordEntry } from "../domain.js";
 
 const WEIGHTS = [3, 7, 1];
 export const cleanClabe = (text) => String(text ?? "").replace(/\D/g, "");
@@ -85,4 +85,59 @@ export function applyConfirmed(data, deposits, uid, now = Date.now()) {
     added.push(d);
   }
   return { data: next, marks, added };
+}
+
+/** Everything the guardian screens show, from the couple's deposit list. */
+export function guardianView(deposits, uid) {
+  return {
+    pending: pendingByGoal(deposits, uid),
+    /** What I keep for my partner: everything I confirmed, in and out. */
+    held: deposits
+      .filter((d) => d.to === uid && d.status === "confirmed")
+      .reduce((sum, d) => sum + d.cents, 0),
+    toConfirm: deposits
+      .filter((d) => d.to === uid && d.status === "pending")
+      .sort((a, b) => a.createdAt - b.createdAt),
+    myDeposits: deposits
+      .filter((d) => d.from === uid && d.status !== "confirmed")
+      .sort((a, b) => b.createdAt - a.createdAt),
+  };
+}
+
+/** The status of each deposit, to tell later what changed. */
+export const depositStatuses = (deposits) =>
+  new Map(deposits.map((d) => [d.id, d.status]));
+
+/**
+ * Money news since `before` (the statuses already seen): my partner says
+ * they sent me something or asks for some back, or my guardian has not seen
+ * mine yet. `who` is how my partner is called.
+ */
+export function depositNews(before, deposits, uid, who) {
+  const news = [];
+  for (const d of deposits) {
+    if (before.get(d.id) === d.status) continue;
+    const amount = money(Math.abs(d.cents));
+    if (d.to === uid && d.status === "pending")
+      news.push(
+        d.cents > 0
+          ? `${who} dice que te mandó ${amount} para ${d.goalName}. ¿Te llegó?`
+          : `${who} te pide ${amount} de ${d.goalName}.`,
+      );
+    else if (d.from === uid && d.status === "rejected")
+      news.push(
+        d.cents > 0
+          ? `${who} todavía no ve tus ${amount}. Revisa la transferencia.`
+          : `${who} no pudo darte ${amount} por ahora.`,
+      );
+  }
+  return news;
+}
+
+/** What I hear when my guardian confirmed `added` (from `applyConfirmed`). */
+export function confirmationNote(added, who) {
+  const total = added.reduce((sum, d) => sum + d.cents, 0);
+  return total > 0
+    ? `${who} confirmó tu depósito: +${money(total)} 💞`
+    : `${who} confirmó tu retiro de ${money(-total)}.`;
 }
