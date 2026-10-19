@@ -3042,3 +3042,8 @@ summary {
 .held small {
   color: var(--muted);
 }
+.privacy-link {
+  display: inline-block;
+  margin-top: var(--space-4);
+  color: var(--muted);
+}

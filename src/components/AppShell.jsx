@@ -55,7 +55,7 @@ export default function AppShell({
           <span className="brand-icon" aria-hidden="true">
             ▣
           </span>
-          cajitas
+          guardadito
           <span className="brand-dot" aria-hidden="true">
             ✦
           </span>
@@ -89,7 +89,7 @@ export default function AppShell({
         <main>
           {children}
           <footer>
-            <span>cajitas ✦</span>
+            <span>guardadito ✦</span>
             <p>Cuida tus sueños. Ahorra a tu ritmo.</p>
           </footer>
         </main>

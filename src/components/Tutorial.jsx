@@ -903,7 +903,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
             </div>
             <div className="tutorial-phone" aria-hidden="true">
               <div className="tutorial-phone-speaker" />
-              <span>cajitas ✦</span>
+              <span>guardadito ✦</span>
               <Mascot pet={pet} small />
               <div className="tutorial-phone-icons">
                 <span>♡</span>

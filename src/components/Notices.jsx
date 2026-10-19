@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isNative } from "../platform.js";
 
 const push = () => import("../cloud/push.js");
 
@@ -62,7 +63,11 @@ export default function Notices({ pairId, uid, name, notify }) {
           </ol>
         </>
       ) : state === "unsupported" ? (
-        <p className="muted">Este navegador no puede recibir avisos.</p>
+        <p className="muted">
+          {isNative
+            ? "En la app de Android los avisos llegan pronto. Mientras, los ves aquí al abrirla, y tu pareja sí recibe los tuyos."
+            : "Este navegador no puede recibir avisos."}
+        </p>
       ) : state === "denied" ? (
         <p className="muted">
           Bloqueaste los avisos. Puedes activarlos en los ajustes del teléfono,
