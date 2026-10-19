@@ -19,3 +19,12 @@ export const emulatorConfig = {
 };
 
 export const cloudConfigured = useEmulator || Boolean(firebaseConfig.apiKey);
+
+// Notices to the partner's phone (Web Push). The public half of the VAPID
+// key; the private half lives only on the server.
+export const vapidPublicKey =
+  "BPkPKnEY6C0Im8LU5jgvgNC7bnCyMAWvXraGQD3g8RsdCtwDafeFQBlB2ukO_9iLUm1Dy3rwTFworwtMUcV-9qo";
+// Where /api/push lives. Same origin in development; the Vercel backend for
+// the published web and the app.
+export const pushOrigin = import.meta.env.VITE_PUSH_ORIGIN ?? "";
+export const pushConfigured = Boolean(pushOrigin) || import.meta.env.DEV;

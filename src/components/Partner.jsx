@@ -4,6 +4,8 @@ import { compressImage } from "../cloud/image.js";
 import { normalizeCode } from "../cloud/partner.js";
 import Modal from "./Modal.jsx";
 import { DepositInbox, MyDeposits, PayoutForm } from "./Guardian.jsx";
+import Notices from "./Notices.jsx";
+import { pushConfigured } from "../cloud/config.js";
 
 const WHEN = {
   open: "Al abrir la app",
@@ -507,6 +509,14 @@ export default function Partner({
       )}
       <DepositInbox partner={partner} name={name} />
       <MyDeposits partner={partner} name={name} />
+      {pushConfigured && (
+        <Notices
+          pairId={partner.pair.id}
+          uid={cloud.user.uid}
+          name={name}
+          notify={notify}
+        />
+      )}
       <h2 className="partner-subtitle">Para {name}</h2>
       <PetGift partner={partner} name={name} />
       <Notes partner={partner} name={name} />

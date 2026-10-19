@@ -46,6 +46,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           navigateFallbackDenylist: [/^\/api\//, /\/descargas\//],
           globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
+          // Notices from the partner (src/cloud/push.js).
+          importScripts: ["push-sw.js"],
         },
       }),
     ],

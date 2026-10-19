@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { getRates } from "./banxico.js";
 import { getBitsoBalance } from "./bitso.js";
 import { configuredSenders, parseDeposit } from "./parser.js";
+import { sendPush } from "./push.js";
 import {
   setRecord,
   getRecord,
@@ -281,6 +282,12 @@ export default async function handler(req, res) {
       if (previous) await deleteRecord(`session:${previous.id}`);
       return json(res, 200, { sessionId: id });
     }
+    if (route === "/api/push" && method === "POST")
+      return json(
+        res,
+        200,
+        await sendPush(req.headers.authorization, await readBody(req)),
+      );
     if (route === "/api/rates" && method === "GET") {
       if (!ratesCache || ratesCache.expires < Date.now())
         ratesCache = { value: await getRates(), expires: Date.now() + 300000 };
