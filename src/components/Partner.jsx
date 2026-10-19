@@ -3,6 +3,7 @@ import { money } from "../domain.js";
 import { compressImage } from "../cloud/image.js";
 import { normalizeCode } from "../cloud/partner.js";
 import Modal from "./Modal.jsx";
+import { DepositInbox, MyDeposits, PayoutForm } from "./Guardian.jsx";
 
 const WHEN = {
   open: "Al abrir la app",
@@ -504,10 +505,13 @@ export default function Partner({
           </ul>
         </div>
       )}
+      <DepositInbox partner={partner} name={name} />
+      <MyDeposits partner={partner} name={name} />
       <h2 className="partner-subtitle">Para {name}</h2>
       <PetGift partner={partner} name={name} />
       <Notes partner={partner} name={name} />
       <Rewards partner={partner} name={name} notify={notify} />
+      <PayoutForm partner={partner} name={name} />
       {opened.length > 0 && (
         <div className="panel partner-panel">
           <h2>Notitas de {name} para ti</h2>

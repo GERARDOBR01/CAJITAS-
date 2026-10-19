@@ -117,6 +117,54 @@ service cloud.firestore {
         allow delete: if member(pairId) && resource.data.by == request.auth.uid;
       }
 
+      // Where to send money when one keeps the savings of the other (the
+      // guardian): only the couple sees it.
+      match /payout/{uid} {
+        allow read: if member(pairId);
+        allow write: if owner(uid) && member(pairId)
+          && request.resource.data.keys().hasOnly(["clabe", "holder", "bank", "updatedAt"])
+          && request.resource.data.clabe is string
+          && request.resource.data.clabe.matches("^[0-9]{18}$")
+          && shortText(request.resource.data.holder, 60)
+          && shortText(request.resource.data.bank, 40);
+        allow delete: if owner(uid);
+      }
+      // Money handed to the guardian (positive) or asked back (negative).
+      // It only counts once the guardian says it arrived; then the sender's
+      // app records it and marks it as applied.
+      match /deposits/{depositId} {
+        allow read: if member(pairId);
+        allow create: if member(pairId)
+          && request.resource.data.keys().hasOnly(["from", "to", "goalId", "goalName",
+            "cents", "method", "status", "note", "createdAt"])
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.to in pair(pairId).members
+          && request.resource.data.to != request.auth.uid
+          && exists(/databases/$(database)/documents/pairs/$(pairId)/payout/$(request.resource.data.to))
+          && shortText(request.resource.data.goalId, 80)
+          && shortText(request.resource.data.goalName, 80)
+          && request.resource.data.cents is int
+          && request.resource.data.cents != 0
+          && request.resource.data.cents <= 100000000000
+          && request.resource.data.cents >= -100000000000
+          && request.resource.data.method in ["spei", "cash"]
+          && request.resource.data.status == "pending"
+          && (!("note" in request.resource.data) || request.resource.data.note.size() <= 200);
+        allow update: if member(pairId) && (
+          (resource.data.to == request.auth.uid
+            && resource.data.status == "pending"
+            && request.resource.data.status in ["confirmed", "rejected"]
+            && request.resource.data.decidedAt is int
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "decidedAt"]))
+          || (resource.data.from == request.auth.uid
+            && resource.data.status == "confirmed"
+            && request.resource.data.appliedAt is int
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["appliedAt"])));
+        // The sender cancels or clears it; a confirmed one only once applied.
+        allow delete: if member(pairId) && resource.data.from == request.auth.uid
+          && (resource.data.status != "confirmed" || "appliedAt" in resource.data);
+      }
+
       // Surprises from one to the other: a special pet, notes, rewards.
       match /gifts/{giftId} {
         allow read: if member(pairId);

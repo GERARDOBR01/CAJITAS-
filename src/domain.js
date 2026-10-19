@@ -18,6 +18,12 @@ export const money = (cents) =>
     maximumFractionDigits: 2,
   }).format(cents / 100);
 export const today = () => localDate(new Date());
+/** Where a movement came from, as the app names it. */
+export const SOURCE_LABEL = {
+  manual: "Manual",
+  gmail: "Correo",
+  guardian: "Confirmado",
+};
 export function localDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
@@ -282,7 +288,7 @@ export function activityCSV(data, filters) {
           text(e.provider),
           text(e.cents > 0 ? "Depósito" : "Retiro"),
           (e.cents / 100).toFixed(2),
-          text(e.source === "gmail" ? "Correo" : "Manual"),
+          text(SOURCE_LABEL[e.source] ?? "Manual"),
           text(e.unlockDate ?? ""),
         ].join(","),
       )
@@ -399,7 +405,8 @@ export function validateBackup(data) {
         e.cents === 0 ||
         Math.abs(e.cents) > 1e11 ||
         !validMovementDate(e.at) ||
-        (e.source !== undefined && !["manual", "gmail"].includes(e.source))
+        (e.source !== undefined &&
+          !["manual", "gmail", "guardian"].includes(e.source))
       )
         throw new Error("Hay un movimiento inválido.");
       entryIds.add(e.id);
@@ -441,7 +448,7 @@ export function validateBackup(data) {
         id: e.id,
         cents: e.cents,
         at: e.at,
-        source: e.source === "gmail" ? "gmail" : "manual",
+        source: ["gmail", "guardian"].includes(e.source) ? e.source : "manual",
       })),
     })),
     importedIds: [...new Set(data.importedIds)],

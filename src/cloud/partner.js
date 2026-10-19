@@ -75,19 +75,23 @@ export async function watchPair(uid, callback) {
   );
 }
 
-/** Leaves the couple: my surprises and summary go away with it. */
+/** Leaves the couple: my surprises, summary and CLABE go away with it. */
 export async function unpair(pairId, uid) {
   const { db, storeLib: s } = await cloud();
-  const gifts = await s.getDocs(
-    s.query(
-      s.collection(db, "pairs", pairId, "gifts"),
-      s.where("from", "==", uid),
-    ),
-  );
-  await Promise.all(gifts.docs.map((d) => s.deleteDoc(d.ref)));
+  for (const name of ["gifts", "deposits"]) {
+    const mine = await s.getDocs(
+      s.query(
+        s.collection(db, "pairs", pairId, name),
+        s.where("from", "==", uid),
+      ),
+    );
+    // A deposit confirmed but not yet recorded stays; the rest goes.
+    await Promise.all(mine.docs.map((d) => s.deleteDoc(d.ref).catch(() => {})));
+  }
   await s
     .deleteDoc(s.doc(db, "pairs", pairId, "summaries", uid))
     .catch(() => {});
+  await s.deleteDoc(s.doc(db, "pairs", pairId, "payout", uid)).catch(() => {});
   await s.deleteDoc(s.doc(db, "pairs", pairId));
 }
 
@@ -196,4 +200,68 @@ export async function addSharedEntry(pairId, entry) {
 export async function deleteSharedEntry(pairId, id) {
   const { db, storeLib: s } = await cloud();
   await s.deleteDoc(s.doc(db, "pairs", pairId, "entries", id));
+}
+
+/** The guardian's CLABE and the money on its way to (or back from) them. */
+export async function watchMoney(pairId, onPayouts, onDeposits, onError) {
+  const { db, storeLib: s } = await cloud();
+  const a = s.onSnapshot(
+    s.collection(db, "pairs", pairId, "payout"),
+    (snap) =>
+      onPayouts(Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]))),
+    onError,
+  );
+  const b = s.onSnapshot(
+    s.collection(db, "pairs", pairId, "deposits"),
+    (snap) => onDeposits(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    onError,
+  );
+  return () => {
+    a();
+    b();
+  };
+}
+
+export async function savePayout(pairId, uid, { clabe, holder, bank }) {
+  const { db, storeLib: s } = await cloud();
+  await s.setDoc(s.doc(db, "pairs", pairId, "payout", uid), {
+    clabe,
+    holder,
+    bank,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function deletePayout(pairId, uid) {
+  const { db, storeLib: s } = await cloud();
+  await s.deleteDoc(s.doc(db, "pairs", pairId, "payout", uid));
+}
+
+export async function requestDeposit(pairId, deposit) {
+  const { db, storeLib: s } = await cloud();
+  await s.addDoc(s.collection(db, "pairs", pairId, "deposits"), {
+    ...deposit,
+    status: "pending",
+    createdAt: Date.now(),
+  });
+}
+
+export async function decideDeposit(pairId, id, confirmed) {
+  const { db, storeLib: s } = await cloud();
+  await s.updateDoc(s.doc(db, "pairs", pairId, "deposits", id), {
+    status: confirmed ? "confirmed" : "rejected",
+    decidedAt: Date.now(),
+  });
+}
+
+export async function markApplied(pairId, id) {
+  const { db, storeLib: s } = await cloud();
+  await s.updateDoc(s.doc(db, "pairs", pairId, "deposits", id), {
+    appliedAt: Date.now(),
+  });
+}
+
+export async function deleteDeposit(pairId, id) {
+  const { db, storeLib: s } = await cloud();
+  await s.deleteDoc(s.doc(db, "pairs", pairId, "deposits", id));
 }

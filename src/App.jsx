@@ -16,6 +16,7 @@ import { usePartner } from "./cloud/usePartner.js";
 import Partner from "./components/Partner.jsx";
 import SurpriseReveal from "./components/SurpriseReveal.jsx";
 import SharedGoals from "./components/SharedGoals.jsx";
+import { DepositDialog, DepositInbox } from "./components/Guardian.jsx";
 import {
   haptic,
   isNative,
@@ -81,6 +82,7 @@ export default function App() {
         : "goals",
     ),
     [modal, setModal] = useState(null),
+    [deposit, setDeposit] = useState(null),
     [toast, setToast] = useState(""),
     [now, setNow] = useState(Date.now()),
     [confetti, setConfetti] = useState(false),
@@ -379,6 +381,12 @@ export default function App() {
             </button>
           </div>
         )}
+        {tab === "goals" && partner.pair && (
+          <DepositInbox
+            partner={partner}
+            name={partner.partnerName || "Tu pareja"}
+          />
+        )}
         {tab === "goals" && (
           <Home
             data={data}
@@ -398,6 +406,14 @@ export default function App() {
             onCreate={() => setModal({ type: "new" })}
             onMove={(goal, withdraw) =>
               setModal({ type: "movement", goal, withdraw })
+            }
+            guardian={
+              partner.guardian && {
+                name: partner.partnerName || "tu guardián",
+                pending: partner.pending,
+                onDeposit: (goal, withdraw) =>
+                  setDeposit({ goal, withdraw }),
+              }
             }
             onEdit={(goal) => setModal({ type: "edit", goal })}
             onRecord={(goal, initialCents) =>
@@ -543,6 +559,25 @@ export default function App() {
         celebrate={celebrate}
         setGoalFilter={setGoalFilter}
       />
+      {deposit && partner.guardian && (
+        <DepositDialog
+          goal={deposit.goal}
+          withdraw={deposit.withdraw}
+          guardian={partner.guardian}
+          name={partner.partnerName || "tu guardián"}
+          pendingOut={partner.pending[deposit.goal.id]?.out ?? 0}
+          onSend={(value, method) =>
+            partner.deposit(
+              deposit.goal,
+              value,
+              method,
+              partner.pending[deposit.goal.id]?.out ?? 0,
+            )
+          }
+          onClose={() => setDeposit(null)}
+          notify={notify}
+        />
+      )}
       {partner.reveal && !cloud.prompt && (
         <SurpriseReveal
           gift={partner.reveal}
