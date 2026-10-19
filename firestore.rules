@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    // The whole journal of one person, as the same JSON a backup has.
+    match /users/{uid}/state/main {
+      allow read, delete: if owner(uid);
+      allow write: if owner(uid)
+        && request.resource.data.keys().hasOnly(["raw", "savedAt", "version", "updatedAt"])
+        && request.resource.data.raw is string
+        && request.resource.data.raw.size() < 1000000
+        && request.resource.data.savedAt is number;
+    }
+  }
+}

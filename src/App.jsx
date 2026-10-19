@@ -10,6 +10,8 @@ import Install from "./components/Install.jsx";
 import Simulator from "./components/Simulator.jsx";
 import Connections from "./components/Connections.jsx";
 import Backup from "./components/Backup.jsx";
+import Account, { SyncPrompt } from "./components/Account.jsx";
+import { useCloud } from "./cloud/useCloud.js";
 import {
   haptic,
   isNative,
@@ -95,6 +97,22 @@ export default function App() {
   const toastTimer = useRef(),
     celebrationTimer = useRef(),
     excitedTimer = useRef();
+  // A copy that came from the account (first sign-in or another device).
+  function applyRemote(next, message) {
+    const raw = JSON.stringify(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, raw);
+    } catch {
+      /* The account keeps the copy; this device retries on its next save. */
+    }
+    lastStoredRaw.current = raw;
+    latestData.current = next;
+    setDataState(next);
+    setLoadError("");
+    persistSavings(raw).catch(() => {});
+    if (message) notify(message);
+  }
+  const cloud = useCloud({ latest: latestData, applyRemote, notify });
   function notify(message) {
     clearTimeout(toastTimer.current);
     setToast(message);
@@ -133,6 +151,7 @@ export default function App() {
         ),
       );
       if (restoring) setLoadError("");
+      cloud.save(saved);
       return true;
     } catch (error) {
       notify(
@@ -407,8 +426,12 @@ export default function App() {
           </Suspense>
         )}
         {tab === "install" && <Install notify={notify} />}
+        {tab === "account" && cloud.configured && (
+          <Account cloud={cloud} notify={notify} />
+        )}
         {tab === "more" && (
           <More
+            cloud={cloud}
             data={data}
             onSave={setData}
             notify={notify}
@@ -479,6 +502,13 @@ export default function App() {
         celebrate={celebrate}
         setGoalFilter={setGoalFilter}
       />
+      {cloud.prompt && (
+        <SyncPrompt
+          prompt={cloud.prompt}
+          onChoose={cloud.resolve}
+          notify={notify}
+        />
+      )}
       {toast && (
         <div className="toast" role="status">
           {toast}

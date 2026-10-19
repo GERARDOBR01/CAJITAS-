@@ -16,6 +16,18 @@ PWA de ahorro en español de México. React + Vite, mascota SVG, datos locales y
 
 **Alcance: Fases 1 y 2.** Sin contratos inteligentes, custodia, pagos ni transferencias. El candado es de compromiso, no bancario: el dinero sigue disponible en la app externa.
 
+## Tu cuenta v0.9 ☁
+
+- **Más → Mi cuenta:** crea una cuenta con correo y contraseña, o entra a la tuya. Tus cajitas se guardan en la nube (Firebase) y te siguen a cualquier teléfono: Android, iPhone con la web instalada o la computadora.
+- **Nunca se mezcla nada sin preguntar.** Si el teléfono ya tenía cajitas, te pregunta si las sube. Si la cuenta y el teléfono tienen cajitas distintas, eliges cuáles usar y puedes descargar antes un respaldo.
+- **Sigue funcionando sin internet:** los cambios se suben cuando vuelve la conexión. Entre dos teléfonos de la misma cuenta gana el cambio más reciente.
+- **Sin cuenta todo funciona igual que antes**; tus cajitas se quedan solo en el teléfono.
+- **Borrar mi cuenta** borra la cuenta y su copia en la nube. Pide tu contraseña y no toca las cajitas del teléfono.
+- Reglas de seguridad en `firestore.rules`: cada quien lee y escribe solo su copia. Se prueban con el emulador (`npm run test:rules`), y el recorrido de dos teléfonos se prueba en Chrome de Android y Safari de iPhone (`npm run test:e2e:cloud`). Ambos necesitan Java 21.
+- La configuración web del proyecto está en `src/cloud/config.js`; es pública por diseño. Las reglas se publican con `npm run deploy:rules`.
+
+[Capturas](docs/screenshots/v09/) · Posicionamiento y estudio de Splitwise con REA: [competencia](docs/research/competencia-2026-10.md), [Splitwise](docs/research/splitwise-rea.md).
+
 ## Cookie, el gatito v0.8 🐱
 
 Guardadito se hizo para Jade. Su mascota principal ahora es **Cookie**, un gatito café atigrado con collar y una placa de galleta, dibujado en SVG por capas para que cada parte se mueva:
