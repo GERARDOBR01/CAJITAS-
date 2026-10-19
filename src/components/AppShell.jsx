@@ -1,8 +1,10 @@
+import { ClockCircle, MenuDots, SmileCircle, Wallet } from "./icons.jsx";
+
 const navigation = [
-  ["goals", "▦", "Mis cajitas"],
-  ["pet", "♡", "Mi mascota"],
-  ["activity", "↗", "Actividad"],
-  ["more", "⋯", "Más"],
+  ["goals", <Wallet />, "Mis cajitas"],
+  ["pet", <SmileCircle />, "Mi mascota"],
+  ["activity", <ClockCircle />, "Actividad"],
+  ["more", <MenuDots />, "Más"],
 ];
 const tools = [
   "simulator",

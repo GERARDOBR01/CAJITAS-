@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import Mascot from "../components/Mascot.jsx";
 import { GoalCard } from "../components/Goals.jsx";
 import NextStep from "../components/NextStep.jsx";
-import { balance, money, nextGoal, petWords } from "../domain.js";
+import Money from "../components/Money.jsx";
+import { ShieldCheck } from "../components/icons.jsx";
+import { balance, nextGoal, petWords } from "../domain.js";
 import {
   STAGE_NAMES,
   daysAway,
@@ -80,7 +82,7 @@ export default function Home({
         className={`home-greeting mood-${mood} ${empty ? "is-empty" : ""} ${celebrating || cheering ? "is-cheering" : ""}`}
       >
         <div className="home-speech">
-          <p className="eyebrow">TU EQUIPO DE AHORRO</p>
+          <p className="eyebrow">Tu equipo de ahorro</p>
           <h1>
             {celebrating
               ? "¡Lo lograste!"
@@ -109,40 +111,50 @@ export default function Home({
                         : `${pet.petName} te echa porras.`)}
           </p>
         </div>
-        <div className="home-mascot">
-          <span className="home-doodle doodle-star" aria-hidden="true">
-            ✦
-          </span>
-          <span className="home-doodle doodle-heart" aria-hidden="true">
-            ♡
-          </span>
-          <Mascot
-            pet={pet.pet}
-            name={pet.petName}
-            accessory={pet.accessory}
-            progress={progress}
-            stage={stage}
-            mood={mood}
-            motion={pet.animations}
-            interactive={!empty || pet.pet === "cat"}
-            lines={words.lines}
-            loveText={words.loveText}
-            onPet={(kind) => {
-              onPet?.();
-              if (Date.now() < trickUntil.current) return;
-              if (kind === "love")
-                say(`${pet.petName} te dice: ${words.loveText} 💖`);
-              else if (kind === "cuddle")
-                say("Un abrazo para ti. Gracias por venir ♡");
-              else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
-            }}
-            onTrick={() => {
-              trickUntil.current = Date.now() + 2500;
-              say("¡Ta-dá! Mi truco secreto ✦");
-            }}
-          />
-          {!empty && (
-            <span className="sprout-stage">🌱 {STAGE_NAMES[stage]}</span>
+        <div className="home-hero">
+          <div className="home-mascot">
+            <span className="home-doodle doodle-star" aria-hidden="true">
+              ✦
+            </span>
+            <span className="home-doodle doodle-heart" aria-hidden="true">
+              ♡
+            </span>
+            <Mascot
+              pet={pet.pet}
+              name={pet.petName}
+              accessory={pet.accessory}
+              progress={progress}
+              stage={stage}
+              mood={mood}
+              motion={pet.animations}
+              interactive={!empty || pet.pet === "cat"}
+              lines={words.lines}
+              loveText={words.loveText}
+              onPet={(kind) => {
+                onPet?.();
+                if (Date.now() < trickUntil.current) return;
+                if (kind === "love")
+                  say(`${pet.petName} te dice: ${words.loveText} 💖`);
+                else if (kind === "cuddle")
+                  say("Un abrazo para ti. Gracias por venir ♡");
+                else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
+              }}
+              onTrick={() => {
+                trickUntil.current = Date.now() + 2500;
+                say("¡Ta-dá! Mi truco secreto ✦");
+              }}
+            />
+            {!empty && (
+              <span className="sprout-stage">🌱 {STAGE_NAMES[stage]}</span>
+            )}
+          </div>
+          {total > 0 && (
+            <p className="home-total">
+              <span>Llevas guardado</span>
+              <strong>
+                <Money cents={total} /> <small>MXN</small>
+              </strong>
+            </p>
           )}
         </div>
         {waiting && (
@@ -161,14 +173,6 @@ export default function Home({
           onEdit={onEdit}
           weekday={data.preferences.reminder.day}
         />
-        {total > 0 && (
-          <p className="home-total">
-            <span>Ahorro registrado</span>
-            <strong>
-              {money(total)} <small>MXN</small>
-            </strong>
-          </p>
-        )}
       </header>
       <section className="home-goals" aria-labelledby="home-goals-title">
         <div className="goals-title">
@@ -239,6 +243,12 @@ export default function Home({
         <button className="primary new-goal" onClick={onCreate}>
           + Nueva cajita
         </button>
+        {!empty && (
+          <p className="home-assurance">
+            <ShieldCheck />
+            Guardadito no mueve tu dinero, solo lo registra.
+          </p>
+        )}
       </section>
     </section>
   );

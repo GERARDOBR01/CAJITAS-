@@ -11,18 +11,20 @@
 :root {
   color-scheme: light;
   --font: "Nunito Variable", ui-rounded, system-ui, sans-serif;
-  --text: #30223f;
-  --muted: #695675;
-  --canvas: #fff9f1;
+  --text: #2b1b3a;
+  --muted: #655a6d;
+  --canvas: #fbf6ec;
   --surface: #ffffff;
-  --surface-soft: #f5efff;
-  --primary: #7040d5;
+  --surface-soft: #f3ecde;
+  --primary: #4b2a7b;
   --on-primary: #ffffff;
-  --primary-edge: #492493;
-  --line: #dfd1ee;
+  --primary-edge: #2e1852;
+  --line: #e8dfcf;
   --control-line: #9580ad;
-  --mint: #e0f6d5;
-  --on-mint: #285238;
+  --mint: #e3f6ee;
+  --on-mint: #1f4d3f;
+  --accent: #a8e6cf;
+  --on-accent: #14372c;
   --pink: #ffe4ed;
   --on-pink: #903357;
   --yellow: #fff0b5;
@@ -34,7 +36,7 @@
   --on-danger: #ffffff;
   --focus: #5630ae;
   --overlay: #20113399;
-  --shadow: 0 5px 0 var(--line), 0 12px 24px #542c7710;
+  --shadow: 0 4px 0 var(--line);
   --button-shadow: 0 4px 0 var(--primary-edge);
   --radius-sm: 14px;
   --radius: 22px;
@@ -69,6 +71,8 @@
     --control-line: #9a85b2;
     --mint: #233e32;
     --on-mint: #c9f1be;
+    --accent: #2f6a53;
+    --on-accent: #d4f5e6;
     --pink: #482636;
     --on-pink: #ffc3d8;
     --yellow: #43351e;
@@ -80,7 +84,7 @@
     --on-danger: #40101e;
     --focus: #e5caff;
     --overlay: #09050dba;
-    --shadow: 0 5px 0 #110c1a, 0 12px 24px #00000020;
+    --shadow: 0 4px 0 #110c1a;
   }
 }
 
@@ -3095,4 +3099,323 @@ summary {
   display: inline-block;
   margin-top: var(--space-4);
   color: var(--muted);
+}
+
+/* Rediseño · Inicio (diseño de Sleek): saludo, tarjeta de ahorro, un solo botón
+   grande y cajitas en una columna. Va al final para ganarle a lo anterior. */
+.eyebrow {
+  letter-spacing: 0;
+  font-weight: 700;
+}
+.home-greeting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: var(--space-5);
+}
+.home-greeting.is-cheering,
+.home-greeting.mood-waiting,
+.home-greeting.mood-sleepy {
+  background: transparent;
+  border-color: transparent;
+}
+.home-speech h1 {
+  max-width: none;
+  font-size: 30px;
+  line-height: 1.15;
+}
+.home-speech > p:not(.eyebrow) {
+  margin-top: var(--space-2);
+}
+.home-speech .eyebrow {
+  font-size: var(--small);
+  margin-bottom: 2px;
+}
+.home-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+.is-cheering .home-hero {
+  background: var(--mint);
+}
+.mood-waiting .home-hero {
+  background: var(--yellow);
+}
+.mood-sleepy .home-hero {
+  background: var(--sky);
+}
+.home-hero .home-mascot {
+  flex: none;
+  width: 108px;
+}
+.home-hero .home-mascot .mascot {
+  max-width: 108px;
+}
+.home-doodle {
+  display: none;
+}
+.home-hero .sprout-stage {
+  margin-top: 2px;
+  padding: 2px 10px;
+  font-size: var(--small);
+}
+.home-hero .home-total {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.home-hero .home-total > span {
+  display: block;
+  font-size: var(--small);
+  font-weight: 700;
+  color: var(--muted);
+}
+.home-hero .home-total strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.home-hero .home-total small {
+  display: inline;
+  font-size: var(--small);
+  font-weight: 700;
+  color: var(--muted);
+}
+.money .cur {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 2px;
+  font-size: max(0.875rem, 0.5em);
+  font-weight: 800;
+  line-height: 1.4;
+}
+.is-empty .home-hero {
+  justify-content: center;
+}
+.is-empty .home-hero .home-mascot {
+  width: min(220px, 70%);
+}
+.is-empty .home-hero .home-mascot .mascot {
+  max-width: 220px;
+}
+.home-greeting.is-empty {
+  display: grid;
+  text-align: left;
+  padding: 0;
+}
+.home-greeting .next-step {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+.home-greeting .next-step > button,
+.new-goal {
+  min-height: 56px;
+  border-radius: 16px;
+  font-size: 1.1rem;
+}
+.goals-title {
+  align-items: center;
+}
+.goals-title h2 {
+  font-size: 20px;
+}
+.goals-title > span {
+  font-weight: 700;
+}
+.goals-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-4);
+}
+.goal-card {
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+.goal-heading {
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.goal-symbol {
+  flex: none;
+  margin-right: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 16px;
+}
+.flower .goal-symbol {
+  background: var(--pink);
+  color: var(--on-pink);
+}
+.cloud .goal-symbol {
+  background: var(--sky);
+  color: var(--on-sky);
+}
+.goal-title {
+  flex: 1;
+  min-width: 0;
+}
+.goal-title h3 {
+  font-size: 18px;
+  line-height: 1.25;
+  color: var(--text);
+}
+.goal-meta {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--small);
+}
+.goal-meta .provider {
+  margin-right: 8px;
+  padding: 1px 8px;
+  font-size: var(--small);
+}
+.goal-heading .saved {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.goal-heading .icon-button {
+  flex: none;
+  min-width: 32px;
+  padding: 5px 0;
+  background: transparent;
+  color: var(--muted);
+}
+.progress {
+  height: 12px;
+  background: var(--surface-soft);
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.progress > span {
+  background: var(--accent);
+}
+.progress-caption {
+  margin-top: var(--space-2);
+}
+.progress-caption strong {
+  color: var(--on-accent);
+  font-weight: 800;
+}
+.progress-caption span {
+  font-variant-numeric: tabular-nums;
+}
+.remaining {
+  margin-top: 2px;
+  font-size: var(--small);
+  color: var(--muted);
+}
+.home-assurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  color: var(--muted);
+  font-size: var(--small);
+  text-align: center;
+}
+.home-assurance svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+/* Barra de pestañas con íconos lineales (Solar). */
+.mobile-nav button > span:first-child,
+.desktop-nav button > span:first-child {
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+}
+.mobile-nav,
+.mobile-nav button.active {
+  background: var(--surface);
+}
+.mobile-nav {
+  border-top: 1px solid var(--line);
+}
+.mobile-nav button {
+  font-size: var(--small);
+  font-weight: 700;
+}
+.mobile-nav button.active {
+  color: var(--primary);
+  font-weight: 900;
+}
+@media (max-width: 420px) {
+  .home-hero .home-total strong {
+    font-size: 30px;
+  }
+  .home-hero {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+}
+.goal-more {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+.goal-more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  color: var(--primary);
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.goal-more > summary::-webkit-details-marker {
+  display: none;
+}
+.goal-more > summary::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  rotate: 45deg;
+  margin-right: 4px;
+  transition: rotate 0.2s ease;
+}
+.goal-more[open] > summary::after {
+  rotate: -135deg;
+}
+.goal-more > summary + * {
+  margin-top: 0;
+}
+.goal-card .card-actions {
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+}
+.goal-card .card-actions .primary,
+.goal-card .card-actions .withdraw {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  min-height: 52px;
+  margin: 0;
+  padding-inline: 10px;
+  border-radius: 16px;
+  font-size: 1rem;
 }
