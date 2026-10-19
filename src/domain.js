@@ -266,7 +266,7 @@ export function activeGoals(data) {
 /** The goal the "siguiente pasito" points at: active, unfinished, nearest date. */
 export function nextGoal(data) {
   return activeGoals(data)
-    .filter((goal) => balance(goal) < goal.targetCents)
+    .filter((goal) => !isComplete(goal))
     .sort(byTargetDate)[0];
 }
 export function companionship(data) {
@@ -331,12 +331,24 @@ export function balanceHistory(data, days = 14, now = new Date()) {
     };
   });
 }
-export function goalStatus(goal, now = Date.now()) {
-  const remaining = Math.max(0, goal.targetCents - balance(goal));
+export const isComplete = (goal) => balance(goal) >= goal.targetCents;
+/**
+ * Everything a screen shows about one cajita. `percent` only says 100 once
+ * the cajita is complete, so "100 % logrado" never sits next to "Te faltan".
+ */
+export function goalSummary(goal, now = Date.now()) {
+  const saved = balance(goal),
+    complete = isComplete(goal),
+    progress = Math.min(1, Math.max(0, saved / goal.targetCents)),
+    remaining = Math.max(0, goal.targetCents - saved);
   return {
-    complete: remaining === 0,
+    saved,
+    progress,
+    percent: complete ? 100 : Math.min(99, Math.round(progress * 100)),
     remaining,
-    pastDue: remaining > 0 && unlockTime(goal.unlockDate) <= now,
+    complete,
+    pastDue: !complete && unlockTime(goal.unlockDate) <= now,
+    locked: unlockTime(goal.unlockDate) > now,
   };
 }
 export function activityCSV(data, filters) {

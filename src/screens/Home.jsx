@@ -4,7 +4,7 @@ import { GoalCard } from "../components/Goals.jsx";
 import NextStep from "../components/NextStep.jsx";
 import Money from "../components/Money.jsx";
 import { ShieldCheck } from "../components/icons.jsx";
-import { balance, nextGoal, petWords } from "../domain.js";
+import { balance, isComplete, nextGoal, petWords } from "../domain.js";
 import {
   STAGE_NAMES,
   daysAway,
@@ -56,8 +56,7 @@ export default function Home({
     visibleGoals = data.goals.filter((goal) =>
       filter === "archived"
         ? goal.archived
-        : !goal.archived &&
-          (filter === "completed" ? balance(goal) >= goal.targetCents : true),
+        : !goal.archived && (filter === "completed" ? isComplete(goal) : true),
     ),
     empty = data.goals.length === 0,
     progress = overallProgress(data),

@@ -1,10 +1,10 @@
-import { goalStatus, money, plan } from "../domain.js";
+import { goalSummary, money, plan } from "../domain.js";
 import { rhythmLabel } from "../calendar.js";
 import Illustration from "./Illustration.jsx";
 
 export default function NextStep({ goal, onRecord, onEdit, weekday }) {
   if (!goal) return null;
-  const status = goalStatus(goal),
+  const status = goalSummary(goal),
     amount = plan(goal, goal.frequency, Date.now(), weekday);
   return (
     <aside className="next-step" aria-label="Tu siguiente pasito">
