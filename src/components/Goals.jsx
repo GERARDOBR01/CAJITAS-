@@ -9,6 +9,8 @@ import {
   plan,
   localDate,
   goalSummary,
+  moneyPlace,
+  PROVIDERS,
   SOURCE_LABEL,
 } from "../domain.js";
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
@@ -22,7 +24,19 @@ import { GoalComplete, GoalNotices, GoalProgress } from "./GoalProgress.jsx";
 export const destinations = {
   Nu: "https://nu.com.mx/",
   "Mercado Pago": "https://www.mercadopago.com.mx/",
+  BBVA: "https://www.bbva.mx/",
+  Banorte: "https://www.banorte.com/",
+  Santander: "https://www.santander.com.mx/",
+  Banamex: "https://www.banamex.com/",
+  "Hey Banco": "https://heybanco.com/",
+  Klar: "https://www.klar.mx/",
   Bitso: "https://bitso.com/",
+};
+// A movement before this is surely a typo in the year.
+const OLDEST_MOVEMENT = "2000-01-01";
+const PROVIDER_OPTION = {
+  Efectivo: "Efectivo o alcancía",
+  Otra: "Otro banco o app",
 };
 export const symbols = { star: "✦", flower: "✿", cloud: "☁" };
 export const dateLabel = (date) =>
@@ -156,13 +170,15 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
           ¿Cuánto quieres ahorrar? (MXN)
           <input
             name="amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            max="1000000000"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
             value={draftPlan.amount}
             onChange={(e) =>
-              setDraftPlan({ ...draftPlan, amount: e.target.value })
+              setDraftPlan({
+                ...draftPlan,
+                amount: cleanAmount(e.target.value),
+              })
             }
             placeholder="5000"
             required
@@ -198,10 +214,11 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
           <label>
             ¿Dónde lo guardas?
             <select name="provider" defaultValue={goal?.provider ?? "Nu"}>
-              <option>Nu</option>
-              <option>Mercado Pago</option>
-              <option>Bitso</option>
-              <option>Otra</option>
+              {PROVIDERS.map((name) => (
+                <option key={name} value={name}>
+                  {PROVIDER_OPTION[name] ?? name}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -264,7 +281,7 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
         </fieldset>
         <p className="notice">
           El candado es de compromiso, no bancario. Tu dinero sigue disponible
-          en la app externa.
+          donde lo guardas.
         </p>
         {error && (
           <p role="alert" className="error">
@@ -321,7 +338,7 @@ export function MovementForm({
       const value = cents(amount);
       if (withdraw && value > balance(goal))
         throw new Error("El retiro supera lo registrado en esta cajita.");
-      if (!date || date > today())
+      if (!date || date > today() || date < OLDEST_MOVEMENT)
         throw new Error(
           "Elige la fecha en que ocurrió el movimiento, hasta hoy.",
         );
@@ -420,8 +437,8 @@ export function MovementForm({
           <p className="notice sheet-notice">
             <InfoCircle />
             <span>
-              Tu dinero sigue disponible en {goal.provider}. Guardadito solo
-              lleva el registro; no realiza transferencias.
+              Tu dinero sigue disponible en {moneyPlace(goal.provider)}.
+              Guardadito solo lleva el registro; no realiza transferencias.
             </span>
           </p>
         )}
@@ -444,6 +461,7 @@ export function MovementForm({
           <input
             type="date"
             value={date}
+            min={OLDEST_MOVEMENT}
             max={today()}
             required
             onChange={(e) => setDate(e.target.value)}
@@ -488,7 +506,7 @@ export function GoalCard({ goal, actions, onOpen, now }) {
           <h3>{goal.name}</h3>
           <span className="goal-meta">
             <span className={`provider ${goal.provider === "Nu" ? "nu" : ""}`}>
-              {goal.provider}
+              {goal.provider === "Otra" ? "Mi banco" : goal.provider}
             </span>
             {goal.unlockDate
               ? `Meta: ${dateLabel(goal.unlockDate)}`

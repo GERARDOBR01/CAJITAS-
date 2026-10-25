@@ -4127,3 +4127,80 @@ summary {
   background: color-mix(in srgb, var(--on-mint) 12%, transparent);
   color: var(--on-mint);
 }
+
+/* v0.16: the error screen, help, the account nudge and install warning. */
+.crash-screen {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(var(--space-6) + env(safe-area-inset-top)) var(--space-5)
+    var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+  min-height: 100vh;
+  align-content: center;
+  background: var(--canvas);
+  color: var(--text);
+}
+.crash-screen h1 {
+  font-size: 28px;
+  font-weight: 950;
+}
+.account-nudge {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius);
+  border: 2px solid var(--line);
+  background: var(--sky);
+  color: var(--text);
+}
+.account-nudge > span {
+  font-size: 30px;
+  color: var(--on-sky);
+}
+.account-nudge p {
+  font-size: var(--small);
+  color: var(--muted);
+  margin: var(--space-1) 0 var(--space-3);
+}
+.account-nudge .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+.help-screen .panel {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.help-faq details {
+  border-top: 2px solid var(--line);
+  padding: var(--space-3) 0;
+}
+.help-faq summary {
+  cursor: pointer;
+  font-weight: 850;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.help-faq details p {
+  color: var(--muted);
+  margin-top: var(--space-2);
+}
+.help-footer {
+  margin-top: var(--space-5);
+  text-align: center;
+}
+.help-footer a {
+  color: var(--primary);
+}
+.install-warning strong {
+  display: block;
+}
+.empty-state .text-button {
+  margin-top: var(--space-3);
+}

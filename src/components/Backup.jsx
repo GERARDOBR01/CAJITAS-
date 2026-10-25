@@ -22,13 +22,18 @@ export default function Backup({ data, onRestore, notify }) {
     try {
       if (file.size > 5e6)
         throw new Error("El respaldo debe pesar menos de 5 MB.");
-      setPending(validateBackup(JSON.parse(await file.text())));
+      let parsed;
+      try {
+        parsed = JSON.parse(await file.text());
+      } catch {
+        // Each browser words this differently, and always in English.
+        throw new Error(
+          "Ese archivo no es un respaldo de Guardadito o está incompleto.",
+        );
+      }
+      setPending(validateBackup(parsed));
     } catch (err) {
-      notify(
-        err.message === "Unexpected end of JSON input"
-          ? "El archivo está incompleto."
-          : err.message,
-      );
+      notify(err.message);
     }
   }
   return (

@@ -35,6 +35,7 @@ export default function Home({
   checkIn,
   onCheckIn,
   onLater,
+  onTutorial,
 }) {
   const [line, setLine] = useState("");
   const lineTimer = useRef(),
@@ -225,6 +226,19 @@ export default function Home({
                     ? "Cada meta llega a su tiempo. Aquí celebraremos la tuya."
                     : "Aquí cabe tu siguiente sueño."}
             </p>
+            {empty && onTutorial && (
+              // A quiet link, so creating the first cajita stays the one action.
+              <a
+                className="text-button"
+                href="?tutorial=1"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onTutorial();
+                }}
+              >
+                ¿Primera vez? Da un paseíto de práctica
+              </a>
+            )}
           </div>
         )}
         <button className="primary new-goal" onClick={actions.create}>

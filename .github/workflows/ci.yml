@@ -20,6 +20,7 @@ jobs:
       - run: npm run build:pages
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - run: npm run test:e2e:public
       # Cuentas: reglas de Firestore y recorrido en los emuladores de Firebase.
       - uses: actions/setup-java@v4
         with:

@@ -155,7 +155,7 @@ test("recorrido animado practica meta, depósito, retiro, mascota y repaso sin t
   await page.getByLabel("En mi app externa", { exact: true }).check();
   await page.getByLabel("No, cuenta como compañía", { exact: true }).check();
   await page
-    .getByLabel("Reviso y lo vinculo al registro existente", { exact: true })
+    .getByLabel("Entro con mi cuenta o importo mi respaldo", { exact: true })
     .check();
   await page
     .getByRole("button", { name: "Revisar mis respuestas", exact: true })
@@ -326,7 +326,7 @@ test("repaso indica el error y se puede corregir; Escape cancela retiro y recarg
   await step(page, 8, "A tu ritmo");
   await page.getByLabel("Dentro de Guardadito", { exact: true }).check();
   await page.getByLabel("Sí, es un depósito", { exact: true }).check();
-  await page.getByLabel("Lo vuelvo a sumar", { exact: true }).check();
+  await page.getByLabel("Aparecen solas sin hacer nada", { exact: true }).check();
   await page
     .getByRole("button", { name: "Revisar mis respuestas", exact: true })
     .click();
@@ -335,7 +335,7 @@ test("repaso indica el error y se puede corregir; Escape cancela retiro y recarg
   await page.getByLabel("En mi app externa", { exact: true }).check();
   await page.getByLabel("No, cuenta como compañía", { exact: true }).check();
   await page
-    .getByLabel("Reviso y lo vinculo al registro existente", { exact: true })
+    .getByLabel("Entro con mi cuenta o importo mi respaldo", { exact: true })
     .check();
   await page
     .getByRole("button", { name: "Revisar mis respuestas", exact: true })

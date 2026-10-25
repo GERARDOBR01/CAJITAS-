@@ -2,12 +2,14 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import handler from "./server/handler.js";
+import pkg from "./package.json" with { type: "json" };
 
 export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
   const base = mode === "pages" ? "/CAJITAS-/" : "/";
   return {
     base,
+    define: { __APP_VERSION__: JSON.stringify(pkg.version) },
     plugins: [
       react(),
       {
@@ -22,7 +24,12 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         disable: mode === "native",
         registerType: "prompt",
-        includeAssets: ["mascot.svg", "icon-192.png", "icon-512.png"],
+        includeAssets: [
+          "mascot.svg",
+          "icon-192.png",
+          "icon-512.png",
+          "apple-touch-icon.png",
+        ],
         manifest: {
           name: "Guardadito · Poquito a poquito",
           short_name: "Guardadito",
@@ -40,6 +47,12 @@ export default defineConfig(({ mode }) => {
               sizes: "512x512",
               type: "image/png",
               purpose: "any",
+            },
+            {
+              src: `${base}icon-maskable-512.png`,
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "maskable",
             },
           ],
         },

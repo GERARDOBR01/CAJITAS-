@@ -1,5 +1,6 @@
 import { ANDROID_DOWNLOAD_URL, ANDROID_VERSION } from "../downloads.js";
 import { haptic, isNative } from "../platform.js";
+import { ownerTools } from "../features.js";
 import {
   checkIn,
   companionship,
@@ -49,14 +50,25 @@ export default function More({ cloud, data, onSave, notify, onNavigate }) {
             "Tutorial interactivo",
             "Aprende jugando, con datos de ejemplo.",
           ],
-          ["simulator", "✦", "Rendimiento", "Compara tasas y haz tus cuentas."],
-          [
+          ownerTools && [
+            "simulator",
+            "✦",
+            "Rendimiento",
+            "Compara tasas y haz tus cuentas.",
+          ],
+          ownerTools && [
             "connections",
             "⌁",
             "Conexiones",
             "Importa y revisa tus comprobantes.",
           ],
           ["backup", "☁", "Respaldo", "Lleva tus cajitas contigo."],
+          [
+            "help",
+            "?",
+            "Ayuda y comentarios",
+            "Preguntas frecuentes y cómo escribirnos.",
+          ],
           [
             "install",
             "↓",
@@ -81,7 +93,7 @@ export default function More({ cloud, data, onSave, notify, onNavigate }) {
             </button>
           ))}
       </div>
-      {!isNative && (
+      {!isNative && ownerTools && (
         <aside className="download-banner" aria-label="Descargar Guardadito">
           <span className="download-mascot" aria-hidden="true">
             🐷

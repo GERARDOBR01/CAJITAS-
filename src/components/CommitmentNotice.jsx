@@ -1,5 +1,7 @@
+import { moneyPlace } from "../domain.js";
+
 export default function CommitmentNotice({ provider, keeper }) {
-  const app = provider || "tu app externa";
+  const app = moneyPlace(provider);
   return (
     <p className="commitment-note">
       <strong>El candado es de compromiso, no bancario.</strong>
