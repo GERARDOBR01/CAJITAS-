@@ -1,6 +1,6 @@
 {
   "name": "cajitas-ahorro",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -12,6 +12,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:public": "playwright test --config playwright.public.config.js",
     "build:native": "vite build --mode native",
     "build:android": "node scripts/android-build.mjs",
     "sync:ios": "npm run build:native && cap sync ios",
@@ -21,7 +22,7 @@
     "deploy:pages": "node scripts/deploy-pages.mjs",
     "preview:pages": "vite preview --mode pages --host 0.0.0.0",
     "check:setup": "node scripts/check-setup.mjs",
-    "verify": "npm test && npm run build:pages && npm run test:e2e",
+    "verify": "npm test && npm run build:pages && npm run test:e2e && npm run test:e2e:public",
     "test:rules": "firebase --project demo-guardadito emulators:exec --only firestore \"vitest run --config vitest.rules.config.js\"",
     "test:e2e:cloud": "firebase --project demo-guardadito emulators:exec --only auth,firestore \"playwright test --config playwright.cloud.config.js\"",
     "emulators": "firebase --project demo-guardadito emulators:start --only auth,firestore",

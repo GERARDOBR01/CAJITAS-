@@ -7,7 +7,9 @@ import {
 } from "../platform.js";
 import Illustration from "./Illustration.jsx";
 import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
-export default function Install({ notify }) {
+import { ownerTools } from "../features.js";
+import { PLAY_URL } from "../support.js";
+export default function Install({ notify, signedIn }) {
   const [prompt, setPrompt] = useState(getInstallPrompt),
     [installed, setInstalled] = useState(
       isNative ||
@@ -17,6 +19,7 @@ export default function Install({ notify }) {
   const ios =
     /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(navigator.userAgent);
   useEffect(() => {
     const before = () => setPrompt(getInstallPrompt()),
       done = () => {
@@ -40,7 +43,8 @@ export default function Install({ notify }) {
     if (choice.outcome === "accepted")
       notify("Guardadito se está instalando. ¡Nos vemos en tu inicio!");
   }
-  const apk = ANDROID_DOWNLOAD_URL;
+  // The test APK is only for the owner; the public gets Google Play.
+  const apk = ownerTools ? ANDROID_DOWNLOAD_URL : "";
   return (
     <section>
       <div className="section-heading">
@@ -64,10 +68,7 @@ export default function Install({ notify }) {
             ? "Tu app, tus sueños."
             : "Una casita en tu pantalla de inicio."}
         </h2>
-        <p>
-          Tus metas, mascotas e historial funcionan sin conexión. Las consultas
-          de tasas y comprobantes necesitan internet.
-        </p>
+        <p>Tus metas, mascota e historial funcionan aunque no tengas internet.</p>
         {prompt && !installed && (
           <button className="primary" onClick={install}>
             Instalar Guardadito
@@ -76,38 +77,64 @@ export default function Install({ notify }) {
         {isNative ? (
           <p className="notice">
             Estás usando la app para {platform === "ios" ? "iPhone" : "Android"}
-            . Para recuperar tus cajitas en otro dispositivo, lleva contigo tu
-            respaldo.
+            . Para tener tus cajitas en otro teléfono, entra con tu cuenta en Más
+            → Mi cuenta.
           </p>
         ) : (
           !installed && (
-            <div className="install-instructions">
-              <h3>{ios ? "En tu iPhone o iPad" : "En tu navegador"}</h3>
-              <ol>
-                {ios ? (
-                  <>
-                    <li>Abre Guardadito en Safari.</li>
-                    <li>
-                      Toca Compartir y elige “Agregar a pantalla de inicio”.
-                    </li>
-                    <li>
-                      Confirma “Agregar”. Tu app aparecerá junto a las demás.
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li>Abre el menú del navegador.</li>
-                    <li>
-                      Elige “Instalar app” o “Agregar a pantalla de inicio”.
-                    </li>
-                    <li>
-                      Confirma la instalación. Si la opción aún no aparece,
-                      visita la versión publicada con conexión.
-                    </li>
-                  </>
-                )}
-              </ol>
-            </div>
+            <>
+              {ios && !signedIn && (
+                <p className="notice install-warning">
+                  <strong>Antes de instalar, crea tu cuenta.</strong> En el
+                  iPhone, Safari y la app de tu pantalla de inicio guardan por
+                  separado: con tu cuenta, tus cajitas aparecen en las dos.
+                </p>
+              )}
+              {android && PLAY_URL && (
+                <a
+                  className="primary button-link full"
+                  href={PLAY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Descargar en Google Play ↗
+                </a>
+              )}
+              <div className="install-instructions">
+                <h3>{ios ? "En tu iPhone o iPad" : "En tu navegador"}</h3>
+                <ol>
+                  {ios ? (
+                    <>
+                      <li>Abre Guardadito en Safari.</li>
+                      <li>
+                        Toca Compartir (el cuadrito con la flecha) y elige
+                        “Agregar a pantalla de inicio”.
+                      </li>
+                      <li>
+                        Confirma “Agregar” y abre Guardadito desde su ícono.
+                      </li>
+                      {!signedIn && (
+                        <li>
+                          Entra con tu cuenta en Más → Mi cuenta para traer tus
+                          cajitas.
+                        </li>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <li>Abre el menú del navegador.</li>
+                      <li>
+                        Elige “Instalar app” o “Agregar a pantalla de inicio”.
+                      </li>
+                      <li>
+                        Confirma la instalación. Si la opción aún no aparece,
+                        vuelve a abrir Guardadito con internet.
+                      </li>
+                    </>
+                  )}
+                </ol>
+              </div>
+            </>
           )
         )}
         {!isNative && apk && (
@@ -122,13 +149,13 @@ export default function Install({ notify }) {
         )}
         <div className="install-benefits">
           <span>♡ Mascota a tu estilo</span>
-          <span>☁ Ahorro offline</span>
-          <span>♧ Sin custodia de dinero</span>
+          <span>☁ Funciona sin internet</span>
+          <span>♧ No mueve tu dinero</span>
         </div>
         <p className="small-text muted">
-          Tus registros viven en este dispositivo. La instalación web y la app
-          nativa tienen almacenes independientes: exporta e importa el respaldo
-          para llevar tus datos.
+          {signedIn
+            ? "Tus cajitas se guardan en tu cuenta: entra con el mismo correo en cualquier teléfono."
+            : "Sin cuenta, tus cajitas viven solo en este navegador. Crea una en Más → Mi cuenta o descarga un respaldo para no perderlas."}
         </p>
       </div>
     </section>

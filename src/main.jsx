@@ -5,7 +5,10 @@ import "./styles.css";
 import { setupNativeEvents } from "./nativeEvents.js";
 import { hydrateSavings } from "./journal/nativeReplica.js";
 import { migrateStorageKey } from "./domain.js";
+import ErrorBoundary from "./feedback/ErrorBoundary.jsx";
+import { listenForErrors } from "./feedback/errorLog.js";
 async function start() {
+  listenForErrors();
   try {
     migrateStorageKey(localStorage);
   } catch {
@@ -16,9 +19,14 @@ async function start() {
   } catch {
     /* The local copy remains available if native replication is unavailable. */
   }
+  // Ask the browser to keep the cajitas even when space runs low (Safari
+  // otherwise may clear a site it has not seen in a while).
+  navigator.storage?.persist?.().catch(() => {});
   createRoot(document.getElementById("root")).render(
     <React.StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </React.StrictMode>,
   );
   setupNativeEvents().catch(() => {});

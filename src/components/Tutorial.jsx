@@ -16,6 +16,7 @@ import { PETS, availablePets } from "../pet/catalog.js";
 import { ANDROID_DOWNLOAD_URL } from "../downloads.js";
 import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
 import { isNative } from "../platform.js";
+import { ownerTools } from "../features.js";
 import "../tutorial.css";
 
 const lessons = [
@@ -42,17 +43,19 @@ const lessons = [
   [
     "Tu mascota",
     "Una compañía a tu ritmo",
-    "Elige un cerdito, vaquita, conejito o Caji, ponle nombre y un accesorio. Tu compañía cuenta aunque hoy no apartes dinero.",
+    "Elige a tu compañero (cerdito, vaquita, conejito, shiba, nutria o cajita), ponle nombre y un accesorio. Tu compañía cuenta aunque hoy no apartes dinero.",
   ],
   [
     "Herramientas",
     "Todo en su lugar",
-    "En Más encuentras rendimiento, conexiones y respaldo. Actividad reúne tus registros; estas herramientas te ayudan a cuidarlos.",
+    ownerTools
+      ? "En Más encuentras rendimiento, conexiones y respaldo. Actividad reúne tus registros; estas herramientas te ayudan a cuidarlos."
+      : "Actividad reúne tus registros y en Más encuentras tu cuenta y el respaldo. Así cuidas tus pasitos.",
   ],
   [
     "Tu app",
     "Llévanos contigo",
-    "Instala Guardadito y úsala sin conexión para tus metas y registros. Las conexiones necesitan internet y estar configuradas.",
+    "Instala Guardadito y úsala aunque no tengas internet. Con tu cuenta, tus cajitas te siguen a cualquier teléfono.",
   ],
   [
     "A tu ritmo",
@@ -72,9 +75,12 @@ const questions = [
     correct: 1,
   },
   {
-    title: "Ya capturé un depósito y llega su correo. ¿Qué hago?",
-    options: ["Lo vuelvo a sumar", "Reviso y lo vinculo al registro existente"],
-    correct: 1,
+    title: "Cambié de teléfono. ¿Cómo recupero mis cajitas?",
+    options: [
+      "Entro con mi cuenta o importo mi respaldo",
+      "Aparecen solas sin hacer nada",
+    ],
+    correct: 0,
   },
 ];
 function futureDate() {
@@ -389,7 +395,7 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
             </ol>
             <p className="notice">
               No custodiamos dinero ni hacemos transferencias. Tus metas se
-              guardan en este dispositivo: usa Respaldo para llevarlas a otro.
+              guardan en este teléfono, y en tu cuenta si creas una.
             </p>
           </>
         )}
@@ -436,7 +442,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                   >
                     <option>Nu</option>
                     <option>Mercado Pago</option>
-                    <option>Bitso</option>
                     <option>Otra</option>
                   </select>
                 </label>
@@ -696,10 +701,12 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
             >
               {[
                 ["activity", "Actividad"],
-                ["rates", "Rendimiento"],
-                ["connections", "Conexiones"],
+                ownerTools && ["rates", "Rendimiento"],
+                ownerTools && ["connections", "Conexiones"],
                 ["backup", "Respaldo"],
-              ].map(([key, label]) => (
+              ]
+                .filter(Boolean)
+                .map(([key, label]) => (
                 <button
                   key={key}
                   aria-pressed={tool === key}
@@ -915,17 +922,17 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
               <>
                 <h3>Android: app o instalación web</h3>
                 <ol className="tutorial-instructions">
-                  <li>Descarga el APK de prueba desde Instalar app.</li>
                   <li>
-                    Ábrelo y autoriza la instalación desde esa aplicación si
-                    Android lo pide.
+                    Busca Guardadito en Google Play, o abre el menú de tu
+                    navegador y elige “Instalar app”.
                   </li>
+                  <li>Abre Guardadito desde su ícono.</li>
                   <li>
-                    Abre Guardadito. También puedes instalar la versión web
-                    desde el menú de tu navegador.
+                    Entra con tu cuenta en Más → Mi cuenta para traer tus
+                    cajitas.
                   </li>
                 </ol>
-                {!isNative && (
+                {!isNative && ownerTools && (
                   <a
                     className="secondary button-link full"
                     href={ANDROID_DOWNLOAD_URL}
@@ -933,9 +940,6 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                     Descargar APK Android de prueba ↗
                   </a>
                 )}
-                <p className="tutorial-tip">
-                  El APK es para pruebas; no es una publicación en Google Play.
-                </p>
               </>
             ) : (
               <>
@@ -946,16 +950,15 @@ export default function Tutorial({ preferences, onNavigate, onCreate }) {
                   <li>Confirma Agregar. Abre Guardadito desde su icono.</li>
                 </ol>
                 <p className="tutorial-tip">
-                  La versión nativa de iPhone todavía requiere compilación y
-                  firma de Apple; no hay una descarga IPA publicada.
+                  Crea tu cuenta antes de instalar: Safari y la app de tu
+                  pantalla de inicio guardan por separado.
                 </p>
               </>
             )}
             <p className="notice">
-              La web, el APK y cada dispositivo tienen sus propios datos.
-              Exporta e importa un respaldo para trasladarlos. Abrir la app
-              funciona offline después de la primera carga de la web; tasas y
-              conexiones requieren internet.
+              Sin cuenta, cada teléfono y cada navegador guarda sus propias
+              cajitas. Con tu cuenta (Más → Mi cuenta) aparecen en todos; sin
+              ella, usa un respaldo para llevarlas.
             </p>
           </>
         )}

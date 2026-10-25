@@ -3,6 +3,7 @@ import CorrectEntry from "../components/CorrectEntry.jsx";
 import Modal from "../components/Modal.jsx";
 import LocalMailImport from "../components/LocalMailImport.jsx";
 import { DepositDialog } from "../components/Guardian.jsx";
+import { ownerTools } from "../features.js";
 
 /** The dialog `useGoalActions` has open, if any. */
 export default function GoalDialogs({ actions, data, pet, notify, record }) {
@@ -26,7 +27,7 @@ export default function GoalDialogs({ actions, data, pet, notify, record }) {
           onSave={actions.saveMovement}
           preferences={pet}
           initialCents={dialog.initialCents}
-          onImport={actions.importMail}
+          onImport={ownerTools ? actions.importMail : undefined}
         />
       );
     case "mail":

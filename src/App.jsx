@@ -35,8 +35,15 @@ import {
   restoreWithoutReminders,
 } from "./pet/reminders.js";
 import { restoreEntry } from "./domain.js";
+import Help from "./components/Help.jsx";
+import AccountNudge from "./components/AccountNudge.jsx";
+import { ownerTools } from "./features.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
+
+// Development only: `?probar-error` makes the app fail to show the error screen.
+const CRASH_TEST =
+  import.meta.env.DEV && new URLSearchParams(location.search).has("probar-error");
 
 const RECOVERY_MESSAGES = {
   unreadable:
@@ -53,12 +60,31 @@ const SAVE_MESSAGES = {
     "No pudimos guardar el cambio. Revisa el espacio o los permisos del navegador y descarga un respaldo.",
 };
 
+const UPDATE_CHECK_MS = 60 * 60 * 1000;
+
 function ServiceWorkerNotices() {
   const {
-    offlineReady: [ready],
+    offlineReady: [ready, setReady],
     needRefresh: [refresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    // An app on the home screen is resumed, not reopened: look for a new
+    // version every time it comes back, and every hour while open.
+    onRegisteredSW(_url, registration) {
+      if (!registration) return;
+      const check = () => {
+        if (document.visibilityState === "visible" && navigator.onLine)
+          registration.update().catch(() => {});
+      };
+      setInterval(check, UPDATE_CHECK_MS);
+      document.addEventListener("visibilitychange", check);
+    },
+  });
+  useEffect(() => {
+    if (!ready) return;
+    const timer = setTimeout(() => setReady(false), 6000);
+    return () => clearTimeout(timer);
+  }, [ready]);
   return (
     <>
       {ready && (
@@ -81,6 +107,7 @@ function ServiceWorkerNotices() {
   );
 }
 export default function App() {
+  if (CRASH_TEST) throw new Error("Prueba de la pantalla de error");
   const store = journal();
   const { data, recovery } = useJournal(store);
   const loadError = RECOVERY_MESSAGES[recovery] ?? "";
@@ -142,7 +169,10 @@ export default function App() {
   }
   const setData = (next) => report(store.save(next));
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    // Countdowns tick every second, but not while the app is in the background.
+    const timer = setInterval(() => {
+      if (document.visibilityState !== "hidden") setNow(Date.now());
+    }, 1000);
     const on = () => setOffline(!navigator.onLine);
     window.addEventListener("online", on);
     window.addEventListener("offline", on);
@@ -247,9 +277,17 @@ export default function App() {
       >
         {offline && (
           <p className="offline" role="status">
-            Estás sin conexión. Tus cajitas, mascotas y respaldos siguen
-            contigo; las consultas necesitan internet.
+            {cloud.user
+              ? "Estás sin conexión. Tus cajitas siguen contigo y se guardan en tu cuenta cuando vuelva el internet."
+              : "Estás sin conexión. Tus cajitas siguen contigo en este teléfono."}
           </p>
+        )}
+        {tab === "goals" && (
+          <AccountNudge
+            show={cloud.configured && cloud.status === "signed-out"}
+            goals={data.goals.length}
+            onAccount={() => go("account")}
+          />
         )}
         {!isNative && <ServiceWorkerNotices />}
         {loadError && (
@@ -297,6 +335,7 @@ export default function App() {
             actions={actions}
             onOpen={openGoal}
             onPet={() => haptic()}
+            onTutorial={() => go("tutorial")}
           />
         )}
         {tab === "goals" && partner.pair && (
@@ -350,7 +389,10 @@ export default function App() {
             />
           </Suspense>
         )}
-        {tab === "install" && <Install notify={notify} />}
+        {tab === "install" && (
+          <Install notify={notify} signedIn={Boolean(cloud.user)} />
+        )}
+        {tab === "help" && <Help notify={notify} />}
         {tab === "account" && cloud.configured && (
           <Account cloud={cloud} notify={notify} />
         )}
@@ -372,8 +414,8 @@ export default function App() {
             onNavigate={go}
           />
         )}
-        {tab === "simulator" && <Simulator />}
-        {tab === "connections" && (
+        {tab === "simulator" && ownerTools && <Simulator />}
+        {tab === "connections" && ownerTools && (
           <Connections
             key={connectionVersion}
             data={data}

@@ -2,7 +2,27 @@ import { defaultReminder, normalizeReminder } from "./pet/reminderSettings.js";
 import { PETS } from "./pet/catalog.js";
 import { DEFAULT_WEEKDAY, countScheduleDays } from "./calendar.js";
 export const STORAGE_KEY = "guardadito:v1";
-export const PROVIDERS = ["Nu", "Mercado Pago", "Bitso", "Otra"];
+export const PROVIDERS = [
+  "Nu",
+  "Mercado Pago",
+  "BBVA",
+  "Banorte",
+  "Santander",
+  "Banamex",
+  "Hey Banco",
+  "Klar",
+  "Stori",
+  "Spin by OXXO",
+  "Bitso",
+  "Efectivo",
+  "Otra",
+];
+/** How the place where the money is reads inside a sentence. */
+export function moneyPlace(provider) {
+  if (provider === "Efectivo") return "tu efectivo o alcancía";
+  if (!provider || provider === "Otra") return "tu banco o app";
+  return provider;
+}
 // Before the rename the app saved under this key; copy it once so nobody
 // loses their cajitas. The old copy stays as a fallback.
 export const LEGACY_STORAGE_KEY = "cajitas:v1";
