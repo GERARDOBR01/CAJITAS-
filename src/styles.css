@@ -4204,3 +4204,17 @@ summary {
 .empty-state .text-button {
   margin-top: var(--space-3);
 }
+
+/* v0.17: confirm the email and get back what the phone had. */
+.verify-notice,
+.previous-copy {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.verify-notice .button-row,
+.previous-copy .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

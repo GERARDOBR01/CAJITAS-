@@ -38,12 +38,14 @@ import { restoreEntry } from "./domain.js";
 import Help from "./components/Help.jsx";
 import AccountNudge from "./components/AccountNudge.jsx";
 import { ownerTools } from "./features.js";
+import { keepPrevious } from "./journal/previous.js";
 
 const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
 // Development only: `?probar-error` makes the app fail to show the error screen.
 const CRASH_TEST =
-  import.meta.env.DEV && new URLSearchParams(location.search).has("probar-error");
+  import.meta.env.DEV &&
+  new URLSearchParams(location.search).has("probar-error");
 
 const RECOVERY_MESSAGES = {
   unreadable:
@@ -134,6 +136,9 @@ export default function App() {
   const { notify } = feedback;
   // A copy that came from the account (first sign-in or another device).
   function applyRemote(next, message) {
+    // If the account's copy turns out to be the wrong one, Respaldo can
+    // bring back what this phone had.
+    keepPrevious(store.get(), next);
     store.replace(next, { remote: true });
     if (message) notify(message);
   }

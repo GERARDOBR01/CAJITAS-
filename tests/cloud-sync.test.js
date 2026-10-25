@@ -119,5 +119,17 @@ it("traduce los errores de la cuenta a mensajes claros", () => {
   expect(authMessage({ code: "auth/invalid-credential" })).toMatch(
     /no coinciden/,
   );
-  expect(authMessage({ code: "auth/otro", message: "x" })).toBe("x");
+  // Firebase's own English message never reaches the person.
+  expect(authMessage({ code: "auth/otro", message: "x" })).toBe(
+    "Algo salió mal. Intenta de nuevo.",
+  );
+  expect(
+    authMessage({
+      code: "permission-denied",
+      message: "Missing or insufficient permissions.",
+    }),
+  ).toMatch(/No se pudo guardar/);
+  expect(authMessage(new Error("Ese código es tuyo."))).toBe(
+    "Ese código es tuyo.",
+  );
 });

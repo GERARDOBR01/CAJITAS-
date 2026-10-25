@@ -27,7 +27,21 @@ const money = (cents) =>
     maximumFractionDigits: 2,
   }).format(cents / 100);
 
+// Only the push services browsers really use (as firestore.rules says), so a
+// stored address can never make this server call anywhere else.
+const PUSH_HOSTS =
+  /^(fcm\.googleapis\.com|web\.push\.apple\.com|updates\.push\.services\.mozilla\.com|[a-z0-9-]+\.notify\.windows\.com)$/;
+export function knownPushService(endpoint) {
+  try {
+    const url = new URL(endpoint);
+    return url.protocol === "https:" && PUSH_HOSTS.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** The signed-in Firebase user behind a bearer token. */
+
 export async function verifyUser(authorization) {
   const token = /^Bearer (.+)$/.exec(authorization ?? "")?.[1];
   if (!token) throw problem("Inicia sesión para mandar avisos.", 401);
@@ -245,31 +259,33 @@ export async function sendPush(
   });
   let sent = 0;
   await Promise.all(
-    devices.map(async (device) => {
-      try {
-        await send(
-          {
-            endpoint: device.endpoint,
-            keys: { p256dh: device.p256dh, auth: device.auth },
-          },
-          payload,
-          {
-            TTL: 86400,
-            urgency: "high",
-            vapidDetails: {
-              subject: "https://gerardobr01.github.io/CAJITAS-/",
-              publicKey,
-              privateKey,
+    devices
+      .filter((device) => knownPushService(device.endpoint))
+      .map(async (device) => {
+        try {
+          await send(
+            {
+              endpoint: device.endpoint,
+              keys: { p256dh: device.p256dh, auth: device.auth },
             },
-          },
-        );
-        sent++;
-      } catch (error) {
-        // The phone dropped this subscription: forget it.
-        if ([404, 410].includes(error.statusCode))
-          await db.remove(`pairs/${pairId}/devices/${device.id}`);
-      }
-    }),
+            payload,
+            {
+              TTL: 86400,
+              urgency: "high",
+              vapidDetails: {
+                subject: "https://gerardobr01.github.io/CAJITAS-/",
+                publicKey,
+                privateKey,
+              },
+            },
+          );
+          sent++;
+        } catch (error) {
+          // The phone dropped this subscription: forget it.
+          if ([404, 410].includes(error.statusCode))
+            await db.remove(`pairs/${pairId}/devices/${device.id}`);
+        }
+      }),
   );
   return { sent };
 }

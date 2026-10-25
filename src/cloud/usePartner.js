@@ -5,6 +5,7 @@ import { useGuardian } from "./useGuardian.js";
 import { useSharedGoals } from "./useSharedGoals.js";
 import { useSurprises } from "./useSurprises.js";
 import { useSubscription } from "./useSubscription.js";
+import { friendlyMessage } from "./sync.js";
 
 const lib = () => import("./partner.js");
 const pushLib = () => import("./push.js");
@@ -119,9 +120,7 @@ export function usePartner({ user, data, update, record, notify }) {
       if (success) callbacks.current.notify(success);
       return value;
     } catch (error) {
-      callbacks.current.notify(
-        error.message || "No se pudo. Intenta de nuevo.",
-      );
+      callbacks.current.notify(friendlyMessage(error));
       throw error;
     }
   }

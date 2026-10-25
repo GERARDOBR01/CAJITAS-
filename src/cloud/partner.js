@@ -46,15 +46,48 @@ export async function acceptInvite(user, text) {
   const { from, fromName } = invite.data();
   if (from === user.uid)
     throw new Error("Ese código es tuyo: compártelo con tu pareja.");
-  const members = [from, user.uid].sort();
-  await s.setDoc(s.doc(db, "pairs", members.join("_")), {
+  const members = [from, user.uid].sort(),
+    pairId = members.join("_");
+  // All at once: the couple, who belongs to it, and the code used up, so
+  // nobody else can join with the same code.
+  const batch = s.writeBatch(db);
+  batch.set(s.doc(db, "pairs", pairId), {
     members,
     names: { [from]: fromName, [user.uid]: displayName(user) },
     invite: code,
   });
+  for (const uid of members)
+    batch.set(s.doc(db, "pairOf", uid), { pair: pairId });
+  batch.delete(s.doc(db, "invites", code));
+  try {
+    await batch.commit();
+  } catch (error) {
+    if (error?.code === "permission-denied")
+      throw new Error(
+        "No se pudo usar ese código: ya se usó, o alguno de los dos ya tiene pareja en Guardadito.",
+      );
+    throw error;
+  }
   return fromName;
 }
 
+/**
+ * Keeps the «one couple per person» mark in step with reality: couples made
+ * before it existed get it, and a mark left by a couple that is gone is
+ * removed so the person can pair again.
+ */
+export async function syncPairMark(uid, pair) {
+  const { db, storeLib: s } = await cloud();
+  const ref = s.doc(db, "pairOf", uid);
+  if (!pair) {
+    await s.deleteDoc(ref).catch(() => {});
+    return;
+  }
+  const mark = await s.getDoc(ref).catch(() => null);
+  if (mark && !mark.exists()) await s.setDoc(ref, { pair: pair.id });
+}
+
+let markSynced = null;
 /** The couple this account belongs to (one at most), or null. */
 export async function watchPair(uid, callback) {
   const { db, storeLib: s } = await cloud();
@@ -69,7 +102,14 @@ export async function watchPair(uid, callback) {
       // Wait until the server has the couple: its rules depend on it.
       if (snap.metadata.hasPendingWrites) return;
       const first = snap.docs[0];
-      callback(first ? { id: first.id, ...first.data() } : null);
+      const pair = first ? { id: first.id, ...first.data() } : null;
+      callback(pair);
+      // What the server says, not the offline copy, decides the mark.
+      const state = `${uid}:${pair?.id ?? ""}`;
+      if (!snap.metadata.fromCache && markSynced !== state) {
+        markSynced = state;
+        syncPairMark(uid, pair).catch(() => (markSynced = null));
+      }
     },
     () => callback(null),
   );
@@ -102,6 +142,14 @@ export async function unpair(pairId, uid) {
     )
     .catch(() => ({ docs: [] }));
   await Promise.all(phones.docs.map((d) => s.deleteDoc(d.ref).catch(() => {})));
+  // Both are free to pair again; this has to go before the couple does.
+  await Promise.all(
+    pairId
+      .split("_")
+      .map((member) =>
+        s.deleteDoc(s.doc(db, "pairOf", member)).catch(() => {}),
+      ),
+  );
   await s.deleteDoc(s.doc(db, "pairs", pairId));
 }
 
@@ -124,6 +172,14 @@ export async function leaveAllPairs(uid) {
     await Promise.all(mine.docs.map((d) => s.deleteDoc(d.ref)));
     await unpair(pair.id, uid);
   }
+  // Codes I shared and nobody used, and my mark if it outlived its couple.
+  const invites = await s
+    .getDocs(s.query(s.collection(db, "invites"), s.where("from", "==", uid)))
+    .catch(() => ({ docs: [] }));
+  await Promise.all(
+    invites.docs.map((d) => s.deleteDoc(d.ref).catch(() => {})),
+  );
+  await s.deleteDoc(s.doc(db, "pairOf", uid)).catch(() => {});
 }
 
 export async function watchGifts(pairId, callback, onError) {
