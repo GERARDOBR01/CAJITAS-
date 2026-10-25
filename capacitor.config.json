@@ -2,7 +2,7 @@
   "appId": "mx.guardadito.ahorro",
   "appName": "Guardadito",
   "webDir": "dist",
-  "backgroundColor": "#fff7ef",
+  "backgroundColor": "#f8f6f1",
   "server": {
     "hostname": "localhost",
     "androidScheme": "https",
@@ -12,7 +12,7 @@
     "SystemBars": {
       "insetsHandling": "css",
       "initialViewportFitValueHint": "cover",
-      "style": "LIGHT"
+      "style": "DEFAULT"
     }
   }
 }

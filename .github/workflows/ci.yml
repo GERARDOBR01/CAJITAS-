@@ -35,3 +35,28 @@ jobs:
           name: playwright-failures
           path: test-results/
           retention-days: 7
+  # Android: que la app de la tienda siga compilando en cada cambio.
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-36 build-tools;36.0.0 platform-tools"
+      - run: npm ci
+      - run: npm run build:native
+      - run: npx cap sync android
+      - name: Compilar APK de prueba
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --console=plain assembleDebug

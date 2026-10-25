@@ -15,7 +15,8 @@ Todo lo que pide Play Console, listo para copiar. Paquete: `mx.guardadito.ahorro
 - **Llave de subida**: `C:\Users\gerar\Documents\Guardadito-Play\upload-key.jks`, con su contraseña en `LEEME-llave.txt`. **Haz una copia de esa carpeta en una USB o en tu nube privada.** En GitHub vive como secreto del repositorio y nunca entra al código.
   - SHA-256 del certificado de subida: `38:31:31:55:4A:E5:3D:58:8F:8B:FF:26:6A:D6:BC:0A:19:87:A1:8E:90:D7:2E:76:96:CC:E1:A7:D6:91:CC:23`
 - Activa **Play App Signing** (viene por defecto): Google guarda la llave final y tú solo usas la de subida. Si la pierdes, Play permite reiniciarla.
-- Cada versión nueva necesita un `versionCode` mayor en `android/app/build.gradle`. Hoy es 15 (0.15.0).
+- Cada versión nueva necesita un `versionCode` mayor en `android/app/build.gradle`. Hoy es 18 (0.18.0).
+- La app de la tienda es la versión pública: sin Gmail, Bitso, Banxico ni el APK de prueba (`VITE_OWNER_TOOLS` apagado en el modo `native`).
 
 ## 3. Ficha de la tienda
 
@@ -48,9 +49,9 @@ PRIVADA DESDE EL INICIO
 Sin cuenta, todo se queda en tu teléfono. Con cuenta, solo tú y tu pareja vinculada ven sus datos. Sin anuncios y sin vender datos.
 ```
 
-**Categoría**: Finanzas · **Etiquetas**: ahorro, presupuesto · **Correo de contacto**: el de tu cuenta de desarrollador · **Sitio web**: https://gerardobr01.github.io/CAJITAS-/
+**Categoría**: Finanzas · **Etiquetas**: ahorro, presupuesto · **Correo de contacto**: el correo nuevo de Guardadito (el mismo que va en `CONTACT_EMAIL`, `src/support.js`) · **Sitio web**: https://gerardobr01.github.io/CAJITAS-/
 
-**Gráficos** (en `docs/play/assets/`, se regeneran con `npm run build && node scripts/play-assets.mjs`):
+**Gráficos** (en `docs/play/assets/`, se regeneran con `node scripts/play-assets.mjs`, que compila la versión pública y toma las capturas):
 - Ícono 512×512: `public/icon-512.png`
 - Gráfico destacado 1024×500: `grafico-destacado.png`
 - Capturas de teléfono 1080×1920: `1-inicio.png` a `5-mas.png`
