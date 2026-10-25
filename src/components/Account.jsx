@@ -3,6 +3,7 @@ import { authMessage } from "../cloud/sync.js";
 import { balance, money, today } from "../domain.js";
 import { isNative, openExternal, saveFile } from "../platform.js";
 import Modal from "./Modal.jsx";
+import { forgetThisPhone } from "../journal/forget.js";
 
 const lib = () => import("../cloud/firebase.js");
 
@@ -13,7 +14,8 @@ const STATUS = {
   waiting: "Elige qué cajitas usar para continuar.",
   offline: "Sin conexión: tus cambios se suben cuando vuelva el internet.",
   error:
-    "No pudimos llegar a tu cuenta. Tus cajitas siguen en este teléfono; lo intentamos de nuevo con tu próximo cambio.",
+    "No pudimos llegar a tu cuenta. Tus cajitas siguen en este teléfono; lo intentamos de nuevo solitos en un ratito.",
+  full: "Tu historial ya no cabe en tu cuenta: tus cambios se quedan en este teléfono. Descarga un respaldo y escríbenos desde Ayuda y comentarios.",
 };
 
 const PRIVACY_URL = "https://gerardobr01.github.io/CAJITAS-/privacidad.html";
@@ -41,7 +43,9 @@ function PrivacyLink() {
 export default function Account({ cloud, notify }) {
   const [mode, setMode] = useState("signin"),
     [busy, setBusy] = useState(false),
-    [deleting, setDeleting] = useState(false);
+    [deleting, setDeleting] = useState(false),
+    [leaving, setLeaving] = useState(false),
+    [verified, setVerified] = useState(false);
   const user = cloud.user;
 
   async function submit(e) {
@@ -63,7 +67,9 @@ export default function Account({ cloud, notify }) {
         setMode("signin");
       } else if (mode === "signup") {
         await signUp({ name, email, password });
-        notify(`¡Listo${name ? `, ${name}` : ""}! Tu cuenta está creada.`);
+        notify(
+          `¡Listo${name ? `, ${name}` : ""}! Te mandamos un correo para confirmar tu cuenta.`,
+        );
       } else await signIn({ email, password });
     } catch (error) {
       notify(authMessage(error));
@@ -182,28 +188,112 @@ export default function Account({ cloud, notify }) {
           Guardadito lleva la cuenta de tu ahorro; tu dinero sigue en tu banco o
           con quien lo guarda.
         </p>
+        {!user.emailVerified && !verified && (
+          <div className="notice verify-notice">
+            <p>
+              <strong>Confirma tu correo.</strong> Te mandamos un enlace a{" "}
+              {user.email}. Así podrás recuperar tu contraseña si la olvidas.
+            </p>
+            <div className="button-row">
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const { refreshVerified } = await lib();
+                    if (await refreshVerified()) {
+                      setVerified(true);
+                      notify("¡Correo confirmado! ✓");
+                    } else notify("Todavía no vemos la confirmación.");
+                  } catch (error) {
+                    notify(authMessage(error));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                Ya lo confirmé
+              </button>
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const { resendVerification } = await lib();
+                    await resendVerification();
+                    notify("Te lo mandamos otra vez. Revisa también spam.");
+                  } catch (error) {
+                    notify(authMessage(error));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                Reenviar el correo
+              </button>
+            </div>
+          </div>
+        )}
         <div className="button-row">
-          <button
-            className="secondary"
-            onClick={async () => {
-              try {
-                await cloud.signOut();
-                notify("Sesión cerrada. Tus cajitas siguen en este teléfono.");
-              } catch (error) {
-                notify(authMessage(error));
-              }
-            }}
-          >
+          <button className="secondary" onClick={() => setLeaving(true)}>
             Cerrar sesión
           </button>
-          <button
-            className="text-button"
-            onClick={() => setDeleting(true)}
-          >
+          <button className="text-button" onClick={() => setDeleting(true)}>
             Borrar mi cuenta
           </button>
         </div>
       </div>
+      {leaving && (
+        <Modal title="Cerrar sesión" onClose={() => !busy && setLeaving(false)}>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const wipe = new FormData(e.currentTarget).get("wipe") === "on";
+              setBusy(true);
+              try {
+                if (wipe && !navigator.onLine) {
+                  notify(
+                    "Conéctate a internet para borrar las cajitas de este teléfono: así no se pierde ningún cambio.",
+                  );
+                  setBusy(false);
+                  return;
+                }
+                const { unsaved } = await cloud.signOut();
+                // Never erase the only copy of a change the account did not get.
+                if (wipe && !unsaved) await forgetThisPhone();
+                // Firebase starts fresh, without the previous person's copy.
+                location.replace(`${location.pathname}?tab=account`);
+              } catch (error) {
+                notify(authMessage(error));
+                setBusy(false);
+              }
+            }}
+          >
+            <p>
+              Tus cajitas siguen guardadas en tu cuenta. Para verlas otra vez,
+              entra con tu correo.
+            </p>
+            <label className="checkbox">
+              <input type="checkbox" name="wipe" />
+              Borrar también las cajitas de este teléfono (por ejemplo, si no es
+              tuyo)
+            </label>
+            <button className="primary full" disabled={busy}>
+              {busy ? "Cerrando…" : "Cerrar sesión"}
+            </button>
+            <button
+              type="button"
+              className="secondary full"
+              disabled={busy}
+              onClick={() => setLeaving(false)}
+            >
+              Cancelar
+            </button>
+          </form>
+        </Modal>
+      )}
       {deleting && (
         <Modal
           title="Borrar tu cuenta"
@@ -229,8 +319,10 @@ export default function Account({ cloud, notify }) {
             }}
           >
             <p className="notice">
-              Se borra tu cuenta y la copia de tus cajitas en la nube. Las de
-              este teléfono se quedan aquí. No se puede deshacer.
+              Se borran tu cuenta, la copia de tus cajitas en la nube y lo que
+              tú registraste o mandaste en tu pareja (movimientos, sorpresas,
+              CLABE y avisos). Las cajitas de este teléfono se quedan aquí. No
+              se puede deshacer.
             </p>
             <label>
               Escribe tu contraseña para confirmar

@@ -3,6 +3,14 @@ import { cloudConfigured } from "./config.js";
 import { CLOUD_UID_KEY, firstSync, fromCloud, reconcile } from "./sync.js";
 
 const SAVE_DELAY_MS = 600;
+// How long signing out waits for the last change to reach the account.
+const FLUSH_MS = 4000;
+const RETRY_MS = 5000,
+  MAX_RETRY_MS = 5 * 60 * 1000;
+// A Firestore document holds 1 MiB; leave room for the other fields.
+export const CLOUD_LIMIT_BYTES = 1000000;
+export const cloudBytes = (data) =>
+  new TextEncoder().encode(JSON.stringify(data)).length;
 const lib = () => import("./firebase.js");
 
 function readLinked() {
@@ -33,14 +41,22 @@ export function useCloud({ latest, applyRemote, notify }) {
   const linked = useRef(null),
     unwatch = useRef(null),
     timer = useRef(),
+    retryTimer = useRef(),
+    pending = useRef(null),
+    attempts = useRef(0),
+    warned = useRef(false),
+    askingRef = useRef(false),
     callbacks = useRef();
   callbacks.current = { applyRemote, notify };
+  askingRef.current = Boolean(prompt);
 
   function stop() {
     unwatch.current?.();
     unwatch.current = null;
     linked.current = null;
     clearTimeout(timer.current);
+    clearTimeout(retryTimer.current);
+    attempts.current = 0;
   }
 
   async function follow(uid) {
@@ -67,6 +83,7 @@ export function useCloud({ latest, applyRemote, notify }) {
         "Tus cajitas llegaron de tu cuenta.",
       );
     linked.current = uid;
+    attempts.current = 0;
     writeLinked(uid);
     if (action === "push")
       saveState(uid, latest.current).catch(() => setStatus("error"));
@@ -75,6 +92,7 @@ export function useCloud({ latest, applyRemote, notify }) {
   }
 
   async function start(account) {
+    clearTimeout(retryTimer.current);
     setStatus("syncing");
     try {
       const { loadState } = await lib();
@@ -93,6 +111,13 @@ export function useCloud({ latest, applyRemote, notify }) {
       } else await act(account.uid, action, remote);
     } catch {
       setStatus(navigator.onLine ? "error" : "offline");
+      // Try again on its own: 5 s, 10 s, 20 s… up to 5 minutes. Coming back
+      // online or to the app also tries at once (see the effect below).
+      clearTimeout(retryTimer.current);
+      const wait = Math.min(MAX_RETRY_MS, RETRY_MS * 2 ** attempts.current++);
+      retryTimer.current = setTimeout(() => {
+        if (!linked.current) start(account);
+      }, wait);
     }
   }
 
@@ -117,13 +142,20 @@ export function useCloud({ latest, applyRemote, notify }) {
       .catch(() => setStatus("error"));
     // Offline on the first try: the account's copy is read when back.
     const online = () => {
-      if (current && !linked.current && alive) start(current);
+      if (current && !linked.current && alive && !askingRef.current)
+        start(current);
+    };
+    const visible = () => {
+      if (document.visibilityState === "visible") online();
     };
     window.addEventListener("online", online);
+    document.addEventListener("visibilitychange", visible);
     return () => {
       alive = false;
       unsubscribe?.();
       window.removeEventListener("online", online);
+      document.removeEventListener("visibilitychange", visible);
+      clearTimeout(retryTimer.current);
       stop();
     };
   }, []);
@@ -132,12 +164,26 @@ export function useCloud({ latest, applyRemote, notify }) {
   function save(data) {
     const uid = linked.current;
     if (!uid) return;
+    const bytes = cloudBytes(data);
+    if (bytes > CLOUD_LIMIT_BYTES) {
+      setStatus("full");
+      return;
+    }
+    if (bytes > CLOUD_LIMIT_BYTES * 0.7 && !warned.current) {
+      warned.current = true;
+      callbacks.current.notify?.(
+        "Tu historial ya ocupa mucho en tu cuenta. Descarga un respaldo y escríbenos desde Ayuda para hacerle espacio.",
+      );
+    }
     clearTimeout(timer.current);
+    // Until the account confirms it, this copy is still on its way up.
+    pending.current = data;
     timer.current = setTimeout(async () => {
       setStatus(navigator.onLine ? "syncing" : "offline");
       try {
         const { saveState } = await lib();
         await saveState(uid, data);
+        if (pending.current === data) pending.current = null;
         if (linked.current === uid) setStatus("synced");
       } catch {
         setStatus("error");
@@ -166,11 +212,30 @@ export function useCloud({ latest, applyRemote, notify }) {
     return act(p.uid, "push");
   }
 
+  /** Closes the session and erases the account's offline copy from this
+   * phone; the caller reloads the app afterwards. */
   async function signOut() {
+    // A change saved a moment ago may still be waiting to go up: send it now,
+    // before the session and the offline queue are gone.
+    const uid = linked.current,
+      waiting = pending.current;
+    if (uid && waiting) {
+      const { saveState } = await lib();
+      const arrived = await Promise.race([
+        saveState(uid, waiting).then(() => true),
+        new Promise((resolve) => setTimeout(() => resolve(false), FLUSH_MS)),
+      ]).catch(() => false);
+      if (arrived && pending.current === waiting) pending.current = null;
+    }
+    // Whether something never made it up (offline): then this phone keeps
+    // the only copy of it.
+    const lost = Boolean(pending.current);
+    pending.current = null;
     stop();
     writeLinked(null);
     const { signOutUser } = await lib();
-    await signOutUser();
+    await signOutUser({ clearCache: true });
+    return { unsaved: lost };
   }
 
   async function removeAccount(password) {
@@ -184,6 +249,8 @@ export function useCloud({ latest, applyRemote, notify }) {
     configured: cloudConfigured,
     user,
     status,
+    /** A change on this phone has not reached the account yet. */
+    unsaved: () => Boolean(pending.current),
     prompt,
     save,
     resolve,

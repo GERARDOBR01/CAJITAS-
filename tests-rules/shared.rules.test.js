@@ -89,4 +89,16 @@ describe("cajitas en pareja", () => {
     await assertFails(setDoc(entryRef(J), entry(J, { goalId: "nada" })));
     await assertSucceeds(setDoc(entryRef(J, "r1"), entry(J, { cents: -100 })));
   });
+  it("nadie cambia quién creó la cajita ni infla un aporte al corregirlo", async () => {
+    await assertSucceeds(setDoc(goalRef(G), goal()));
+    await assertFails(updateDoc(goalRef(J), { createdBy: J }));
+    await assertFails(setDoc(goalRef(J, "suya"), goal()));
+    await assertSucceeds(setDoc(goalRef(J, "suya"), goal({ createdBy: J })));
+    await assertFails(setDoc(goalRef(G, "rara"), goal({ unlockDate: 5 })));
+    await assertSucceeds(setDoc(entryRef(J), entry(J)));
+    await assertFails(updateDoc(entryRef(J), { cents: 1e12 }));
+    await assertFails(updateDoc(entryRef(J), { note: "x".repeat(201) }));
+    await assertFails(updateDoc(entryRef(J), { extra: true }));
+    await assertFails(setDoc(entryRef(J, "e9"), entry(J, { note: 7 })));
+  });
 });

@@ -61,7 +61,22 @@ export async function signUp({ name, email, password }) {
     password,
   );
   if (name) await authLib.updateProfile(user, { displayName: name });
+  // Without a confirmed address a typo would make the password unrecoverable.
+  // The account works anyway; the link only proves the address is theirs.
+  await authLib.sendEmailVerification(user).catch(() => {});
   return user;
+}
+
+export async function resendVerification() {
+  const { auth, authLib } = await cloud();
+  if (auth.currentUser) await authLib.sendEmailVerification(auth.currentUser);
+}
+
+/** Whether the address was confirmed since the app last asked. */
+export async function refreshVerified() {
+  const { auth } = await cloud();
+  await auth.currentUser?.reload();
+  return Boolean(auth.currentUser?.emailVerified);
 }
 
 export async function signIn({ email, password }) {
@@ -69,9 +84,19 @@ export async function signIn({ email, password }) {
   return (await authLib.signInWithEmailAndPassword(auth, email, password)).user;
 }
 
-export async function signOutUser() {
-  const { auth, authLib } = await cloud();
+/**
+ * With `clearCache`, the offline copy Firestore keeps (the partner's notes,
+ * photos and CLABE) is erased too, so the next person on this phone finds
+ * nothing. Firebase has to start again afterwards: reload the app.
+ */
+export async function signOutUser({ clearCache = false } = {}) {
+  const { auth, authLib, db, storeLib } = await cloud();
   await authLib.signOut(auth);
+  if (!clearCache) return;
+  ready = null;
+  await storeLib.terminate(db);
+  // Fails if Guardadito is open in another tab; that copy stays until then.
+  await storeLib.clearIndexedDbPersistence(db).catch(() => {});
 }
 
 export async function resetPassword(email) {

@@ -3,10 +3,12 @@ import { saveFile } from "../platform.js";
 import { balance, money, today, validateBackup } from "../domain.js";
 import Illustration from "./Illustration.jsx";
 import Modal from "./Modal.jsx";
+import { readPrevious } from "../journal/previous.js";
 
 export default function Backup({ data, onRestore, notify }) {
   const [pending, setPending] = useState(null),
-    [restoring, setRestoring] = useState(false);
+    [restoring, setRestoring] = useState(false),
+    [previous] = useState(readPrevious);
   async function download() {
     try {
       await saveFile(JSON.stringify(data, null, 2), `cajitas-${today()}.json`);
@@ -67,6 +69,26 @@ export default function Backup({ data, onRestore, notify }) {
             />
           </label>
         </div>
+        {previous && (
+          <div className="notice previous-copy">
+            <p>
+              Antes de que llegaran las cajitas de tu cuenta, este teléfono
+              tenía {previous.data.goals.length}{" "}
+              {previous.data.goals.length === 1 ? "cajita" : "cajitas"} (
+              {new Date(previous.at).toLocaleString("es-MX", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+              ).
+            </p>
+            <button
+              className="text-button"
+              onClick={() => setPending(previous.data)}
+            >
+              Recuperar la versión anterior
+            </button>
+          </div>
+        )}
         <p className="small-text muted">
           Incluye metas, mascota, visitas, movimientos y correos ya revisados.
           No incluye contraseñas ni conexiones. El archivo contiene información
