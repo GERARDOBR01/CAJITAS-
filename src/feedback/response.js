@@ -1,8 +1,38 @@
-import { reachedTarget } from "../domain.js";
+import { balance, moneyShort, reachedTarget } from "../domain.js";
 import { WITHDRAWAL_NOTE } from "../pet/state.js";
 
 export const GOAL_REACHED = "¡Meta alcanzada! Poquito a poquito, lo lograste ✦";
 const SAVED = "Ahorro registrado. ¡Un pasito más!";
+export const FIRST_SAVING = "¡Tu primer pasito! Así empiezan los sueños ✦";
+/** Under this, a saving gets a word for being small and still counting. */
+const SMALL_CENTS = 10000;
+const MILESTONES = [
+  [0.75, (name) => `¡Tres cuartas partes de ${name}! Ya casi ✦`],
+  [0.5, (name) => `¡Ya vas a la mitad de ${name}!`],
+  [0.25, (name) => `Ya llevas una cuarta parte de ${name} 🌱`],
+];
+
+/** The kindest true thing to say about money that just came in. */
+function cheer(before, after, added) {
+  const savedBefore = before.goals.some((g) =>
+    g.entries.some((e) => e.cents > 0),
+  );
+  if (!savedBefore) return FIRST_SAVING;
+  for (const goal of after.goals) {
+    const was = before.goals.find((g) => g.id === goal.id);
+    if (!was || !goal.targetCents) continue;
+    const from = balance(was) / goal.targetCents,
+      to = balance(goal) / goal.targetCents;
+    const crossed = MILESTONES.find(([mark]) => from < mark && to >= mark);
+    if (crossed) return crossed[1](goal.name);
+  }
+  const cents = added
+    .filter((e) => e.cents > 0)
+    .reduce((s, e) => s + e.cents, 0);
+  if (cents < SMALL_CENTS)
+    return `${moneyShort(cents)} también cuentan. ¡Así se hace!`;
+  return SAVED;
+}
 
 /**
  * The respuesta al ahorro: what the person hears after a change to the
@@ -28,7 +58,12 @@ export function savingResponse(before, after, detail = "") {
       saved,
       message: detail ? `${detail} ${GOAL_REACHED}` : GOAL_REACHED,
     };
-  if (saved) return { kind: "cheer", saved, message: detail || SAVED };
+  if (saved)
+    return {
+      kind: "cheer",
+      saved,
+      message: detail || cheer(before, after, added),
+    };
   if (added.some((entry) => entry.cents < 0))
     return { kind: "withdrawal", saved, message: detail || WITHDRAWAL_NOTE };
   return { kind: "plain", saved, message: detail };

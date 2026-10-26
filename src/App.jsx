@@ -38,7 +38,10 @@ import {
 import { checkIn, restoreEntry, today } from "./domain.js";
 import { SLEEPY_DAYS, daysAway } from "./pet/state.js";
 import Help from "./components/Help.jsx";
-import AccountNudge from "./components/AccountNudge.jsx";
+import AccountNudge, {
+  dismissed as nudgeDismissed,
+} from "./components/AccountNudge.jsx";
+import ReminderOffer from "./components/ReminderOffer.jsx";
 import Welcome, { markWelcomed, needsWelcome } from "./components/Welcome.jsx";
 import { ownerTools } from "./features.js";
 import { keepPrevious } from "./journal/previous.js";
@@ -333,13 +336,6 @@ export default function App() {
                 : "Estás sin conexión. Tus cajitas siguen contigo en este teléfono."}
             </p>
           )}
-          {tab === "goals" && (
-            <AccountNudge
-              show={cloud.configured && cloud.status === "signed-out"}
-              goals={data.goals.length}
-              onAccount={() => go("account")}
-            />
-          )}
           {!isNative && <ServiceWorkerNotices />}
           {loadError && (
             <div className="error" role="alert">
@@ -387,6 +383,22 @@ export default function App() {
               onOpen={openGoal}
               onPet={() => haptic()}
               returning={returning}
+              notice={
+                // One suggestion at a time, under the main button: first a
+                // way not to lose the cajitas, then a weekly reminder.
+                cloud.configured &&
+                cloud.status === "signed-out" &&
+                data.goals.length > 0 &&
+                !nudgeDismissed() ? (
+                  <AccountNudge
+                    show
+                    goals={data.goals.length}
+                    onAccount={() => go("account")}
+                  />
+                ) : (
+                  <ReminderOffer data={data} onSave={setData} notify={notify} />
+                )
+              }
             />
           )}
           {tab === "goals" && partner.pair && (

@@ -71,6 +71,7 @@ export default function Home({
   onCheckIn,
   onLater,
   returning = false,
+  notice = null,
 }) {
   const [line, setLine] = useState("");
   const lineTimer = useRef(),
@@ -203,6 +204,7 @@ export default function Home({
           {empty ? "Crear mi primera cajita" : "Crear una cajita nueva"}
         </button>
       )}
+      {notice}
       {late && !checkIn && !celebrating && !cheering && (
         <button
           className="secondary full more-time"

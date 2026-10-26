@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const DISMISSED_KEY = "guardadito:account-nudge";
 
-function dismissed() {
+export function dismissed() {
   try {
     return localStorage.getItem(DISMISSED_KEY) === "1";
   } catch {

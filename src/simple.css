@@ -149,6 +149,9 @@
   width: 26px;
   height: 26px;
 }
+.home .account-nudge {
+  margin: var(--space-3) 0 0;
+}
 .more-time {
   margin-top: var(--space-3);
 }
