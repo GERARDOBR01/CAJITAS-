@@ -19,44 +19,44 @@
       {
         "foreground": "--text",
         "background": "--surface",
-        "fg": "#2b1b3a",
+        "fg": "#30223f",
         "bg": "#ffffff",
-        "ratio": 15.901993863971299
+        "ratio": 14.72379298501398
       },
       {
         "foreground": "--muted",
         "background": "--surface",
-        "fg": "#655a6d",
+        "fg": "#695675",
         "bg": "#ffffff",
-        "ratio": 6.488227210285129
+        "ratio": 6.58588443571978
       },
       {
         "foreground": "--muted",
         "background": "--canvas",
-        "fg": "#655a6d",
-        "bg": "#fbf6ec",
-        "ratio": 6.02335455811491
+        "fg": "#695675",
+        "bg": "#fff9f1",
+        "ratio": 6.294991390410118
       },
       {
         "foreground": "--primary",
         "background": "--surface",
-        "fg": "#4b2a7b",
+        "fg": "#7040d5",
         "bg": "#ffffff",
-        "ratio": 10.958223746669045
+        "ratio": 6.207276027545808
       },
       {
         "foreground": "--on-primary",
         "background": "--primary",
         "fg": "#ffffff",
-        "bg": "#4b2a7b",
-        "ratio": 10.958223746669045
+        "bg": "#7040d5",
+        "ratio": 6.207276027545808
       },
       {
         "foreground": "--on-mint",
         "background": "--mint",
-        "fg": "#1f4d3f",
-        "bg": "#e3f6ee",
-        "ratio": 8.524910380795466
+        "fg": "#285238",
+        "bg": "#e0f6d5",
+        "ratio": 7.778537193766245
       },
       {
         "foreground": "--on-pink",
@@ -82,37 +82,37 @@
       {
         "foreground": "--text",
         "background": "--surface-soft",
-        "fg": "#2b1b3a",
-        "bg": "#f3ecde",
-        "ratio": 13.52722316373435
+        "fg": "#30223f",
+        "bg": "#f5efff",
+        "ratio": 13.09232397879542
       },
       {
         "foreground": "--muted",
         "background": "--surface-soft",
-        "fg": "#655a6d",
-        "bg": "#f3ecde",
-        "ratio": 5.5192888490161796
+        "fg": "#695675",
+        "bg": "#f5efff",
+        "ratio": 5.856135902420647
       },
       {
         "foreground": "--muted",
         "background": "--yellow",
-        "fg": "#655a6d",
+        "fg": "#695675",
         "bg": "#fff0b5",
-        "ratio": 5.679755312804246
+        "ratio": 5.7652438641479655
       },
       {
         "foreground": "--muted",
         "background": "--pink",
-        "fg": "#655a6d",
+        "fg": "#695675",
         "bg": "#ffe4ed",
-        "ratio": 5.429177350702916
+        "ratio": 5.510894340456577
       },
       {
         "foreground": "--muted",
         "background": "--mint",
-        "fg": "#655a6d",
-        "bg": "#e3f6ee",
-        "ratio": 5.77238878807216
+        "fg": "#695675",
+        "bg": "#e0f6d5",
+        "ratio": 5.743074638517946
       }
     ],
     "dark": [
@@ -230,6 +230,21 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
             ]
           ]
         }
@@ -239,7 +254,19 @@
       "theme": "light",
       "screen": "create-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "button[type=\"button\"]:nth-child(2) > span"
+            ],
+            [
+              "button[type=\"button\"]:nth-child(3) > span"
+            ]
+          ]
+        }
+      ]
     },
     {
       "theme": "light",
@@ -256,13 +283,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -272,7 +314,16 @@
       "theme": "light",
       "screen": "deposit-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".notice"
+            ]
+          ]
+        }
+      ]
     },
     {
       "theme": "light",
@@ -289,13 +340,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -305,7 +371,34 @@
       "theme": "light",
       "screen": "withdraw-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".muted"
+            ],
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "screen": "early-withdrawal-confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
     },
     {
       "theme": "light",
@@ -322,13 +415,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ],
             [
               ".toast"
@@ -352,13 +460,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ],
             [
               ".toast"
@@ -382,10 +505,13 @@
               ".brand-dot"
             ],
             [
-              "button[aria-label=\"Mi cuenta\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
             ],
             [
-              "button[aria-label=\"Mi pareja\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(1)"
@@ -407,9 +533,6 @@
             ],
             [
               "button[aria-label=\"Respaldo\"] > span[aria-hidden=\"true\"]:nth-child(3)"
-            ],
-            [
-              "button[aria-label=\"Ayuda y comentarios\"] > span[aria-hidden=\"true\"]:nth-child(3)"
             ],
             [
               "button[aria-label=\"Instalar app\"] > span[aria-hidden=\"true\"]:nth-child(1)"
@@ -439,6 +562,21 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".flower-one"
+            ],
+            [
+              ".flower-two"
+            ],
+            [
               ".waiting:nth-child(1) > span"
             ],
             [
@@ -466,6 +604,15 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
               ".yellow"
             ]
           ]
@@ -485,6 +632,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -503,6 +659,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -521,6 +686,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -539,6 +713,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -557,6 +740,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               "li:nth-child(1) > span[aria-hidden=\"true\"]"
@@ -584,6 +776,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -602,6 +803,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -620,6 +830,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               ".tutorial-lock-scene > div > span[aria-hidden=\"true\"]"
@@ -641,6 +860,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -659,6 +887,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -677,6 +914,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               ".tutorial-phone-icons > span:nth-child(1)"
@@ -704,6 +950,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -722,6 +977,21 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
             ]
           ]
         }
@@ -731,7 +1001,19 @@
       "theme": "dark",
       "screen": "create-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "button[type=\"button\"]:nth-child(2) > span"
+            ],
+            [
+              "button[type=\"button\"]:nth-child(3) > span"
+            ]
+          ]
+        }
+      ]
     },
     {
       "theme": "dark",
@@ -748,13 +1030,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -764,7 +1061,16 @@
       "theme": "dark",
       "screen": "deposit-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".notice"
+            ]
+          ]
+        }
+      ]
     },
     {
       "theme": "dark",
@@ -781,13 +1087,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -797,7 +1118,34 @@
       "theme": "dark",
       "screen": "withdraw-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".muted"
+            ],
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "screen": "early-withdrawal-confirmation",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "form > .commitment-note > strong"
+            ]
+          ]
+        }
+      ]
     },
     {
       "theme": "dark",
@@ -814,13 +1162,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ],
             [
               ".toast"
@@ -844,13 +1207,28 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".doodle-star"
+            ],
+            [
+              ".doodle-heart"
+            ],
+            [
               ".goal-symbol"
             ],
             [
               ".icon-button"
             ],
             [
-              ".goal-lock > span[aria-hidden=\"true\"]"
+              ".lock > span[aria-hidden=\"true\"]"
             ],
             [
               ".toast"
@@ -874,10 +1252,13 @@
               ".brand-dot"
             ],
             [
-              "button[aria-label=\"Mi cuenta\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
             ],
             [
-              "button[aria-label=\"Mi pareja\"] > span[aria-hidden=\"true\"]:nth-child(3)"
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               "button[aria-label=\"Tutorial interactivo\"] > span[aria-hidden=\"true\"]:nth-child(1)"
@@ -899,9 +1280,6 @@
             ],
             [
               "button[aria-label=\"Respaldo\"] > span[aria-hidden=\"true\"]:nth-child(3)"
-            ],
-            [
-              "button[aria-label=\"Ayuda y comentarios\"] > span[aria-hidden=\"true\"]:nth-child(3)"
             ],
             [
               "button[aria-label=\"Instalar app\"] > span[aria-hidden=\"true\"]:nth-child(1)"
@@ -931,6 +1309,21 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".flower-one"
+            ],
+            [
+              ".flower-two"
+            ],
+            [
               ".waiting:nth-child(1) > span"
             ],
             [
@@ -958,6 +1351,15 @@
               ".brand-dot"
             ],
             [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(4) > span[aria-hidden=\"true\"]"
+            ],
+            [
               ".yellow"
             ]
           ]
@@ -977,6 +1379,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -995,6 +1406,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1013,6 +1433,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1031,6 +1460,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1049,6 +1487,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               "li:nth-child(1) > span[aria-hidden=\"true\"]"
@@ -1076,6 +1523,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1094,6 +1550,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1112,6 +1577,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               ".tutorial-lock-scene > div > span[aria-hidden=\"true\"]"
@@ -1133,6 +1607,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1151,6 +1634,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
@@ -1169,6 +1661,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ],
             [
               ".tutorial-phone-icons > span:nth-child(1)"
@@ -1196,6 +1697,15 @@
             ],
             [
               ".brand-dot"
+            ],
+            [
+              ".mobile-nav > button:nth-child(1) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > button:nth-child(2) > span[aria-hidden=\"true\"]"
+            ],
+            [
+              ".mobile-nav > .active[aria-current=\"page\"] > span[aria-hidden=\"true\"]"
             ]
           ]
         }
