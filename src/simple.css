@@ -80,6 +80,16 @@
   font-size: 28px;
 }
 
+/* Toasts sit low and never block a tap: only their × takes touches. */
+.toast,
+.toast.toast {
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+.toast button {
+  pointer-events: auto;
+}
+
 /* Home: the pet speaks, one big button, then the cajitas. */
 .home .hero {
   display: grid;
