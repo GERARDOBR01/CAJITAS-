@@ -12,9 +12,7 @@ async function createGoal(page) {
   await page
     .getByRole("button", { name: "+ Nueva cajita", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Una escapadita", exact: false })
-    .click();
+  await page.getByLabel("Nombre de tu meta").fill("Una escapadita");
   await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
   await page.getByLabel("Mi ritmo de ahorro").selectOption("15");
   await page.getByRole("button", { name: "Crear cajita", exact: true }).click();

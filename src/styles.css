@@ -919,30 +919,6 @@ legend {
 .quick-amounts button {
   font-size: var(--small);
 }
-.goal-templates {
-  display: flex;
-  gap: var(--space-2);
-  margin-block: var(--space-4);
-}
-.goal-templates button {
-  flex: 1;
-  min-width: 0;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface-soft);
-  color: var(--text);
-  font-size: var(--small);
-  padding: 10px 6px;
-  font-weight: 850;
-}
-.goal-templates button > span {
-  display: block;
-  font-size: 24px;
-  margin-bottom: var(--space-1);
-}
-.goal-templates [aria-pressed="true"] {
-  border-color: var(--primary);
-}
 .plan-preview {
   display: flex;
   align-items: flex-start;
@@ -2677,12 +2653,6 @@ summary {
   .modal-head h2 {
     font-size: 22px;
   }
-  .goal-templates {
-    flex-wrap: wrap;
-  }
-  .goal-templates button {
-    flex-basis: 42%;
-  }
   .more-grid {
     grid-template-columns: 1fr;
   }
@@ -4217,4 +4187,112 @@ summary {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
+}
+
+/* v0.19: the welcome, the first time someone opens Guardadito. */
+.welcome {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: calc(var(--space-5) + env(safe-area-inset-top)) var(--space-4)
+    calc(var(--space-6) + env(safe-area-inset-bottom));
+  background: var(--canvas);
+  color: var(--text);
+}
+.welcome-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.welcome-top strong {
+  font-size: 22px;
+  font-weight: 950;
+  color: var(--primary);
+}
+.welcome-top span {
+  color: var(--muted);
+  font-size: var(--small);
+}
+.welcome-step {
+  display: grid;
+  gap: var(--space-4);
+}
+.welcome-pet {
+  justify-self: center;
+  width: min(240px, 64vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mint);
+}
+.welcome-pet svg {
+  width: 88%;
+  height: auto;
+}
+.welcome h1 {
+  text-align: center;
+  font-size: clamp(28px, 8vw, 34px);
+  line-height: 1.15;
+  font-weight: 950;
+}
+.welcome-lead {
+  text-align: center;
+  color: var(--muted);
+}
+.welcome-pets {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.welcome-pets legend {
+  font-weight: 850;
+  margin-bottom: var(--space-3);
+  text-align: center;
+  width: 100%;
+}
+.welcome-pets button {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  font-weight: 800;
+}
+.welcome-pets button[aria-pressed="true"] {
+  border-color: var(--primary);
+  outline: 2px solid var(--primary);
+}
+.welcome-pets svg {
+  width: 72px;
+  height: 66px;
+}
+.welcome-ideas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.welcome-ideas button {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  line-height: 1.2;
+}
+.welcome-ideas button > span {
+  font-size: 22px;
+}
+.welcome-note {
+  margin-top: calc(-1 * var(--space-2));
+  color: var(--muted);
+  font-size: var(--small);
 }

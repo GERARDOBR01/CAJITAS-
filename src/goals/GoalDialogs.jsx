@@ -14,7 +14,12 @@ export default function GoalDialogs({ actions, data, pet, notify, record }) {
   switch (dialog.type) {
     case "new":
       return (
-        <GoalForm weekday={weekday} onClose={close} onSave={actions.saveNew} />
+        <GoalForm
+          weekday={weekday}
+          onClose={close}
+          onSave={actions.saveNew}
+          idea={dialog.idea}
+        />
       );
     case "movement":
       return (
