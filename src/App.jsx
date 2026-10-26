@@ -37,6 +37,7 @@ import {
 import { restoreEntry } from "./domain.js";
 import Help from "./components/Help.jsx";
 import AccountNudge from "./components/AccountNudge.jsx";
+import Welcome, { markWelcomed, needsWelcome } from "./components/Welcome.jsx";
 import { ownerTools } from "./features.js";
 import { keepPrevious } from "./journal/previous.js";
 
@@ -117,6 +118,15 @@ export default function App() {
   const [now, setNow] = useState(Date.now()),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
+  // The first time on a phone with nothing yet: a short welcome instead of
+  // an empty home. A link that asked for a screen (an invite, the
+  // tutorial) goes straight there.
+  const [welcome, setWelcome] = useState(
+    () =>
+      !recovery &&
+      launch.tab === "goals" &&
+      needsWelcome(store.get(), { search: location.search }),
+  );
   const [detailId, setDetailId] = useState(null);
   const [connectionVersion, setConnectionVersion] = useState(0);
   // The cloud hook reads the newest journal through `.current`.
@@ -269,189 +279,217 @@ export default function App() {
       ),
     });
   }
+  function finishWelcome(next = "goals") {
+    markWelcomed();
+    setWelcome(false);
+    go(next);
+  }
   const pet = data.preferences;
   return (
     <div
       className={`app ${!pet.animations ? "reduced-motion" : ""} ${isNative ? "native-app" : ""} ${tab === "goal" ? "detail-open" : ""}`}
     >
-      <AppShell
-        tab={tab}
-        onNavigate={go}
-        goalCount={data.goals.length}
-        pet={pet}
-      >
-        {offline && (
-          <p className="offline" role="status">
-            {cloud.user
-              ? "Estás sin conexión. Tus cajitas siguen contigo y se guardan en tu cuenta cuando vuelva el internet."
-              : "Estás sin conexión. Tus cajitas siguen contigo en este teléfono."}
-          </p>
-        )}
-        {tab === "goals" && (
-          <AccountNudge
-            show={cloud.configured && cloud.status === "signed-out"}
-            goals={data.goals.length}
-            onAccount={() => go("account")}
-          />
-        )}
-        {!isNative && <ServiceWorkerNotices />}
-        {loadError && (
-          <div className="error" role="alert">
-            {loadError}
-            <br />
-            <button
-              className="text-button"
-              onClick={() => {
-                const raw = store.readRaw();
-                const url = URL.createObjectURL(
-                  new Blob([raw ?? ""], { type: "application/json" }),
-                );
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "cajitas-datos-originales.json";
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-            >
-              Descargar datos originales
-            </button>
-          </div>
-        )}
-        {tab === "goals" && partner.pair && (
-          <DepositInbox
-            partner={partner}
-            name={partner.partnerName || "Tu pareja"}
-          />
-        )}
-        {tab === "goals" && (
-          <Home
-            data={data}
-            filter={goalFilter}
-            onFilter={setGoalFilter}
-            now={now}
-            cheering={feedback.excited}
-            celebrating={feedback.confetti}
-            checkIn={dueCheckIn(data, new Date(now))}
-            onCheckIn={(goal) => actions.move(goal)}
-            onLater={() => {
-              if (setData(answerCheckIn(data)))
-                notify("¡Va! Aquí sigo cuando quieras 💛");
-            }}
-            actions={actions}
-            onOpen={openGoal}
-            onPet={() => haptic()}
-            onTutorial={() => go("tutorial")}
-          />
-        )}
-        {tab === "goals" && partner.pair && (
-          <SharedGoals
-            partner={partner}
-            uid={cloud.user?.uid}
-            now={now}
-            onCelebrate={feedback.celebrate}
-          />
-        )}
-        {detailGoal && (
-          <GoalDetail
-            goal={detailGoal}
-            now={now}
-            weekday={data.preferences.reminder.day}
-            actions={actions}
-            onBack={() => go("goals")}
-            onFrequency={setFrequency}
-            onActivity={() => go("activity")}
-          />
-        )}
-        {tab === "pet" && (
-          <PetRoom data={data} onSave={setData} notify={notify} />
-        )}
-        {tab === "activity" && (
-          <Activity
-            data={data}
-            notify={notify}
-            onRestore={(entryId) => {
-              try {
-                if (setData(restoreEntry(data, entryId)))
-                  notify("Movimiento restaurado. ✓");
-              } catch (error) {
-                notify(error.message);
-              }
-            }}
-            onCorrect={actions.correct}
-          />
-        )}
-        {tab === "tutorial" && (
-          <Suspense
-            fallback={<p role="status">{pet.petName} prepara tu paseíto…</p>}
-          >
-            <Tutorial
-              preferences={pet}
-              onNavigate={go}
-              onCreate={() => {
-                go("goals");
-                actions.create();
-              }}
+      {welcome ? (
+        <Welcome
+          preferences={pet}
+          cloudConfigured={cloud.configured}
+          onChoosePet={(choice) =>
+            setData({
+              ...latestData.current,
+              preferences: { ...latestData.current.preferences, ...choice },
+            })
+          }
+          onCreate={(idea) => {
+            finishWelcome();
+            actions.create(idea);
+          }}
+          onAccount={() => {
+            // Not marked as seen: if no sign-in happens, it greets again.
+            setWelcome(false);
+            go("account");
+          }}
+          onDone={() => finishWelcome()}
+        />
+      ) : (
+        <AppShell
+          tab={tab}
+          onNavigate={go}
+          goalCount={data.goals.length}
+          pet={pet}
+        >
+          {offline && (
+            <p className="offline" role="status">
+              {cloud.user
+                ? "Estás sin conexión. Tus cajitas siguen contigo y se guardan en tu cuenta cuando vuelva el internet."
+                : "Estás sin conexión. Tus cajitas siguen contigo en este teléfono."}
+            </p>
+          )}
+          {tab === "goals" && (
+            <AccountNudge
+              show={cloud.configured && cloud.status === "signed-out"}
+              goals={data.goals.length}
+              onAccount={() => go("account")}
             />
-          </Suspense>
-        )}
-        {tab === "install" && (
-          <Install notify={notify} signedIn={Boolean(cloud.user)} />
-        )}
-        {tab === "help" && <Help notify={notify} />}
-        {tab === "account" && cloud.configured && (
-          <Account cloud={cloud} notify={notify} />
-        )}
-        {tab === "partner" && cloud.configured && (
-          <Partner
-            cloud={cloud}
-            partner={partner}
-            notify={notify}
-            onNavigate={go}
-            initialCode={launch.inviteCode}
-          />
-        )}
-        {tab === "more" && (
-          <More
-            cloud={cloud}
-            data={data}
-            onSave={setData}
-            notify={notify}
-            onNavigate={go}
-          />
-        )}
-        {tab === "simulator" && ownerTools && <Simulator />}
-        {tab === "connections" && ownerTools && (
-          <Connections
-            key={connectionVersion}
-            data={data}
-            setData={setData}
-            notify={notify}
-            record={feedback.record}
-            onCreate={actions.create}
-          />
-        )}
-        {tab === "backup" && (
-          <Backup
-            data={data}
-            onRestore={async (next) => {
-              const restored = restoreWithoutReminders(next);
-              if (!report(store.replace(restored))) return false;
-              try {
-                await syncReminders(restored);
-                notify(
-                  "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Mi mascota.",
-                );
-              } catch (error) {
-                notify(
-                  `Respaldo restaurado. Revisa el recordatorio en Mi mascota: ${error.message}`,
-                );
-              }
-              return true;
-            }}
-            notify={notify}
-          />
-        )}
-      </AppShell>
+          )}
+          {!isNative && <ServiceWorkerNotices />}
+          {loadError && (
+            <div className="error" role="alert">
+              {loadError}
+              <br />
+              <button
+                className="text-button"
+                onClick={() => {
+                  const raw = store.readRaw();
+                  const url = URL.createObjectURL(
+                    new Blob([raw ?? ""], { type: "application/json" }),
+                  );
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "cajitas-datos-originales.json";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                Descargar datos originales
+              </button>
+            </div>
+          )}
+          {tab === "goals" && partner.pair && (
+            <DepositInbox
+              partner={partner}
+              name={partner.partnerName || "Tu pareja"}
+            />
+          )}
+          {tab === "goals" && (
+            <Home
+              data={data}
+              filter={goalFilter}
+              onFilter={setGoalFilter}
+              now={now}
+              cheering={feedback.excited}
+              celebrating={feedback.confetti}
+              checkIn={dueCheckIn(data, new Date(now))}
+              onCheckIn={(goal) => actions.move(goal)}
+              onLater={() => {
+                if (setData(answerCheckIn(data)))
+                  notify("¡Va! Aquí sigo cuando quieras 💛");
+              }}
+              actions={actions}
+              onOpen={openGoal}
+              onPet={() => haptic()}
+              onTutorial={() => go("tutorial")}
+            />
+          )}
+          {tab === "goals" && partner.pair && (
+            <SharedGoals
+              partner={partner}
+              uid={cloud.user?.uid}
+              now={now}
+              onCelebrate={feedback.celebrate}
+            />
+          )}
+          {detailGoal && (
+            <GoalDetail
+              goal={detailGoal}
+              now={now}
+              weekday={data.preferences.reminder.day}
+              actions={actions}
+              onBack={() => go("goals")}
+              onFrequency={setFrequency}
+              onActivity={() => go("activity")}
+            />
+          )}
+          {tab === "pet" && (
+            <PetRoom data={data} onSave={setData} notify={notify} />
+          )}
+          {tab === "activity" && (
+            <Activity
+              data={data}
+              notify={notify}
+              onRestore={(entryId) => {
+                try {
+                  if (setData(restoreEntry(data, entryId)))
+                    notify("Movimiento restaurado. ✓");
+                } catch (error) {
+                  notify(error.message);
+                }
+              }}
+              onCorrect={actions.correct}
+            />
+          )}
+          {tab === "tutorial" && (
+            <Suspense
+              fallback={<p role="status">{pet.petName} prepara tu paseíto…</p>}
+            >
+              <Tutorial
+                preferences={pet}
+                onNavigate={go}
+                onCreate={() => {
+                  go("goals");
+                  actions.create();
+                }}
+              />
+            </Suspense>
+          )}
+          {tab === "install" && (
+            <Install notify={notify} signedIn={Boolean(cloud.user)} />
+          )}
+          {tab === "help" && <Help notify={notify} />}
+          {tab === "account" && cloud.configured && (
+            <Account cloud={cloud} notify={notify} />
+          )}
+          {tab === "partner" && cloud.configured && (
+            <Partner
+              cloud={cloud}
+              partner={partner}
+              notify={notify}
+              onNavigate={go}
+              initialCode={launch.inviteCode}
+            />
+          )}
+          {tab === "more" && (
+            <More
+              cloud={cloud}
+              data={data}
+              onSave={setData}
+              notify={notify}
+              onNavigate={go}
+            />
+          )}
+          {tab === "simulator" && ownerTools && <Simulator />}
+          {tab === "connections" && ownerTools && (
+            <Connections
+              key={connectionVersion}
+              data={data}
+              setData={setData}
+              notify={notify}
+              record={feedback.record}
+              onCreate={actions.create}
+            />
+          )}
+          {tab === "backup" && (
+            <Backup
+              data={data}
+              onRestore={async (next) => {
+                const restored = restoreWithoutReminders(next);
+                if (!report(store.replace(restored))) return false;
+                try {
+                  await syncReminders(restored);
+                  notify(
+                    "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Mi mascota.",
+                  );
+                } catch (error) {
+                  notify(
+                    `Respaldo restaurado. Revisa el recordatorio en Mi mascota: ${error.message}`,
+                  );
+                }
+                return true;
+              }}
+              notify={notify}
+            />
+          )}
+        </AppShell>
+      )}
       <GoalDialogs
         actions={actions}
         data={data}

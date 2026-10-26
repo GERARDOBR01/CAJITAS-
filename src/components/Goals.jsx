@@ -45,33 +45,16 @@ export const dateLabel = (date) =>
     month: "short",
     year: "numeric",
   });
-export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
+export function GoalForm({
+  onSave,
+  onClose,
+  goal = null,
+  onArchive,
+  weekday,
+  idea = null,
+}) {
   const [error, setError] = useState("");
-  const [icon, setIcon] = useState(goal?.icon ?? "star");
-  const [template, setTemplate] = useState(null);
-  const templates = [
-    {
-      id: "trip",
-      name: "Una escapadita",
-      icon: "cloud",
-      label: "Una escapadita",
-      symbol: "☁",
-    },
-    {
-      id: "safety",
-      name: "Mi colchoncito",
-      icon: "star",
-      label: "Tranquilidad",
-      symbol: "✦",
-    },
-    {
-      id: "treat",
-      name: "Algo para mí",
-      icon: "flower",
-      label: "Algo para mí",
-      symbol: "✿",
-    },
-  ];
+  const [icon, setIcon] = useState(goal?.icon ?? idea?.icon ?? "star");
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 30);
   const [draftPlan, setDraftPlan] = useState({
@@ -132,34 +115,12 @@ export function GoalForm({ onSave, onClose, goal = null, onArchive, weekday }) {
       onClose={onClose}
     >
       <p className="muted">Ponle nombre. Dale tiempo. Tú puedes.</p>
-      {!goal && (
-        <div
-          className="goal-templates"
-          role="group"
-          aria-label="Ideas para tu cajita"
-        >
-          {templates.map((t) => (
-            <button
-              type="button"
-              key={t.id}
-              aria-pressed={template?.id === t.id}
-              onClick={() => {
-                setTemplate(t);
-                setIcon(t.icon);
-              }}
-            >
-              <span>{t.symbol}</span>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
-      <form key={template?.id ?? goal?.id ?? "custom"} onSubmit={submit}>
+      <form onSubmit={submit}>
         <label>
           Nombre de tu meta
           <input
             name="name"
-            defaultValue={goal?.name ?? template?.name ?? ""}
+            defaultValue={goal?.name ?? idea?.name ?? ""}
             placeholder="Mi próxima aventura"
             maxLength={80}
             required

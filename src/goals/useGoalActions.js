@@ -31,7 +31,13 @@ export function useGoalActions({
     dialog,
     close,
     goalOf,
-    create: () => setDialog({ type: "new" }),
+    /** `idea` ({ name, icon }) starts the form, e.g. from the welcome. A
+     * click event passed by an `onClick` is not an idea. */
+    create: (idea) =>
+      setDialog({
+        type: "new",
+        idea: typeof idea?.name === "string" ? idea : null,
+      }),
     move: (goal, { withdraw = false, initialCents } = {}) =>
       setDialog({ type: "movement", goalId: goal.id, withdraw, initialCents }),
     edit: (goal) => setDialog({ type: "edit", goalId: goal.id }),
