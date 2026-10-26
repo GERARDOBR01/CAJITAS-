@@ -1,70 +1,40 @@
 import { test, expect } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-async function openTab(page, name) {
-  const button = page.getByRole("button", { name, exact: true });
-  if (!(await button.isVisible()))
-    await page.getByRole("button", { name: "Más", exact: true }).click();
-  await page.getByRole("button", { name, exact: true }).click();
-}
+import { createGoal, home, saveIn, settings } from "./helpers.js";
 
-test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×844", async ({
+test("crear meta, guardar, usar parte sin culpa, meta cumplida y respaldo a 390×844", async ({
   page,
 }) => {
-  await mkdir("docs/screenshots", { recursive: true });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "¿Qué te hace ilusión?" }),
+    page.getByRole("heading", { name: "¡Hola, soy Pipo!" }),
   ).toBeVisible();
-  await page.screenshot({
-    path: "docs/screenshots/01-inicio-mobile.png",
-    fullPage: true,
-  });
-  await page
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await page.getByLabel("Nombre de tu meta").fill("Mi escapadita");
-  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
   const future = new Date();
   future.setDate(future.getDate() + 30);
   const local = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, "0")}-${String(future.getDate()).padStart(2, "0")}`;
-  await page.getByLabel("Fecha objetivo").fill(local);
-  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  const card = page.locator(".goal-card");
-  await expect(card).toContainText("días ·");
-  await expect(card).toContainText("Ahorro registrado");
-  await page.screenshot({
-    path: "docs/screenshots/02-meta-countdown-mobile.png",
-    fullPage: true,
-  });
-  await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
-  await page.getByLabel("Monto (MXN)").fill("600");
-  await page.getByRole("button", { name: /^Guardar/ }).click();
-  await card
-    .getByRole("button", { name: "Registrar retiro", exact: true })
-    .click();
-  await page.getByLabel("Monto (MXN)").fill("100");
-  await expect(page.getByRole("dialog")).toContainText(
-    "también es cumplir su propósito",
-  );
-  await page.screenshot({
-    path: "docs/screenshots/03-retiro-confirmacion-mobile.png",
-    fullPage: true,
-  });
+  await createGoal(page, { name: "Mi escapadita", amount: 1000, when: local });
+  const card = page.locator(".cajita");
+  await expect(card).toContainText("Faltan 30 días");
+  await saveIn(page, "Mi escapadita", 600);
   await page
-    .getByRole("dialog")
-    .getByRole("button", { name: /^Retirar/ })
+    .getByRole("button", { name: "Ver detalle de Mi escapadita" })
     .click();
-  await expect(card.locator(".saved")).toContainText("$500.00");
+  await page.getByRole("button", { name: "Usé parte de este ahorro" }).click();
+  const use = page.getByRole("dialog", { name: "Usé parte de mi ahorro" });
+  await expect(use).toContainText("también es cumplir su propósito");
+  await use.getByLabel("Monto", { exact: true }).fill("100");
+  await use.getByRole("button", { name: /^Registrar/ }).click();
   await expect(page.locator(".toast")).toContainText("cumplir su propósito");
+  await home(page);
+  await expect(card).toContainText("$500");
   await expect(page.locator(".home .mascot").first()).not.toHaveAttribute(
     "data-mood",
     "sad",
   );
-  await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
-  await page.getByLabel("Monto (MXN)").fill("500");
-  await page.getByRole("button", { name: /^Guardar/ }).click();
-  await expect(card).toContainText("¡Lo lograste!");
+  await saveIn(page, "Mi escapadita", 500);
   await expect(page.locator(".confetti")).toBeAttached();
+  await expect(page.locator(".hero")).toContainText("¡Lo lograste!");
+  await page.getByRole("button", { name: "Cumplidas (1)" }).click();
+  await expect(card).toContainText("¡Cumplida!");
   await expect
     .poll(() =>
       card
@@ -76,13 +46,8 @@ test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×
         ),
     )
     .toBeGreaterThan(0.99);
-  await page.screenshot({
-    path: "docs/screenshots/04-meta-alcanzada-mobile.png",
-    fullPage: true,
-  });
   await page.reload();
-  await expect(card.locator(".saved")).toContainText("$1,000.00");
-  await openTab(page, "Respaldo");
+  await settings(page, "Respaldo");
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "↓ Descargar respaldo" }).click();
   const download = await downloadPromise;
@@ -96,7 +61,8 @@ test("crear meta, countdown, retiro sin culpa, meta alcanzada y respaldo a 390×
   await page
     .getByRole("button", { name: "Reemplazar con este respaldo" })
     .click();
-  await page.getByRole("button", { name: "Mis cajitas", exact: true }).click();
+  await home(page);
+  await page.getByRole("button", { name: "Cumplidas (1)" }).click();
   await expect(card).toContainText("Mi escapadita");
   expect(
     await page.evaluate(
@@ -117,16 +83,12 @@ test("simulador sin token muestra configuración pendiente, sin tasas inventadas
     }),
   );
   await page.goto("/");
-  await openTab(page, "Rendimiento");
+  await settings(page, "Rendimiento");
   await expect(
     page.getByText("Configura el token de Banxico", { exact: false }),
   ).toBeVisible();
   await page.getByLabel("Tasa anual de tu app (%)").fill("10");
   await expect(page.locator(".custom")).toContainText("$7.67");
-  await page.screenshot({
-    path: "docs/screenshots/05-simulador-mobile.png",
-    fullPage: true,
-  });
 });
 test("Gmail revisa depósitos, recuerda asignación y evita duplicados", async ({
   page,
@@ -159,29 +121,20 @@ test("Gmail revisa depósitos, recuerda asignación y evita duplicados", async (
     }),
   );
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await page.getByLabel("Nombre de tu meta").fill("Mi guardadito");
-  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
-  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  await openTab(page, "Conexiones");
+  await createGoal(page, { name: "Mi guardadito", amount: 1000 });
+  await settings(page, "Conexiones");
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await page
     .getByRole("combobox", { name: "Cajita", exact: true })
     .selectOption({ label: "Mi guardadito" });
   await page.getByLabel("Recordar esta cajita para el patrón").check();
-  await page.screenshot({
-    path: "docs/screenshots/06-conexiones-mobile.png",
-    fullPage: true,
-  });
   await page.getByRole("button", { name: "Confirmar depósito" }).click();
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await expect(
     page.getByRole("button", { name: "Confirmar depósito" }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Mis cajitas", exact: true }).click();
-  await expect(page.locator(".goal-card .saved")).toContainText("$250.00");
+  await home(page);
+  await expect(page.locator(".cajita")).toContainText("$250");
 });
 test("un patrón validado con cajita recordada se registra automáticamente una sola vez", async ({
   page,
@@ -229,7 +182,7 @@ test("un patrón validado con cajita recordada se registra automáticamente una 
     }),
   );
   await page.goto("/");
-  await openTab(page, "Conexiones");
+  await settings(page, "Conexiones");
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await expect(
     page.getByText("1 depósitos automáticos.", { exact: false }),
@@ -238,8 +191,8 @@ test("un patrón validado con cajita recordada se registra automáticamente una 
   await expect(
     page.getByText("0 depósitos automáticos.", { exact: false }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Mis cajitas", exact: true }).click();
-  await expect(page.locator(".goal-card .saved")).toContainText("$300.00");
+  await home(page);
+  await expect(page.locator(".cajita")).toContainText("$300");
 });
 test("datos locales dañados no se sobrescriben al intentar crear una meta", async ({
   page,
@@ -251,12 +204,11 @@ test("datos locales dañados no se sobrescriben al intentar crear una meta", asy
   await expect(
     page.getByRole("button", { name: "Descargar datos originales" }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await page.getByLabel("Nombre de tu meta").fill("Prueba");
-  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("10");
-  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
+  await page.getByRole("button", { name: "Crear mi primera cajita" }).click();
+  const form = page.getByRole("dialog", { name: "Nueva cajita" });
+  await form.getByLabel("¿Para qué es?").fill("Prueba");
+  await form.getByLabel("¿Cuánto quieres juntar?").fill("10");
+  await form.getByRole("button", { name: "Crear cajita" }).click();
   expect(await page.evaluate(() => localStorage.getItem("guardadito:v1"))).toBe(
     '{"datos":"incompletos"}',
   );

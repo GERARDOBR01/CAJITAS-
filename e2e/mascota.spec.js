@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { journal, settings } from "./helpers.js";
 
 const day = (n) => new Date(Date.now() - n * 86400000).toISOString();
 const seed = () => ({
@@ -45,10 +46,10 @@ async function open(page, colorScheme = "light") {
     }
   }, JSON.stringify(seed()));
   await page.goto("/");
-  await page.getByRole("button", { name: "Mi mascota", exact: true }).click();
+  await page.getByRole("button", { name: /^Mi mascota/ }).click();
 }
 
-test("elegir a Nuri y a Taro cambia el nombre y se guarda", async ({
+test("elegir a Nuri y a Taro cambia el nombre y se guarda al momento", async ({
   page,
 }) => {
   await open(page);
@@ -61,28 +62,48 @@ test("elegir a Nuri y a Taro cambia el nombre y se guarda", async ({
   ]);
   await page.getByRole("button", { name: "Elegir Nutria" }).click();
   await expect(page.getByLabel("Su nombre")).toHaveValue("Nuri");
-  await expect(page.locator(".pet-garden h2")).toHaveText("Nuri");
+  await expect(page.locator(".pet-stage h1")).toHaveText("Nuri");
   await page.getByRole("button", { name: "Bufanda" }).click();
-  await page.getByRole("button", { name: "Guardar mi compañero" }).click();
-  const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("guardadito:v1")),
-  );
-  expect(saved.preferences).toMatchObject({
+  expect((await journal(page)).preferences).toMatchObject({
     pet: "otter",
     petName: "Nuri",
     accessory: "scarf",
   });
   await page.getByRole("button", { name: "Elegir Shiba" }).click();
   await expect(page.getByLabel("Su nombre")).toHaveValue("Taro");
+  // A name the person chose stays when changing the pet.
+  await page.getByLabel("Su nombre").fill("Bolita");
+  await page.getByLabel("Su nombre").press("Enter");
+  await page.getByRole("button", { name: "Elegir Conejito" }).click();
+  await expect(page.getByLabel("Su nombre")).toHaveValue("Bolita");
+  expect((await journal(page)).preferences).toMatchObject({
+    pet: "bunny",
+    petName: "Bolita",
+  });
 });
 
-test("el recordatorio se enciende con el interruptor", async ({ page }) => {
+test("los logros cuentan semanas con ahorro, nunca rachas que se rompen", async ({
+  page,
+}) => {
   await open(page);
-  const toggle = page.getByLabel("Recordarme registrar mi ahorro");
+  await expect(page.locator(".pet-weeks")).toContainText(
+    "1 semana en que guardaste",
+  );
+  await expect(page.getByText("Tu primer pasito")).toBeVisible();
+  await expect(page.getByText(/racha/i)).toHaveCount(0);
+});
+
+test("el recordatorio se enciende con el interruptor y se guarda", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await settings(page, "Recordatorio");
+  const toggle = page.getByLabel("Recordarme guardar");
   await expect(toggle).not.toBeChecked();
   await toggle.check();
-  await expect(toggle).toBeChecked();
   await expect(page.getByLabel("Hora")).toBeEnabled();
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  expect((await journal(page)).preferences.reminder.enabled).toBe(true);
 });
 
 for (const theme of ["light", "dark"])

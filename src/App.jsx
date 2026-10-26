@@ -3,11 +3,12 @@ import GoalDialogs from "./goals/GoalDialogs.jsx";
 import { useGoalActions } from "./goals/useGoalActions.js";
 import Home from "./screens/Home.jsx";
 import GoalDetail from "./screens/GoalDetail.jsx";
-import More from "./screens/More.jsx";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import Settings from "./screens/Settings.jsx";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import PetRoom from "./components/PetRoom.jsx";
-import Activity from "./components/Activity.jsx";
+import History from "./components/History.jsx";
+import Reminder from "./components/Reminder.jsx";
 import Install from "./components/Install.jsx";
 import Simulator from "./components/Simulator.jsx";
 import Connections from "./components/Connections.jsx";
@@ -34,14 +35,13 @@ import {
   easeReminders,
   restoreWithoutReminders,
 } from "./pet/reminders.js";
-import { restoreEntry } from "./domain.js";
+import { checkIn, restoreEntry, today } from "./domain.js";
+import { SLEEPY_DAYS, daysAway } from "./pet/state.js";
 import Help from "./components/Help.jsx";
 import AccountNudge from "./components/AccountNudge.jsx";
 import Welcome, { markWelcomed, needsWelcome } from "./components/Welcome.jsx";
 import { ownerTools } from "./features.js";
 import { keepPrevious } from "./journal/previous.js";
-
-const Tutorial = lazy(() => import("./components/Tutorial.jsx"));
 
 // Development only: `?probar-error` makes the app fail to show the error screen.
 const CRASH_TEST =
@@ -114,18 +114,25 @@ export default function App() {
   const store = journal();
   const { data, recovery } = useJournal(store);
   const loadError = RECOVERY_MESSAGES[recovery] ?? "";
-  const { tab, go, launch } = useNavigation({ cloudConfigured });
+  const { tab, go, back, launch } = useNavigation({
+    cloudConfigured,
+    ownerTools,
+  });
   const [now, setNow] = useState(Date.now()),
     [offline, setOffline] = useState(!navigator.onLine);
   const [goalFilter, setGoalFilter] = useState("active");
   // The first time on a phone with nothing yet: a short welcome instead of
-  // an empty home. A link that asked for a screen (an invite, the
-  // tutorial) goes straight there.
+  // an empty home. A link that asked for a screen (an invite) goes
+  // straight there.
   const [welcome, setWelcome] = useState(
     () =>
       !recovery &&
       launch.tab === "goals" &&
       needsWelcome(store.get(), { search: location.search }),
+  );
+  // Someone back after a week or more: the pet is glad to see them.
+  const [returning] = useState(
+    () => !recovery && daysAway(store.get()) >= SLEEPY_DAYS,
   );
   const [detailId, setDetailId] = useState(null);
   const [connectionVersion, setConnectionVersion] = useState(0);
@@ -184,10 +191,10 @@ export default function App() {
   }
   const setData = (next) => report(store.save(next));
   useEffect(() => {
-    // Countdowns tick every second, but not while the app is in the background.
+    // Dates move on by the minute, and not while the app is in the background.
     const timer = setInterval(() => {
       if (document.visibilityState !== "hidden") setNow(Date.now());
-    }, 1000);
+    }, 60 * 1000);
     const on = () => setOffline(!navigator.onLine);
     window.addEventListener("online", on);
     window.addEventListener("offline", on);
@@ -247,7 +254,14 @@ export default function App() {
       if (goal) actions.move(goal);
     }).catch(() => {});
   }, []);
+  // Coming back is enough: each day the app is opened counts as company.
   useEffect(() => {
+    if (welcome || loadError) return;
+    const current = latestData.current;
+    if (!current.checkins.includes(today())) setData(checkIn(current));
+  }, [welcome]);
+  useEffect(() => {
+    if (!ownerTools) return;
     const connected = (e) => {
       consumeConnectionResult();
       if (e.detail?.error) notify(e.detail.error);
@@ -311,12 +325,7 @@ export default function App() {
           onDone={() => finishWelcome()}
         />
       ) : (
-        <AppShell
-          tab={tab}
-          onNavigate={go}
-          goalCount={data.goals.length}
-          pet={pet}
-        >
+        <AppShell tab={tab} back={back} onNavigate={go} pet={pet}>
           {offline && (
             <p className="offline" role="status">
               {cloud.user
@@ -377,7 +386,7 @@ export default function App() {
               actions={actions}
               onOpen={openGoal}
               onPet={() => haptic()}
-              onTutorial={() => go("tutorial")}
+              returning={returning}
             />
           )}
           {tab === "goals" && partner.pair && (
@@ -396,14 +405,15 @@ export default function App() {
               actions={actions}
               onBack={() => go("goals")}
               onFrequency={setFrequency}
-              onActivity={() => go("activity")}
+              onActivity={() => go("history")}
             />
           )}
-          {tab === "pet" && (
-            <PetRoom data={data} onSave={setData} notify={notify} />
+          {tab === "pet" && <PetRoom data={data} onSave={setData} />}
+          {tab === "reminder" && (
+            <Reminder data={data} onSave={setData} notify={notify} />
           )}
-          {tab === "activity" && (
-            <Activity
+          {tab === "history" && (
+            <History
               data={data}
               notify={notify}
               onRestore={(entryId) => {
@@ -416,20 +426,6 @@ export default function App() {
               }}
               onCorrect={actions.correct}
             />
-          )}
-          {tab === "tutorial" && (
-            <Suspense
-              fallback={<p role="status">{pet.petName} prepara tu paseíto…</p>}
-            >
-              <Tutorial
-                preferences={pet}
-                onNavigate={go}
-                onCreate={() => {
-                  go("goals");
-                  actions.create();
-                }}
-              />
-            </Suspense>
           )}
           {tab === "install" && (
             <Install notify={notify} signedIn={Boolean(cloud.user)} />
@@ -447,14 +443,8 @@ export default function App() {
               initialCode={launch.inviteCode}
             />
           )}
-          {tab === "more" && (
-            <More
-              cloud={cloud}
-              data={data}
-              onSave={setData}
-              notify={notify}
-              onNavigate={go}
-            />
+          {tab === "settings" && (
+            <Settings cloud={cloud} data={data} onNavigate={go} />
           )}
           {tab === "simulator" && ownerTools && <Simulator />}
           {tab === "connections" && ownerTools && (
@@ -476,11 +466,11 @@ export default function App() {
                 try {
                   await syncReminders(restored);
                   notify(
-                    "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Mi mascota.",
+                    "Respaldo restaurado. Puedes activar de nuevo tu recordatorio en Ajustes.",
                   );
                 } catch (error) {
                   notify(
-                    `Respaldo restaurado. Revisa el recordatorio en Mi mascota: ${error.message}`,
+                    `Respaldo restaurado. Revisa el recordatorio en Ajustes: ${error.message}`,
                   );
                 }
                 return true;

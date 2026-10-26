@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Mascot from "./Mascot.jsx";
 import { PETS, availablePets } from "../pet/catalog.js";
+import GoalIcon from "../goals/GoalIcon.jsx";
 
 export const WELCOMED_KEY = "guardadito:welcomed";
 
@@ -30,10 +31,10 @@ export function markWelcomed(storage) {
 
 // Each idea names the cajita and gives it its icon.
 const IDEAS = [
-  { symbol: "☁", name: "Un viaje", icon: "cloud" },
-  { symbol: "✦", name: "Mi colchoncito", icon: "star" },
-  { symbol: "✿", name: "Algo para mí", icon: "flower" },
-  { symbol: "♡", name: "Un regalo", icon: "star" },
+  { name: "Un viaje", icon: "plane" },
+  { name: "Mi colchoncito", icon: "shield" },
+  { name: "Algo para mí", icon: "star" },
+  { name: "Un regalo", icon: "gift" },
 ];
 
 /**
@@ -151,7 +152,8 @@ export default function Welcome({
                 className="secondary"
                 onClick={() => onCreate(idea)}
               >
-                <span aria-hidden="true">{idea.symbol}</span> {idea.name}
+                <GoalIcon icon={idea.icon} size="sm" />
+                {idea.name}
               </button>
             ))}
           </div>

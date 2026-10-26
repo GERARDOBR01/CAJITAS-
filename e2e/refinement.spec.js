@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { createGoal, home, journal as saved, settings } from "./helpers.js";
 
 function fixture() {
   const yesterday = new Date();
@@ -70,88 +71,84 @@ async function mockReceipt(page, data) {
     }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "Más", exact: true }).click();
-  await page.getByRole("button", { name: "Conexiones", exact: true }).click();
+  await settings(page, "Conexiones");
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
-}
-async function saved(page) {
-  return page.evaluate(() => JSON.parse(localStorage.getItem("guardadito:v1")));
 }
 async function dismiss(page) {
   const close = page.getByRole("button", { name: "Cerrar aviso", exact: true });
   if (await close.isVisible()) await close.click();
 }
-test("el plan se ve antes de crear y los montos rápidos requieren registrar el depósito", async ({
+const local = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+test("el pasito se ve antes de crear y los montos rápidos requieren guardar", async ({
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await page.getByLabel("Nombre de tu meta").fill("Mi fondo bonito");
-  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
-  await page.getByLabel("Mi ritmo de ahorro").selectOption("15");
+  await page.getByRole("button", { name: "Crear mi primera cajita" }).click();
+  const form = page.getByRole("dialog", { name: "Nueva cajita" });
+  await form.getByLabel("¿Para qué es?").fill("Mi fondo bonito");
+  await form.getByLabel("¿Cuánto quieres juntar?").fill("1000");
+  await form.getByRole("button", { name: "3 meses" }).click();
+  await form.getByRole("button", { name: "Cada quincena" }).click();
   // Same dates as the reminders: the 15th and the last day of the month.
-  // How many fall in the default 30 days depends on today.
-  await expect(page.locator(".plan-preview")).toContainText(
-    /\$[\d,.]+ por quincena \(15 y fin de mes\)/,
+  await expect(form.locator(".plan-line")).toContainText(
+    /Serían \$[\d,]+ por quincena/,
   );
-  const step = (await page.locator(".plan-preview strong").innerText())
+  const step = (await form.locator(".plan-line strong").innerText())
     .match(/\$([\d,.]+)/)[1]
     .replace(",", "");
-  await page.screenshot({ path: "docs/screenshots/v3-01-plan-mobile.png" });
-  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  const card = page.locator(".goal-card");
-  await expect(card).toContainText("Te faltan $1,000.00");
-  await card.getByRole("button", { name: "+ Registrar ahorro" }).click();
+  // Rounded up to $10: easier to set aside.
+  expect(Number(step) % 10).toBe(0);
+  await form.getByRole("button", { name: "Crear cajita" }).click();
   await page
-    .getByRole("button", { name: "Mi siguiente pasito", exact: true })
+    .getByRole("button", { name: "Guardar en Mi fondo bonito" })
     .click();
-  await expect(page.getByLabel("Monto (MXN)")).toHaveValue(step);
+  const sheet = page.getByRole("dialog", { name: "Guardar dinero" });
+  await sheet.getByRole("button", { name: /^Mi pasito/ }).click();
+  await expect(sheet.getByLabel("Monto", { exact: true })).toHaveValue(
+    `${step}.00`,
+  );
   expect((await saved(page)).goals[0].entries).toHaveLength(0);
-  await page.getByRole("button", { name: "$100.00", exact: true }).click();
+  await sheet.getByRole("button", { name: "$100", exact: true }).click();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const date = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
-  await page.getByLabel("Fecha del movimiento").fill(date);
-  await page.getByRole("button", { name: /^Guardar/ }).click();
-  await expect(card).toContainText("Te faltan $900.00");
+  await sheet.getByRole("button", { name: "¿Fue otro día?" }).click();
+  await sheet.getByLabel("¿Qué día fue?").fill(local(yesterday));
+  await sheet.getByRole("button", { name: /^Guardar \$/ }).click();
+  await expect(page.locator(".cajita")).toContainText("$100");
   const entry = (await saved(page)).goals[0].entries[0];
   expect(entry.cents).toBe(10000);
-  expect(entry.at.slice(0, 10)).toBe(date);
+  expect(entry.at.slice(0, 10)).toBe(local(yesterday));
 });
-test("una meta sin fecha se crea, se guarda como null y se ahorra a tu ritmo", async ({
+
+test("una cajita sin prisa se crea, se guarda como null y se ahorra a tu ritmo", async ({
   page,
 }) => {
   await page.goto("/");
+  await createGoal(page, {
+    name: "Mi colchoncito",
+    amount: 3000,
+    when: "Sin prisa",
+  });
+  const card = page.locator(".cajita");
+  await expect(card).toContainText("Sin prisa");
   await page
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await page.getByLabel("Nombre de tu meta").fill("Mi colchoncito");
-  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("3000");
-  await page.getByLabel("Sin fecha").check();
-  await expect(page.getByLabel("Fecha objetivo")).toBeDisabled();
-  await expect(page.locator(".plan-preview")).toContainText(
-    "Sin fecha objetivo",
-  );
-  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  const card = page.locator(".goal-card");
-  await expect(card).toContainText("Sin fecha objetivo");
-  await card
     .getByRole("button", { name: "Ver detalle de Mi colchoncito" })
     .click();
   await expect(page.locator(".detail-plan")).toContainText(
-    "Sin fecha objetivo: aporta lo que te acomode.",
+    "guarda lo que puedas",
   );
-  await page.getByRole("button", { name: "Volver a mis cajitas" }).click();
+  await page.getByRole("button", { name: "Volver al inicio" }).click();
   expect((await saved(page)).goals[0].unlockDate).toBeNull();
-  const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
-  await next.getByRole("button", { name: "Registrar mi pasito" }).click();
-  await expect(page.getByLabel("Monto (MXN)")).toHaveValue("");
-  await expect(
-    page.getByRole("button", { name: "Mi siguiente pasito", exact: true }),
-  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Guardar dinero" }).click();
+  const sheet = page.getByRole("dialog", { name: "Guardar dinero" });
+  await expect(sheet.getByLabel("Monto", { exact: true })).toHaveValue("");
+  await expect(sheet.getByRole("button", { name: /^Mi pasito/ })).toHaveCount(
+    0,
+  );
 });
+
 test("un correo validado con coincidencias requiere elección y puede vincular una cajita archivada sin sumar dinero", async ({
   page,
 }) => {
@@ -168,8 +165,6 @@ test("un correo validado con coincidencias requiere elección y puede vincular u
     .getByLabel("¿Ya lo registraste?")
     .selectOption(JSON.stringify(["archive", "archived-manual"]));
   await dismiss(page);
-  await page.locator(".receipt-match").scrollIntoViewIfNeeded();
-  await page.screenshot({ path: "docs/screenshots/v3-02-correo-mobile.png" });
   await page
     .getByRole("button", { name: "Vincular al registro existente" })
     .click();
@@ -187,6 +182,7 @@ test("un correo validado con coincidencias requiere elección y puede vincular u
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await expect(page.locator(".receipt-match")).toHaveCount(0);
 });
+
 test("otro depósito del mismo monto necesita confirmación explícita y sigue deduplicado por correo", async ({
   page,
 }) => {
@@ -210,7 +206,8 @@ test("otro depósito del mismo monto necesita confirmación explícita y sigue d
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   expect((await saved(page)).goals[0].entries).toHaveLength(2);
 });
-test("corregir y eliminar errores conserva saldo histórico válido; gráfico y exportación respetan la cajita", async ({
+
+test("corregir y eliminar errores conserva saldo válido; la papelera lo devuelve igual", async ({
   page,
 }) => {
   const data = fixture();
@@ -227,17 +224,13 @@ test("corregir y eliminar errores conserva saldo histórico válido; gráfico y 
     data,
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "Actividad", exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "Cajita", exact: true })
-    .selectOption("live");
-  await expect(page.locator(".chart-heading")).toContainText("$500.00");
-  await expect(page.locator(".activity-feed")).not.toContainText(
-    "Viaje archivado",
-  );
-  await page
-    .locator(".activity-feed li")
-    .filter({ hasText: "+$600.00" })
+  const card = page.locator(".cajita").filter({ hasText: "Mi guardadito" });
+  await expect(card).toContainText("$500");
+  await settings(page, "Historial");
+  const history = page.locator(".history");
+  await history
+    .locator("li")
+    .filter({ hasText: "+$600" })
     .getByRole("button", { name: /Corregir registro/ })
     .click();
   await page.getByLabel("Monto corregido (MXN)").fill("50");
@@ -251,47 +244,40 @@ test("corregir y eliminar errores conserva saldo histórico válido; gráfico y 
   await expect(page.getByRole("alert")).toContainText("saldo");
   await page.getByRole("button", { name: "Volver a corregir" }).click();
   await page.getByLabel("Monto corregido (MXN)").fill("700");
-  await page.screenshot({
-    path: "docs/screenshots/v3-03-correccion-mobile.png",
-  });
   await page.getByRole("button", { name: "Guardar corrección" }).click();
-  await expect(page.locator(".chart-heading")).toContainText("$600.00");
-  await page
-    .locator(".activity-feed li")
-    .filter({ hasText: "-$100.00" })
+  await expect(history).toContainText("+$700");
+  await history
+    .locator("li")
+    .filter({ hasText: "-$100" })
     .getByRole("button", { name: /Corregir registro/ })
     .click();
   await page
     .getByRole("button", { name: "Eliminar registro equivocado" })
     .click();
   await page.getByRole("button", { name: "Sí, eliminar registro" }).click();
-  await expect(page.locator(".chart-heading")).toContainText("$700.00");
   await dismiss(page);
-  await page.screenshot({
-    path: "docs/screenshots/v3-04-actividad-mobile.png",
-  });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "↓ Exportar CSV" }).click();
+  await page.getByRole("button", { name: /Descargar en Excel/ }).click();
   const download = await downloadPromise;
-  const path = await download.path();
   const { readFile } = await import("node:fs/promises");
-  const csv = await readFile(path, "utf8");
+  const csv = await readFile(await download.path(), "utf8");
   expect(csv).toContain("700.00");
-  expect(csv).not.toContain("Viaje archivado");
-  // Lo borrado espera en la papelera y vuelve igual.
-  await page.getByText("🗑 Papelera (1)").click();
-  const trash = page.getByRole("list", { name: "Papelera" });
-  await expect(trash).toContainText("-$100.00");
+  // What was deleted waits in the trash and comes back as it was.
+  await page.getByText("Papelera (1)").click();
+  const trash = page.locator(".history-trash");
+  await expect(trash).toContainText("-$100");
   await trash.getByRole("button", { name: "Restaurar" }).click();
-  await expect(page.locator(".chart-heading")).toContainText("$600.00");
-  await expect(page.getByText("🗑 Papelera")).toHaveCount(0);
+  await expect(page.getByText("Papelera")).toHaveCount(0);
   expect((await saved(page)).trash).toBeUndefined();
+  await home(page);
+  await expect(card).toContainText("$600");
 });
+
 test("una segunda pestaña actualiza la vista y cierra una captura que quedó desactualizada", async ({
   page,
   context,
@@ -303,22 +289,23 @@ test("una segunda pestaña actualiza la vista y cierra una captura que quedó de
     data,
   );
   await page.goto("/");
-  await page
-    .locator(".goal-card")
-    .getByRole("button", { name: "+ Registrar ahorro" })
-    .click();
-  await page.getByLabel("Monto (MXN)").fill("100");
+  await page.getByRole("button", { name: "Guardar en Mi guardadito" }).click();
+  await page.getByLabel("Monto", { exact: true }).fill("100");
   const second = await context.newPage();
   await second.goto("/");
+  await second
+    .getByRole("button", { name: "Ver detalle de Mi guardadito" })
+    .click();
   await second.getByRole("button", { name: "Editar Mi guardadito" }).click();
-  await second.getByLabel("Nombre de tu meta").fill("Nuestro guardadito");
+  await second.getByLabel("¿Para qué es?").fill("Nuestro guardadito");
   await second.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(page.locator(".goal-card")).toContainText("Nuestro guardadito");
+  await expect(page.locator(".cajita")).toContainText("Nuestro guardadito");
   expect((await saved(page)).goals[0].entries).toHaveLength(1);
   await second.close();
 });
-test("ningún retiro entristece ni pide confirmar, antes o después de la fecha", async ({
+
+test("usar parte del ahorro nunca entristece ni pide confirmar, antes o después de la fecha", async ({
   page,
 }) => {
   const data = fixture();
@@ -328,8 +315,6 @@ test("ningún retiro entristece ni pide confirmar, antes o después de la fecha"
     d.setDate(d.getDate() - days);
     return d;
   };
-  const local = (d) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   data.goals[0].unlockDate = local(daysAgo(1));
   const deposit = daysAgo(3);
   deposit.setHours(10, 0, 0, 0);
@@ -339,31 +324,27 @@ test("ningún retiro entristece ni pide confirmar, antes o después de la fecha"
     data,
   );
   await page.goto("/");
-  const card = page.locator(".goal-card");
-  await card
-    .getByRole("button", { name: "Registrar retiro", exact: true })
-    .click();
-  await page.getByLabel("Monto (MXN)").fill("50");
   await page
-    .getByRole("dialog")
-    .getByRole("button", { name: /^Retirar/ })
+    .getByRole("button", { name: "Ver detalle de Mi guardadito" })
     .click();
-  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await expect(page.locator(".past-due")).toContainText("más tiempo");
+  const use = page.getByRole("dialog", { name: "Usé parte de mi ahorro" });
+  await page.getByRole("button", { name: "Usé parte de este ahorro" }).click();
+  await use.getByLabel("Monto", { exact: true }).fill("50");
+  await use.getByRole("button", { name: /^Registrar/ }).click();
+  await expect(use).not.toBeVisible();
   await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
-  await card
-    .getByRole("button", { name: "Registrar retiro", exact: true })
-    .click();
-  await page.getByLabel("Monto (MXN)").fill("25");
-  await page.getByLabel("Fecha del movimiento").fill(local(daysAgo(2)));
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: /^Retirar/ })
-    .click();
-  await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(card.locator(".saved")).toContainText("$175.00");
+  await page.getByRole("button", { name: "Usé parte de este ahorro" }).click();
+  await use.getByLabel("Monto", { exact: true }).fill("25");
+  await use.getByRole("button", { name: "¿Fue otro día?" }).click();
+  await use.getByLabel("¿Qué día fue?").fill(local(daysAgo(2)));
+  await use.getByRole("button", { name: /^Registrar/ }).click();
+  await expect(use).not.toBeVisible();
+  await expect(page.locator(".detail-amount")).toContainText("$175");
   await expect(page.locator('[data-mood="sad"]')).toHaveCount(0);
   await expect(page.locator(".toast")).toContainText("cumplir su propósito");
 });
+
 test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async ({
   page,
   context,
@@ -404,14 +385,16 @@ test("Gmail lento no sobrescribe cambios más recientes de otra pestaña", async
     });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Más", exact: true }).click();
-  await page.getByRole("button", { name: "Conexiones", exact: true }).click();
+  await settings(page, "Conexiones");
   await page.getByRole("button", { name: "Buscar depósitos" }).click();
   await expect.poll(() => requested).toBe(true);
   const second = await context.newPage();
   await second.goto("/");
+  await second
+    .getByRole("button", { name: "Ver detalle de Mi guardadito" })
+    .click();
   await second.getByRole("button", { name: "Editar Mi guardadito" }).click();
-  await second.getByLabel("Nombre de tu meta").fill("Nombre más reciente");
+  await second.getByLabel("¿Para qué es?").fill("Nombre más reciente");
   await second.getByRole("button", { name: "Guardar cambios" }).click();
   release();
   await expect(

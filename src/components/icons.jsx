@@ -1,6 +1,28 @@
 // Solar (linear) icons from Iconify, as used in the Sleek design.
 // Decorative: callers label the control, so the glyph is hidden from AT.
 
+export const Tune = (props) => (
+  <svg
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+    viewBox="0 0 24 24"
+  >
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth="1.8"
+    >
+      <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+      <circle cx="15" cy="7" r="2" />
+      <circle cx="9" cy="17" r="2" />
+    </g>
+  </svg>
+);
+
 export const Wallet = (props) => (
   <svg
     width="1em"

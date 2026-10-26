@@ -1,10 +1,7 @@
 import { useRef, useState } from "react";
 import Illustration from "./Illustration.jsx";
 import { parseLocalEmail, MAX_EMAIL_BYTES } from "../mail/parseEmail.js";
-import {
-  applyLocalReceipt,
-  possibleLocalMatches,
-} from "../receipts/local.js";
+import { applyLocalReceipt, possibleLocalMatches } from "../receipts/local.js";
 import { cents, localDate, money, today } from "../domain.js";
 
 export default function LocalMailImport({
@@ -425,7 +422,7 @@ export default function LocalMailImport({
         <div className="mail-success" role="status">
           <span aria-hidden="true">✿</span>
           <h3>Un pasito en su lugar</h3>
-          <p>Tu registro ya está actualizado. Puedes verlo en Actividad.</p>
+          <p>Tu registro ya está actualizado. Puedes verlo en Historial.</p>
           <button
             className="secondary"
             onClick={() => {

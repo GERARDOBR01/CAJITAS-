@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { more, password, signUp } from "./helpers.js";
+import { createGoal, home, more, password, signUp } from "./helpers.js";
 
 const contexts = [];
 test.afterEach(async () => {
@@ -26,19 +26,9 @@ test("cerrar sesión en un teléfono prestado no deja nada de la cuenta", async 
   await expect(
     page.getByRole("status").filter({ hasText: "guardadas en tu cuenta" }),
   ).toBeVisible({ timeout: 15000 });
-  await page.getByRole("button", { name: "Más", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Mis cajitas", exact: true })
-    .first()
-    .click();
-  await page
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await page.getByLabel("Nombre de tu meta").fill("Tenis");
-  await page.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1500");
-  await page.getByLabel("Sin fecha").check();
-  await page.getByRole("button", { name: "Crear cajita", exact: true }).click();
-  await expect(page.locator(".goal-card")).toContainText("Tenis");
+  await home(page);
+  await createGoal(page, "Tenis", 1500);
+  await expect(page.locator(".cajita")).toContainText("Tenis");
 
   await more(page, "Mi cuenta");
   await page
@@ -58,11 +48,8 @@ test("cerrar sesión en un teléfono prestado no deja nada de la cuenta", async 
   expect(
     await page.evaluate(() => localStorage.getItem("guardadito:cloud-uid")),
   ).toBeNull();
-  await page
-    .getByRole("button", { name: "Mis cajitas", exact: true })
-    .first()
-    .click();
-  await expect(page.locator(".goal-card")).toHaveCount(0);
+  await home(page);
+  await expect(page.locator(".cajita")).toHaveCount(0);
 
   // The account still has them.
   await more(page, "Mi cuenta");
@@ -72,11 +59,8 @@ test("cerrar sesión en un teléfono prestado no deja nada de la cuenta", async 
   await expect(
     page.getByRole("status").filter({ hasText: "guardadas en tu cuenta" }),
   ).toBeVisible({ timeout: 15000 });
-  await page
-    .getByRole("button", { name: "Mis cajitas", exact: true })
-    .first()
-    .click();
-  await expect(page.locator(".goal-card")).toContainText("Tenis");
+  await home(page);
+  await expect(page.locator(".cajita")).toContainText("Tenis");
 });
 
 test("un código de pareja sirve una sola vez", async ({ browser }, info) => {
@@ -84,10 +68,10 @@ test("un código de pareja sirve una sola vez", async ({ browser }, info) => {
   const [a, b] = await Promise.all([1, 2].map(() => phone(browser, info)));
   await signUp(a, "Gerardo", `g-${stamp}@guardadito.test`);
   await signUp(b, "Jade", `j-${stamp}@guardadito.test`);
-  await more(a, "Mi pareja");
+  await more(a, "Ahorrar en pareja");
   await a.getByRole("button", { name: "Crear mi código" }).click();
   const code = (await a.locator(".partner-code").textContent()).trim();
-  await more(b, "Mi pareja");
+  await more(b, "Ahorrar en pareja");
   await b.getByLabel("Código de tu pareja").fill(code);
   await b.getByRole("button", { name: "Vincular" }).click();
   await expect(b.getByRole("heading", { name: "Tú y Gerardo 💞" })).toBeVisible(
@@ -99,7 +83,7 @@ test("un código de pareja sirve una sola vez", async ({ browser }, info) => {
   await Promise.all([a.context().close(), b.context().close()]);
   const c = await phone(browser, info);
   await signUp(c, "Otra", `o-${stamp}@guardadito.test`);
-  await more(c, "Mi pareja");
+  await more(c, "Ahorrar en pareja");
   await c.getByLabel("Código de tu pareja").fill(code);
   await c.getByRole("button", { name: "Vincular" }).click();
   await expect(c.locator(".toast")).toContainText(

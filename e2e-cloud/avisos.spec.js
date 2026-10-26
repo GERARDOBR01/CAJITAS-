@@ -34,7 +34,6 @@ test("Mi pareja ofrece avisos, o explica cómo tenerlos en iPhone", async ({
   if (info.project.name === "iphone-safari") {
     // Safari outside the home screen has no Web Push.
     await expect(panel).toContainText("Agregar a inicio");
-    await panel.screenshot({ path: "docs/screenshots/v13/avisos-iphone.png" });
   } else {
     await expect(
       panel.getByRole("button", { name: "Activar avisos" }),

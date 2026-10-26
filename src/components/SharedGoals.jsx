@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cents, countdown, money, today } from "../domain.js";
+import { cents, dateText, money, today } from "../domain.js";
 import { contributions, myPart, myPlan } from "../cloud/shared.js";
 import Modal from "./Modal.jsx";
 
@@ -70,17 +70,7 @@ function SharedGoalCard({
           <small>Tu pasito: {money(step)} por quincena</small>
         )}
       </div>
-      <div className="lock">
-        <span aria-hidden="true">♧</span>
-        <div>
-          <strong>{countdown(goal.unlockDate, now)}</strong>
-          <span>
-            {goal.unlockDate
-              ? `Fecha objetivo · ${goal.unlockDate}`
-              : "A su ritmo, sin prisa"}
-          </span>
-        </div>
-      </div>
+      <p className="shared-date">{dateText(goal.unlockDate, now)}</p>
       {saved >= total && <p className="complete">✦ ¡Lo lograron juntos!</p>}
       <div className="card-actions">
         <button className="primary" onClick={() => onMove(goal, false)}>

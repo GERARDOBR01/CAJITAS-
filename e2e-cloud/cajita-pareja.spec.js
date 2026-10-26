@@ -61,11 +61,6 @@ test("una cajita en pareja: cada quien pone su parte desde su banco", async ({
   await expect(anaCard).toContainText("$500.00");
   await expect(anaCard).toContainText("Te faltan $600.00");
   await expect(betoCard).toContainText("Ana: $200.00", { timeout: 30000 });
-  if (info.project.name === "android-chrome")
-    await ana.screenshot({
-      path: "docs/screenshots/v11/cajita-en-pareja.png",
-      fullPage: true,
-    });
 
   // Solo puede retirar lo que ella apartó.
   await anaCard.getByRole("button", { name: "Registrar retiro" }).click();

@@ -46,9 +46,9 @@ describe("copia en la cuenta", () => {
     expect(() => fromCloud({ raw: JSON.stringify({ hola: 1 }) })).toThrow();
     expect(() => fromCloud(null)).toThrow();
   });
-  it("una visita sin cajitas también cuenta como contenido", () => {
+  it("solo las cajitas cuentan: abrir la app (una visita) no obliga a elegir", () => {
     expect(hasContent(journal())).toBe(false);
-    expect(hasContent({ ...journal(), checkins: ["2026-10-18"] })).toBe(true);
+    expect(hasContent({ ...journal(), checkins: ["2026-10-18"] })).toBe(false);
   });
 });
 
@@ -74,6 +74,18 @@ describe("la primera vez que se juntan cuenta y teléfono", () => {
     expect(
       firstSync({ local: journal(), remote: journal([goal("a")], 5), uid }),
     ).toBe("pull");
+  });
+  it("un teléfono vacío más reciente (por una visita) nunca borra la cuenta", () => {
+    const visited = { ...journal([], 99), checkins: ["2026-10-25"] };
+    for (const linkedUid of [undefined, uid])
+      expect(
+        firstSync({
+          local: visited,
+          remote: journal([goal("a")], 5),
+          uid,
+          linkedUid,
+        }),
+      ).toBe("pull");
   });
   it("cajitas distintas en los dos lados: pregunta cuáles usar", () => {
     expect(

@@ -1,50 +1,56 @@
 import { useState } from "react";
-import CommitmentNotice from "./CommitmentNotice.jsx";
 import {
-  money,
+  moneyShort as money,
   today,
   cents,
   balance,
-  countdown,
   plan,
   localDate,
   goalSummary,
-  moneyPlace,
-  PROVIDERS,
-  SOURCE_LABEL,
+  dateText,
 } from "../domain.js";
-import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
-import { isNative, openExternal } from "../platform.js";
+import { rhythmLabel } from "../calendar.js";
 import Money from "./Money.jsx";
-import { ArrowRight, Backspace, CheckCircle, InfoCircle } from "./icons.jsx";
+import { Backspace, CheckCircle } from "./icons.jsx";
 import { cleanAmount, nextAmount } from "../amount.js";
 import Modal from "./Modal.jsx";
-import { GoalComplete, GoalNotices, GoalProgress } from "./GoalProgress.jsx";
+import GoalIcon, { ICON_CHOICES } from "../goals/GoalIcon.jsx";
 
-export const destinations = {
-  Nu: "https://nu.com.mx/",
-  "Mercado Pago": "https://www.mercadopago.com.mx/",
-  BBVA: "https://www.bbva.mx/",
-  Banorte: "https://www.banorte.com/",
-  Santander: "https://www.santander.com.mx/",
-  Banamex: "https://www.banamex.com/",
-  "Hey Banco": "https://heybanco.com/",
-  Klar: "https://www.klar.mx/",
-  Bitso: "https://bitso.com/",
-};
 // A movement before this is surely a typo in the year.
 const OLDEST_MOVEMENT = "2000-01-01";
-const PROVIDER_OPTION = {
-  Efectivo: "Efectivo o alcancía",
-  Otra: "Otro banco o app",
-};
-export const symbols = { star: "✦", flower: "✿", cloud: "☁" };
 export const dateLabel = (date) =>
   new Date(`${date}T12:00:00`).toLocaleDateString("es-MX", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+
+const RHYTHMS = [
+  [7, "Cada semana"],
+  [15, "Cada quincena"],
+  [30, "Cada mes"],
+];
+/** Ready-made answers to "¿para cuándo?", in months from today. */
+const WHEN = [
+  [0, "Sin prisa"],
+  [3, "3 meses"],
+  [6, "6 meses"],
+  [12, "1 año"],
+];
+function monthsFromToday(months) {
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+  return localDate(date);
+}
+/** Which "¿para cuándo?" chip a date matches, or "date" for any other. */
+function whenOf(date) {
+  if (!date) return 0;
+  const match = WHEN.find(
+    ([months]) => months && monthsFromToday(months) === date,
+  );
+  return match ? match[0] : "date";
+}
+
 export function GoalForm({
   onSave,
   onClose,
@@ -53,56 +59,49 @@ export function GoalForm({
   weekday,
   idea = null,
 }) {
-  const [error, setError] = useState("");
-  const [icon, setIcon] = useState(goal?.icon ?? idea?.icon ?? "star");
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 30);
-  const [draftPlan, setDraftPlan] = useState({
-    amount: goal ? String(goal.targetCents / 100) : "",
-    date: goal?.unlockDate ?? localDate(tomorrow),
-    frequency: goal?.frequency ?? 7,
-    noDate: Boolean(goal && !goal.unlockDate),
-  });
-  let preview = null,
-    openPreview = false;
+  const [error, setError] = useState(""),
+    [name, setName] = useState(goal?.name ?? idea?.name ?? ""),
+    [icon, setIcon] = useState(goal?.icon ?? idea?.icon ?? "star"),
+    [amount, setAmount] = useState(goal ? String(goal.targetCents / 100) : ""),
+    [when, setWhen] = useState(goal ? whenOf(goal.unlockDate) : 6),
+    [date, setDate] = useState(goal?.unlockDate ?? monthsFromToday(6)),
+    [frequency, setFrequency] = useState(goal?.frequency ?? 15);
+  const unlockDate =
+    when === 0 ? null : when === "date" ? date : monthsFromToday(when);
+  let step = null;
   try {
-    if (draftPlan.noDate) openPreview = cents(draftPlan.amount) > 0;
-    else if (draftPlan.date >= today())
-      preview = plan(
+    if (unlockDate && unlockDate >= today())
+      step = plan(
         {
-          targetCents: cents(draftPlan.amount),
-          unlockDate: draftPlan.date,
+          targetCents: cents(amount),
+          unlockDate,
           entries: goal?.entries ?? [],
         },
-        Number(draftPlan.frequency),
+        frequency,
         Date.now(),
         weekday,
       );
   } catch {
-    /* The preview appears once the amount is valid. */
+    /* The suggestion appears once the amount is valid. */
   }
   function submit(e) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
     try {
-      const targetCents = cents(form.get("amount")),
-        name = form.get("name").trim(),
-        unlockDate = draftPlan.noDate ? null : form.get("date");
-      if (!name) throw new Error("Ponle un nombre a tu meta.");
-      if (!draftPlan.noDate && !(unlockDate >= today()))
-        throw new Error(
-          "Elige una fecha objetivo de hoy en adelante, o marca Sin fecha.",
-        );
+      const targetCents = cents(amount),
+        clean = name.trim();
+      if (!clean) throw new Error("Ponle un nombre a tu cajita.");
+      if (unlockDate && !(unlockDate >= today()))
+        throw new Error("Elige una fecha de hoy en adelante, o «Sin prisa».");
       onSave({
         ...goal,
         id: goal?.id ?? crypto.randomUUID(),
-        name,
+        name: clean,
         targetCents,
         unlockDate,
-        provider: form.get("provider"),
+        provider: goal?.provider ?? "Otra",
         icon,
         entries: goal?.entries ?? [],
-        frequency: Number(form.get("frequency")),
+        frequency,
         archived: goal?.archived ?? false,
       });
     } catch (err) {
@@ -110,139 +109,107 @@ export function GoalForm({
     }
   }
   return (
-    <Modal
-      title={goal ? "Tu sueño, a tu ritmo" : "Un nuevo sueño"}
-      onClose={onClose}
-    >
-      <p className="muted">Ponle nombre. Dale tiempo. Tú puedes.</p>
-      <form onSubmit={submit}>
+    <Modal title={goal ? "Editar cajita" : "Nueva cajita"} onClose={onClose}>
+      <form className="goal-form" onSubmit={submit}>
         <label>
-          Nombre de tu meta
+          ¿Para qué es?
           <input
             name="name"
-            defaultValue={goal?.name ?? idea?.name ?? ""}
-            placeholder="Mi próxima aventura"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Unos tenis, un viaje…"
             maxLength={80}
             required
-            autoFocus
+            autoFocus={!goal && !idea}
           />
         </label>
-        <label>
-          ¿Cuánto quieres ahorrar? (MXN)
-          <input
-            name="amount"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            value={draftPlan.amount}
-            onChange={(e) =>
-              setDraftPlan({
-                ...draftPlan,
-                amount: cleanAmount(e.target.value),
-              })
-            }
-            placeholder="5000"
-            required
-          />
-        </label>
-        <div className="form-row">
-          <div className="target-date">
-            <label>
-              Fecha objetivo
-              <input
-                name="date"
-                type="date"
-                min={today()}
-                value={draftPlan.noDate ? "" : draftPlan.date}
-                onChange={(e) =>
-                  setDraftPlan({ ...draftPlan, date: e.target.value })
-                }
-                disabled={draftPlan.noDate}
-                required={!draftPlan.noDate}
-              />
-            </label>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={draftPlan.noDate}
-                onChange={(e) =>
-                  setDraftPlan({ ...draftPlan, noDate: e.target.checked })
-                }
-              />
-              Sin fecha
-            </label>
-          </div>
-          <label>
-            ¿Dónde lo guardas?
-            <select name="provider" defaultValue={goal?.provider ?? "Nu"}>
-              {PROVIDERS.map((name) => (
-                <option key={name} value={name}>
-                  {PROVIDER_OPTION[name] ?? name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="icon-row" role="group" aria-label="Ícono de la cajita">
+          {ICON_CHOICES.map(([key, label]) => (
+            <button
+              type="button"
+              key={key}
+              aria-label={label}
+              aria-pressed={icon === key}
+              onClick={() => setIcon(key)}
+            >
+              <GoalIcon icon={key} size="sm" />
+            </button>
+          ))}
         </div>
         <label>
-          Mi ritmo de ahorro
-          <select
-            name="frequency"
-            value={draftPlan.frequency}
-            onChange={(e) =>
-              setDraftPlan({ ...draftPlan, frequency: e.target.value })
-            }
-          >
-            <option value={7}>{RHYTHM_LABEL.weekly}</option>
-            <option value={15}>{RHYTHM_LABEL.biweekly}</option>
-            <option value={30}>{RHYTHM_LABEL.monthly}</option>
-          </select>
+          ¿Cuánto quieres juntar?
+          <span className="money-input">
+            <span aria-hidden="true">$</span>
+            <input
+              name="amount"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={amount}
+              onChange={(e) => setAmount(cleanAmount(e.target.value))}
+              placeholder="5,000"
+              required
+              autoFocus={Boolean(idea) && !goal}
+            />
+          </span>
         </label>
-        {openPreview && (
-          <div className="plan-preview" role="status">
-            <span aria-hidden="true">🌱</span>
-            <div>
-              <strong>Sin fecha objetivo</strong>
-              <p>
-                Aporta lo que te acomode, a tu ritmo. Si después quieres una
-                guía, ponle una fecha y te sugerimos un monto.
-              </p>
-            </div>
-          </div>
+        <fieldset className="chips">
+          <legend>¿Para cuándo?</legend>
+          {WHEN.map(([months, label]) => (
+            <button
+              type="button"
+              key={months}
+              aria-pressed={when === months}
+              onClick={() => setWhen(months)}
+            >
+              {label}
+            </button>
+          ))}
+          <button
+            type="button"
+            aria-pressed={when === "date"}
+            onClick={() => setWhen("date")}
+          >
+            Otra fecha
+          </button>
+        </fieldset>
+        {when === "date" && (
+          <label>
+            Fecha
+            <input
+              name="date"
+              type="date"
+              min={today()}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </label>
         )}
-        {preview !== null && (
-          <div className="plan-preview" role="status">
-            <span aria-hidden="true">🌱</span>
-            <div>
-              <strong>
-                {money(preview)} {rhythmLabel(Number(draftPlan.frequency))}
-              </strong>
-              <p>
-                Para llegar a tu meta. Si se siente pesado, cambia el monto o la
-                fecha. Es una guía, no un cargo automático.
-              </p>
-            </div>
-          </div>
-        )}
-        <fieldset>
-          <legend>Elige su amuleto</legend>
-          <div className="icon-options">
-            {Object.entries(symbols).map(([key, symbol]) => (
+        {unlockDate && (
+          <fieldset className="chips">
+            <legend>¿Cada cuánto apartas?</legend>
+            {RHYTHMS.map(([days, label]) => (
               <button
                 type="button"
-                aria-label={`Amuleto ${key}`}
-                aria-pressed={icon === key}
-                className={icon === key ? "selected" : ""}
-                key={key}
-                onClick={() => setIcon(key)}
+                key={days}
+                aria-pressed={frequency === days}
+                onClick={() => setFrequency(days)}
               >
-                {symbol}
+                {label}
               </button>
             ))}
-          </div>
-        </fieldset>
-        <p className="notice">
-          El candado es de compromiso, no bancario. Tu dinero sigue disponible
-          donde lo guardas.
+          </fieldset>
+        )}
+        <p className="plan-line" role="status">
+          {unlockDate
+            ? step !== null && (
+                <>
+                  Serían <strong>{money(step)}</strong> {rhythmLabel(frequency)}
+                  .
+                </>
+              )
+            : "Guarda lo que puedas, cuando puedas."}
         </p>
         {error && (
           <p role="alert" className="error">
@@ -261,16 +228,13 @@ export function GoalForm({
             {goal.archived ? "Volver a mis cajitas" : "Archivar cajita"}
           </button>
         )}
-        {goal && (
-          <p className="small-text muted">
-            Archivar conserva tus movimientos y el ahorro registrado. Puedes
-            recuperarla cuando quieras.
-          </p>
-        )}
       </form>
     </Modal>
   );
 }
+
+const QUICK = [2000, 5000, 10000];
+
 export function MovementForm({
   goal: initialGoal,
   goals = [],
@@ -286,6 +250,7 @@ export function MovementForm({
       initialCents ? (initialCents / 100).toFixed(2) : "",
     ),
     [date, setDate] = useState(today()),
+    [otherDay, setOtherDay] = useState(false),
     [error, setError] = useState("");
   const choices = goals.some((g) => g.id === initialGoal.id)
       ? goals
@@ -298,11 +263,9 @@ export function MovementForm({
     try {
       const value = cents(amount);
       if (withdraw && value > balance(goal))
-        throw new Error("El retiro supera lo registrado en esta cajita.");
+        throw new Error("Es más de lo que llevas en esta cajita.");
       if (!date || date > today() || date < OLDEST_MOVEMENT)
-        throw new Error(
-          "Elige la fecha en que ocurrió el movimiento, hasta hoy.",
-        );
+        throw new Error("Elige una fecha de hasta hoy.");
       const at =
         date === today()
           ? new Date().toISOString()
@@ -315,65 +278,68 @@ export function MovementForm({
   return (
     <Modal
       sheet
-      title={withdraw ? "Registrar retiro" : "Registrar ahorro"}
+      title={withdraw ? "Usé parte de mi ahorro" : "Guardar dinero"}
       subtitle={
         withdraw
-          ? "Registra lo que usaste de tu ahorro en tu app externa. Usarlo cuando lo necesitas también es cumplir su propósito."
-          : "Anota lo que apartaste en tu otra app o banco."
+          ? "Usarlo cuando lo necesitas también es cumplir su propósito."
+          : undefined
       }
       onClose={onClose}
     >
-      <form onSubmit={submit}>
-        <label>
-          ¿A qué cajita va?
-          <select
-            value={goal.id}
-            onChange={(e) => {
-              setGoalId(e.target.value);
-              setError("");
-            }}
-          >
-            {choices.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+      <form className="save-sheet" onSubmit={submit}>
+        {choices.length > 1 &&
+          (choices.length <= 4 ? (
+            <div className="goal-chips" role="radiogroup" aria-label="Cajita">
+              {choices.map((g) => (
+                <button
+                  type="button"
+                  role="radio"
+                  key={g.id}
+                  aria-checked={g.id === goal.id}
+                  onClick={() => {
+                    setGoalId(g.id);
+                    setError("");
+                  }}
+                >
+                  <GoalIcon icon={g.icon} size="xs" />
+                  {g.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <label>
+              Cajita
+              <select
+                value={goal.id}
+                onChange={(e) => {
+                  setGoalId(e.target.value);
+                  setError("");
+                }}
+              >
+                {choices.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        <label className="amount-display">
+          <span aria-hidden="true">$</span>
+          <input
+            aria-label="Monto"
+            type="text"
+            inputMode="none"
+            autoComplete="off"
+            placeholder="0"
+            required
+            value={amount}
+            onChange={(e) => setAmount(cleanAmount(e.target.value))}
+          />
         </label>
-        <div className="amount-box">
-          <label className="amount-label">
-            Monto (MXN)
-            <span className="amount-field">
-              <span aria-hidden="true">$</span>
-              <input
-                type="text"
-                inputMode="none"
-                autoComplete="off"
-                placeholder="0"
-                required
-                autoFocus
-                value={amount}
-                onChange={(e) => setAmount(cleanAmount(e.target.value))}
-              />
-            </span>
-          </label>
-          {amount && (
-            <button
-              type="button"
-              className="link-button"
-              onClick={() => setAmount("")}
-            >
-              Borrar
-            </button>
-          )}
-        </div>
         {!withdraw && (
-          <div
-            className="quick-amounts"
-            role="group"
-            aria-label="Montos rápidos"
-          >
-            {[5000, 10000, 20000].map((quick) => (
+          <div className="chips quick" role="group" aria-label="Montos rápidos">
+            {QUICK.map((quick) => (
               <button
                 type="button"
                 key={quick}
@@ -387,21 +353,10 @@ export function MovementForm({
                 type="button"
                 onClick={() => setAmount((step / 100).toFixed(2))}
               >
-                Mi siguiente pasito
+                Mi pasito {money(step)}
               </button>
             )}
           </div>
-        )}
-        {withdraw ? (
-          <CommitmentNotice provider={goal.provider} />
-        ) : (
-          <p className="notice sheet-notice">
-            <InfoCircle />
-            <span>
-              Tu dinero sigue disponible en {moneyPlace(goal.provider)}.
-              Guardadito solo lleva el registro; no realiza transferencias.
-            </span>
-          </p>
         )}
         <div className="keypad" role="group" aria-label="Teclado numérico">
           {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"].map(
@@ -417,17 +372,27 @@ export function MovementForm({
             ),
           )}
         </div>
-        <label>
-          Fecha del movimiento
-          <input
-            type="date"
-            value={date}
-            min={OLDEST_MOVEMENT}
-            max={today()}
-            required
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </label>
+        {otherDay ? (
+          <label>
+            ¿Qué día fue?
+            <input
+              type="date"
+              value={date}
+              min={OLDEST_MOVEMENT}
+              max={today()}
+              required
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+        ) : (
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => setOtherDay(true)}
+          >
+            ¿Fue otro día?
+          </button>
+        )}
         {error && (
           <p className="error" role="alert">
             {error}
@@ -435,7 +400,7 @@ export function MovementForm({
         )}
         <button className={withdraw ? "secondary full" : "primary full"}>
           <CheckCircle />
-          {withdraw ? "Retirar" : "Guardar"}
+          {withdraw ? "Registrar" : "Guardar"}
           {value > 0 && ` ${money(value)}`}
         </button>
         {!withdraw && onImport && (
@@ -451,79 +416,56 @@ export function MovementForm({
     </Modal>
   );
 }
+
+/** A cajita on the home screen: tap it to see it, + to save in it. */
 export function GoalCard({ goal, actions, onOpen, now }) {
   const summary = goalSummary(goal, now),
-    { saved } = summary,
-    guardian = actions.guardianFor(goal.id);
+    open = !goal.archived && !summary.complete;
   return (
-    <article className={`goal-card ${goal.icon}`}>
-      <div className="goal-heading">
-        <span className="goal-symbol">{symbols[goal.icon]}</span>
-        <button
-          className="goal-open"
-          aria-label={`Ver detalle de ${goal.name}`}
-          onClick={() => onOpen(goal.id)}
-        >
-          <h3>{goal.name}</h3>
-          <span className="goal-meta">
-            <span className={`provider ${goal.provider === "Nu" ? "nu" : ""}`}>
-              {goal.provider === "Otra" ? "Mi banco" : goal.provider}
-            </span>
-            {goal.unlockDate
-              ? `Meta: ${dateLabel(goal.unlockDate)}`
-              : "A tu ritmo"}
-          </span>
-        </button>
-        <p className="saved">
-          <span className="visually-hidden">Ahorro registrado </span>
-          <Money cents={saved} />
-        </p>
-        <button
-          className="icon-button"
-          aria-label={`Editar ${goal.name}`}
-          onClick={() => actions.edit(goal)}
-        >
-          ⋯
-        </button>
-      </div>
-      <GoalProgress goal={goal} summary={summary}>
-        de {money(goal.targetCents)}
-      </GoalProgress>
-      <p className="remaining">
-        {summary.complete
-          ? "Ahorro registrado"
-          : `Te faltan ${money(summary.remaining)}`}
-      </p>
-      <p className="goal-lock">
-        <span aria-hidden="true">{summary.locked ? "♧" : "✓"}</span>
-        {countdown(goal.unlockDate, now)}
-      </p>
-      <GoalNotices goal={goal} summary={summary} guardian={guardian} />
-      <GoalComplete summary={summary} />
-      {goal.archived ? (
-        <button className="secondary full" onClick={() => actions.edit(goal)}>
-          Recuperar cajita
-        </button>
-      ) : (
-        <div className="card-actions">
-          <button className="primary" onClick={() => actions.move(goal)}>
-            + Registrar ahorro
-          </button>
-          <button
-            className="secondary withdraw"
-            disabled={!saved}
-            onClick={() => actions.move(goal, { withdraw: true })}
-          >
-            Registrar retiro
-          </button>
-        </div>
-      )}
-      <GuardianActions goal={goal} guardian={guardian} saved={saved} />
-      <button className="goal-more" onClick={() => onOpen(goal.id)}>
-        Ver plan y movimientos
-        {goal.entries.length > 0 && ` (${goal.entries.length})`}
-        <ArrowRight />
+    <article className="cajita">
+      <button
+        className="cajita-open"
+        aria-label={`Ver detalle de ${goal.name}`}
+        onClick={() => onOpen(goal.id)}
+      >
+        <GoalIcon icon={goal.icon} />
+        <span className="cajita-text">
+          <strong>{goal.name}</strong>
+          <small>
+            {goal.archived
+              ? "Archivada"
+              : summary.complete
+                ? "¡Cumplida! 🎉"
+                : dateText(goal.unlockDate, now)}
+          </small>
+        </span>
+        <span className="cajita-amount">
+          <Money cents={summary.saved} />
+          <small>de {money(goal.targetCents)}</small>
+        </span>
       </button>
+      <div className="cajita-progress">
+        <div
+          className="progress"
+          role="progressbar"
+          aria-label={`Progreso de ${goal.name}`}
+          aria-valuenow={summary.percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <span style={{ width: `${summary.progress * 100}%` }} />
+        </div>
+        <span className="cajita-percent">{summary.percent} %</span>
+        {open && (
+          <button
+            className="cajita-add"
+            aria-label={`Guardar en ${goal.name}`}
+            onClick={() => actions.move(goal)}
+          >
+            +
+          </button>
+        )}
+      </div>
     </article>
   );
 }

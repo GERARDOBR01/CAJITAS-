@@ -1,15 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { createGoal, home, more, password, saveIn } from "./helpers.js";
 
-const password = "ahorro-seguro-1";
-const shot = (page, info, name) =>
-  info.project.name === "android-chrome"
-    ? page.screenshot({ path: `docs/screenshots/v10/${name}.png` })
-    : null;
-
-async function more(page, name) {
-  await page.getByRole("button", { name: "Más", exact: true }).click();
-  await page.getByRole("button", { name, exact: true }).click();
-}
 async function signUp(page, name, email) {
   await more(page, "Mi cuenta");
   await page.getByRole("button", { name: "¿No tienes cuenta? Créala" }).click();
@@ -35,12 +26,7 @@ test("una pareja se vincula y se manda a Cookie, notitas y premios", async ({
 
   // Ana ya tiene una cajita; Beto empieza sin nada.
   await ana.goto("/");
-  await ana
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await ana.getByLabel("Nombre de tu meta").fill("Viaje");
-  await ana.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
-  await ana.getByRole("button", { name: "Crear cajita", exact: true }).click();
+  await createGoal(ana, "Viaje", 1000);
   await signUp(ana, "Ana", `ana-${stamp}@guardadito.test`);
   await ana
     .getByRole("dialog", { name: "¿Subimos tus cajitas?" })
@@ -53,12 +39,11 @@ test("una pareja se vincula y se manda a Cookie, notitas y premios", async ({
   ).toBeVisible();
 
   // Beto invita con un código; Ana lo escribe.
-  await more(beto, "Mi pareja");
+  await more(beto, "Ahorrar en pareja");
   await beto.getByRole("button", { name: "Crear mi código" }).click();
   const code = (await beto.locator(".partner-code").textContent()).trim();
   expect(code).toMatch(/^[A-Z2-9]{6}$/);
-  await shot(beto, info, "codigo");
-  await more(ana, "Mi pareja");
+  await more(ana, "Ahorrar en pareja");
   await ana.getByLabel("Código de tu pareja").fill(code.toLowerCase());
   await ana.getByRole("button", { name: "Vincular" }).click();
   await expect(
@@ -77,27 +62,22 @@ test("una pareja se vincula y se manda a Cookie, notitas y premios", async ({
   await beto.getByRole("button", { name: "Mandarle a Cookie" }).click();
   const cookie = ana.getByRole("dialog", { name: "¡Beto te mandó a Cookie!" });
   await expect(cookie).toBeVisible({ timeout: 30000 });
-  await shot(ana, info, "cookie-regalo");
   await cookie.getByRole("button", { name: "Conocer a Cookie 🐱" }).click();
-  await ana
-    .getByRole("button", { name: "Mis cajitas", exact: true })
-    .first()
-    .click();
-  const home = ana.getByRole("region", { name: "Inicio", exact: true });
-  await expect(home.locator(".mascot.pet-cat")).toHaveCount(1);
-  await home.getByRole("button", { name: "Acariciar a Cookie" }).click();
+  await home(ana);
+  const anaHome = ana.getByRole("region", { name: "Inicio", exact: true });
+  await expect(anaHome.locator(".mascot.pet-cat")).toHaveCount(1);
+  await anaHome.getByRole("button", { name: "Acariciar a Cookie" }).click();
   await expect(ana.locator(".love-banner")).toContainText("¡Te quiero, Ana!");
   // Beto no tiene a Cookie.
-  await beto.getByRole("button", { name: "Mi mascota", exact: true }).click();
+  await more(beto, "Mi mascota");
   await expect(beto.locator(".pet-options")).not.toContainText("Gatito");
 
   // Una notita al abrir y un premio al 50 %.
-  await more(beto, "Mi pareja");
+  await more(beto, "Ahorrar en pareja");
   await beto.getByLabel("Tu notita para Ana").fill("Estoy orgulloso de ti");
   await beto.getByRole("button", { name: "Mandar notita" }).click();
   const note = ana.getByRole("dialog", { name: "Beto te dejó una notita 💌" });
   await expect(note).toContainText("Estoy orgulloso de ti", { timeout: 30000 });
-  await shot(ana, info, "notita");
   await note.getByRole("button", { name: "♡ Gracias" }).click();
   await expect(beto.getByLabel("Notitas enviadas")).toContainText("✓ La leyó", {
     timeout: 30000,
@@ -106,27 +86,18 @@ test("una pareja se vincula y se manda a Cookie, notitas y premios", async ({
   await beto.getByLabel("Título").fill("Cupón para una cita");
   await beto.getByLabel("Mensaje").fill("Tú eliges el lugar");
   await beto.getByRole("button", { name: "Guardar premio" }).click();
-  await more(ana, "Mi pareja");
+  await more(ana, "Ahorrar en pareja");
   await expect(ana.getByText("Al 50 % de «Viaje»")).toBeVisible({
     timeout: 30000,
   });
-  await ana
-    .getByRole("button", { name: "Mis cajitas", exact: true })
-    .first()
-    .click();
-  await ana
-    .locator(".goal-card")
-    .getByRole("button", { name: "+ Registrar ahorro" })
-    .click();
-  await ana.getByLabel("Monto (MXN)").fill("600");
-  await ana.getByRole("button", { name: /^Guardar/ }).click();
+  await home(ana);
+  await saveIn(ana, "Viaje", 600);
   const reward = ana.getByRole("dialog", { name: "🎁 Cupón para una cita" });
   await expect(reward).toContainText("Tú eliges el lugar");
-  await shot(ana, info, "premio");
   await reward.getByRole("button", { name: "Guardar en mi corazón ♡" }).click();
 
   // Deshacer el vínculo.
-  await more(ana, "Mi pareja");
+  await more(ana, "Ahorrar en pareja");
   await ana.getByRole("button", { name: "Deshacer el vínculo" }).click();
   await ana.getByRole("button", { name: "Sí, deshacer" }).click();
   await expect(

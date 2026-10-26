@@ -3,6 +3,7 @@
 // only counted once, and a deposit goes in through `recordEntry`.
 import {
   PROVIDERS,
+  acceptsProvider,
   localDate,
   recordEntry,
   validMovementDate,
@@ -27,7 +28,7 @@ export function findMatches(
   if (data.importedIds.includes(receipt.id)) return [];
   const day = localDate(new Date(receipt.at));
   return data.goals
-    .filter((goal) => goal.provider === receipt.provider)
+    .filter((goal) => acceptsProvider(goal, receipt.provider))
     .flatMap((goal) =>
       goal.entries
         .filter(

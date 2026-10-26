@@ -3,8 +3,10 @@ import { validateBackup } from "../domain.js";
 /** Which account the journal on this device belongs to. */
 export const CLOUD_UID_KEY = "guardadito:cloud-uid";
 
+/** Whether there is something worth asking about: cajitas. Days of company
+ * alone do not count, since opening the app already adds one. */
 export function hasContent(data) {
-  return Boolean(data && (data.goals.length || data.checkins.length));
+  return Boolean(data && data.goals.length);
 }
 
 export function toCloud(data) {
@@ -39,7 +41,11 @@ export function reconcile(local, remote) {
 export function firstSync({ local, remote, linkedUid, uid }) {
   const mine = linkedUid === uid;
   if (!remote) return hasContent(local) && !mine ? "ask-upload" : "push";
-  if (!hasContent(local) || mine) return reconcile(local, remote);
+  // A phone without cajitas never replaces an account that has them, even
+  // if a visit made its copy newer.
+  if (!hasContent(local))
+    return hasContent(remote) ? "pull" : reconcile(local, remote);
+  if (mine) return reconcile(local, remote);
   if (!hasContent(remote)) return "push";
   return JSON.stringify(local.goals) === JSON.stringify(remote.goals)
     ? reconcile(local, remote)

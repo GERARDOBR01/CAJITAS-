@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { settings } from "./helpers.js";
 
 const file = "tests/fixtures/local-receipt-plain.eml";
 function fixture() {
@@ -38,10 +39,9 @@ async function open(page, seed = fixture()) {
   );
   await page.goto("/");
 }
-async function more(page, name) {
-  await page.getByRole("button", { name: "Más", exact: true }).click();
-  await page.getByRole("button", { name, exact: true }).click();
-}
+const more = settings;
+const openSheet = (page) =>
+  page.getByRole("button", { name: "Guardar en Mi viaje bonito" }).click();
 const saved = (page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem("guardadito:v1")));
 const review = (page) =>
@@ -57,10 +57,7 @@ test("un archivo requiere revisión, se registra una vez y no guarda el contenid
   page,
 }) => {
   await open(page);
-  await page
-    .locator(".goal-card")
-    .getByRole("button", { name: "+ Registrar ahorro" })
-    .click();
+  await openSheet(page);
   await page
     .getByRole("button", { name: "Usar un correo de depósito" })
     .click();
@@ -111,10 +108,7 @@ test("un comprobante que completa la cajita celebra y cuenta como ahorro", async
     },
   };
   await open(page, seed);
-  await page
-    .locator(".goal-card")
-    .getByRole("button", { name: "+ Registrar ahorro" })
-    .click();
+  await openSheet(page);
   await page
     .getByRole("button", { name: "Usar un correo de depósito" })
     .click();
@@ -237,11 +231,6 @@ test("el HTML del correo queda inerte y Gmail sin configurar permite la importac
     page.getByRole("button", { name: "Conectar Gmail ↗", exact: true }),
   ).toBeDisabled();
   await page.getByText("Gmail directo", { exact: false }).first().click();
-  await page.evaluate(() => scrollTo(0, 0));
-  await page.screenshot({
-    path: "docs/screenshots/finish-01-correo-mobile.png",
-    animations: "disabled",
-  });
   await review(page)
     .getByLabel("Archivo del correo")
     .setInputFiles("tests/fixtures/local-receipt-html.eml");
@@ -264,29 +253,19 @@ test("el HTML del correo queda inerte y Gmail sin configurar permite la importac
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await review(page)
-    .getByRole("heading", { name: "Revisar comprobante" })
-    .scrollIntoViewIfNeeded();
-  await page.screenshot({
-    path: "docs/screenshots/finish-02-revision-mobile.png",
-    animations: "disabled",
-  });
 });
 
-test("el siguiente pasito prellena sin registrar y una fecha vencida propone editar", async ({
+test("el pasito prellena sin registrar y una fecha vencida se alarga de un toque", async ({
   page,
 }) => {
   await open(page);
-  // The next step lives on Inicio, next to the mascot.
-  const next = page.getByRole("complementary", { name: "Tu siguiente pasito" });
-  await expect(next).toContainText("Mi viaje bonito");
-  await page.screenshot({
-    path: "docs/screenshots/finish-03-pasito-mobile.png",
-    animations: "disabled",
-  });
-  await next.getByRole("button", { name: "Registrar mi pasito" }).click();
+  // The next step is what the pet says on Inicio.
+  const home = page.getByRole("region", { name: "Inicio", exact: true });
+  await expect(home.locator(".hero")).toContainText("Tu pasito:");
+  await expect(home.locator(".hero")).toContainText("Mi viaje bonito");
+  await home.getByRole("button", { name: "Guardar dinero" }).click();
   expect(
-    Number(await page.getByLabel("Monto (MXN)").inputValue()),
+    Number(await page.getByLabel("Monto", { exact: true }).inputValue()),
   ).toBeGreaterThan(0);
   expect((await saved(page)).goals[0].entries).toHaveLength(0);
   await page
@@ -301,11 +280,16 @@ test("el siguiente pasito prellena sin registrar y una fecha vencida propone edi
     expired,
   );
   await page.reload();
-  await next.getByRole("button", { name: "Revisar mi plan" }).click();
-  await expect(
-    page.getByRole("button", { name: "Guardar cambios" }),
-  ).toBeVisible();
-  expect((await saved(page)).goals[0].entries).toHaveLength(0);
+  await expect(home.locator(".hero")).toContainText("¿Le damos más tiempo?");
+  await expect(home.locator(".hero")).not.toContainText("Tu pasito");
+  await home
+    .getByRole("button", { name: "Darle 3 meses más a Mi viaje bonito" })
+    .click();
+  await expect(page.getByRole("status")).toContainText("3 meses más");
+  const goal = (await saved(page)).goals[0];
+  expect(goal.unlockDate > new Date().toISOString().slice(0, 10)).toBe(true);
+  expect(goal.entries).toHaveLength(0);
+  await expect(home.locator(".hero")).not.toContainText("más tiempo");
 });
 
 test("si falla guardar un respaldo conserva los datos y la revisión abierta", async ({

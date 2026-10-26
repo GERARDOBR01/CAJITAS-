@@ -1,4 +1,4 @@
-import { validateBackup } from "../domain.js";
+import { acceptsProvider, validateBackup } from "../domain.js";
 import {
   PROVIDERS,
   findMatches,
@@ -69,7 +69,7 @@ export function applyLocalReceipt(
       "Elige el movimiento que corresponde al correo o confirma que es un depósito distinto.",
     );
   const goal = data.goals.find((item) => item.id === goalId);
-  if (!goal || goal.archived || goal.provider !== receipt.provider)
+  if (!goal || goal.archived || !acceptsProvider(goal, receipt.provider))
     throw new Error("Elige una cajita activa de la misma app del correo.");
   return registerDeposit(data, receipt, goal.id, "manual");
 }

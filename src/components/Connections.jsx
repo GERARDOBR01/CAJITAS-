@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../platform.js";
 import { connectGmail } from "../gmail/connection.js";
-import { money } from "../domain.js";
+import { acceptsProvider, money } from "../domain.js";
 import {
   addReceipt,
   possibleReceiptMatches,
@@ -64,7 +64,9 @@ export default function Connections({
       const goalId = updated.assignments[receipt.patternId],
         goal = updated.goals.find(
           (g) =>
-            g.id === goalId && g.provider === receipt.provider && !g.archived,
+            g.id === goalId &&
+            acceptsProvider(g, receipt.provider) &&
+            !g.archived,
         );
       if (
         receipt.validated &&
@@ -430,7 +432,8 @@ export default function Connections({
                         <option value="">Selecciona una cajita</option>
                         {data.goals
                           .filter(
-                            (g) => g.provider === r.provider && !g.archived,
+                            (g) =>
+                              acceptsProvider(g, r.provider) && !g.archived,
                           )
                           .map((g) => (
                             <option key={g.id} value={g.id}>
