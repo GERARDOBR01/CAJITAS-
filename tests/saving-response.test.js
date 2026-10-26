@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { initialData, recordEntry } from "../src/domain.js";
-import { GOAL_REACHED, savingResponse } from "../src/feedback/response.js";
+import {
+  FIRST_SAVING,
+  GOAL_REACHED,
+  savingResponse,
+} from "../src/feedback/response.js";
 import { WITHDRAWAL_NOTE } from "../src/pet/state.js";
 
 const goal = (id, entries = [], targetCents = 100000) => ({
@@ -19,12 +23,37 @@ const add = (data, goalId, cents) =>
 
 describe("savingResponse", () => {
   it("cheers a deposit and counts it as saving", () => {
-    const before = journal(goal("g1"));
-    expect(savingResponse(before, add(before, "g1", 5000))).toEqual({
+    const before = journal(goal("g1", [{ id: "a", cents: 1000, at }]));
+    expect(savingResponse(before, add(before, "g1", 15000))).toEqual({
       kind: "cheer",
       saved: true,
       message: "Ahorro registrado. ¡Un pasito más!",
     });
+  });
+
+  it("the very first saving gets its own words", () => {
+    const before = journal(goal("g1"));
+    expect(savingResponse(before, add(before, "g1", 15000)).message).toBe(
+      FIRST_SAVING,
+    );
+  });
+
+  it("a small saving is celebrated for counting, not measured", () => {
+    const before = journal(goal("g1", [{ id: "a", cents: 1000, at }]));
+    expect(savingResponse(before, add(before, "g1", 2000)).message).toBe(
+      "$20 también cuentan. ¡Así se hace!",
+    );
+  });
+
+  it("crossing a quarter, half or three quarters is named", () => {
+    const before = journal(goal("g1", [{ id: "a", cents: 40000, at }]));
+    expect(savingResponse(before, add(before, "g1", 15000)).message).toBe(
+      "¡Ya vas a la mitad de g1!",
+    );
+    const third = journal(goal("g1", [{ id: "a", cents: 70000, at }]));
+    expect(savingResponse(third, add(third, "g1", 6000)).message).toContain(
+      "Tres cuartas partes",
+    );
   });
 
   it("celebrates the deposit that reaches the target, with the caller's sentence first", () => {

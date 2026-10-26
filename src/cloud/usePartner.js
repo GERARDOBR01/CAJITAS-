@@ -6,6 +6,7 @@ import { useSharedGoals } from "./useSharedGoals.js";
 import { useSurprises } from "./useSurprises.js";
 import { useSubscription } from "./useSubscription.js";
 import { friendlyMessage } from "./sync.js";
+import { ownerTools } from "../features.js";
 
 const lib = () => import("./partner.js");
 const pushLib = () => import("./push.js");
@@ -27,6 +28,30 @@ function store(code) {
 }
 
 const SUMMARY_DELAY_MS = 1500;
+
+/**
+ * Whether this couple sees the guardian (money through a CLABE) and the
+ * surprises. New couples get the simple version: cajitas of the two and how
+ * each one is going. A couple that already uses them keeps them, and so do
+ * the owner's builds.
+ */
+export function pairExtras({
+  ownerTools = false,
+  guardian,
+  myPayout,
+  sent = [],
+  received = [],
+  special,
+}) {
+  return Boolean(
+    ownerTools ||
+    guardian ||
+    myPayout ||
+    sent.length ||
+    received.length ||
+    special,
+  );
+}
 
 /**
  * The couple of the signed-in account: who the partner is and how the
@@ -137,6 +162,14 @@ export function usePartner({ user, data, update, record, notify }) {
     ...surprises,
     ...shared,
     ...guardian,
+    extras: pairExtras({
+      ownerTools,
+      guardian: guardian.guardian,
+      myPayout: guardian.myPayout,
+      sent: surprises.sent,
+      received: surprises.received,
+      special: data.preferences.special,
+    }),
     invite,
     createInvite: () =>
       run((p) => p.createInvite(user)).then((code) => {

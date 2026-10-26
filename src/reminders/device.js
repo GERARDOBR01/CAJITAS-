@@ -53,7 +53,7 @@ export async function listenToReminders(onAction) {
       {
         id: "cajitas-checkin",
         actions: [
-          { id: "save", title: "Registrar ahorro", foreground: true },
+          { id: "save", title: "Guardar dinero", foreground: true },
           { id: "later", title: "Ahora no", foreground: false },
         ],
       },

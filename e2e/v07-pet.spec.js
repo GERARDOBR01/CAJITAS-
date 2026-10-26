@@ -69,7 +69,10 @@ for (const theme of ["light", "dark"])
       axe.violations.map((v) => [v.id, v.nodes.map((n) => n.target)]),
     ).toEqual([]);
     const before = await journal(page);
-    await home.getByRole("button", { name: "Ahora no" }).click();
+    await home
+      .locator(".hero-actions")
+      .getByRole("button", { name: "Ahora no" })
+      .click();
     await expect(page.getByRole("status")).toContainText("Aquí sigo");
     await expect(mascot(home)).toHaveAttribute("data-mood", "idle");
     const after = await journal(page);

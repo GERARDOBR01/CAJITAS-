@@ -81,6 +81,43 @@ test("una cajita con «5,000» sin preguntar el banco, guardar en 3 toques e inv
   await expect(nudge).toHaveCount(0);
 });
 
+test("el primer ahorro se celebra y luego ofrece, una vez, un recordatorio", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Crear mi primera cajita" }).click();
+  const form = page.getByRole("dialog", { name: "Nueva cajita" });
+  await form.getByLabel("¿Para qué es?").fill("Tenis");
+  await form.getByLabel("¿Cuánto quieres juntar?").fill("1500");
+  await form.getByRole("button", { name: "Sin prisa" }).click();
+  await form.getByRole("button", { name: "Crear cajita" }).click();
+  await page
+    .getByRole("complementary", { name: "Respalda tus cajitas" })
+    .getByRole("button", { name: "Ahora no" })
+    .click();
+  await page.getByRole("button", { name: "Guardar dinero" }).click();
+  const sheet = page.getByRole("dialog", { name: "Guardar dinero" });
+  await sheet.getByRole("button", { name: "$20", exact: true }).click();
+  await sheet.getByRole("button", { name: "Guardar $20" }).click();
+  await expect(page.locator(".toast")).toContainText("¡Tu primer pasito!");
+  const offer = page.getByRole("complementary", {
+    name: "Recordatorio semanal",
+  });
+  await offer.getByRole("button", { name: "Sí, recuérdame" }).click();
+  await expect(offer).toHaveCount(0);
+  const reminder = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("guardadito:v1")).preferences.reminder,
+  );
+  expect(reminder).toMatchObject({
+    enabled: true,
+    frequency: "weekly",
+    day: 5,
+  });
+  await page.reload();
+  await expect(offer).toHaveCount(0);
+});
+
 test("nada de cuentas regresivas con segundos ni candados", async ({
   page,
 }) => {
