@@ -319,10 +319,9 @@ export default function Account({ cloud, notify }) {
             }}
           >
             <p className="notice">
-              Se borran tu cuenta, la copia de tus cajitas en la nube y lo que
-              tú registraste o mandaste en tu pareja (movimientos, sorpresas,
-              CLABE y avisos). Las cajitas de este teléfono se quedan aquí. No
-              se puede deshacer.
+              Se borran tu cuenta, la copia de tus cajitas en la nube y todo lo
+              que registraste con tu pareja. Las cajitas de este teléfono se
+              quedan aquí. No se puede deshacer.
             </p>
             <label>
               Escribe tu contraseña para confirmar

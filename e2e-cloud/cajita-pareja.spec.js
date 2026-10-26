@@ -63,11 +63,11 @@ test("una cajita en pareja: cada quien pone su parte desde su banco", async ({
   await expect(betoCard).toContainText("Ana: $200.00", { timeout: 30000 });
 
   // Solo puede retirar lo que ella apartó.
-  await anaCard.getByRole("button", { name: "Registrar retiro" }).click();
+  await anaCard.getByRole("button", { name: "Usé parte" }).click();
   await ana.getByLabel("Monto (MXN)").fill("300");
   await ana
     .getByRole("dialog")
-    .getByRole("button", { name: "Registrar retiro" })
+    .getByRole("button", { name: "Registrar", exact: true })
     .click();
   await expect(ana.locator(".toast")).toContainText("Solo puedes retirar");
   await ana.getByRole("button", { name: "Cerrar", exact: true }).click();

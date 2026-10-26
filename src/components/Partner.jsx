@@ -114,7 +114,7 @@ function Invite({ partner, notify, initialCode }) {
       </form>
       <p className="small-text muted partner-privacy">
         Al vincularse, cada quien ve el nombre y el avance de las cajitas del
-        otro, no sus movimientos. Las sorpresas solo las ven ustedes dos.
+        otro, no sus movimientos.
       </p>
     </>
   );
@@ -456,8 +456,8 @@ export default function Partner({
             <p className="eyebrow">EN PAREJA</p>
             <h1>Ahorren juntos 💞</h1>
             <p className="muted">
-              Vincula tu cuenta con la de tu pareja para mandarse sorpresas y
-              ver cómo va cada quien.
+              Vincula tu cuenta con la de tu pareja para tener cajitas de los
+              dos y ver cómo va cada quien.
             </p>
           </div>
         </div>
@@ -507,8 +507,12 @@ export default function Partner({
           </ul>
         </div>
       )}
-      <DepositInbox partner={partner} name={name} />
-      <MyDeposits partner={partner} name={name} />
+      {partner.extras && (
+        <>
+          <DepositInbox partner={partner} name={name} />
+          <MyDeposits partner={partner} name={name} />
+        </>
+      )}
       {pushConfigured && (
         <Notices
           pairId={partner.pair.id}
@@ -517,11 +521,21 @@ export default function Partner({
           notify={notify}
         />
       )}
-      <h2 className="partner-subtitle">Para {name}</h2>
-      <PetGift partner={partner} name={name} />
-      <Notes partner={partner} name={name} />
-      <Rewards partner={partner} name={name} notify={notify} />
-      <PayoutForm partner={partner} name={name} />
+      {!partner.extras && (
+        <p className="muted partner-hint">
+          Creen cajitas de los dos desde el inicio: cada quien aparta su parte
+          en su propio banco.
+        </p>
+      )}
+      {partner.extras && (
+        <>
+          <h2 className="partner-subtitle">Para {name}</h2>
+          <PetGift partner={partner} name={name} />
+          <Notes partner={partner} name={name} />
+          <Rewards partner={partner} name={name} notify={notify} />
+          <PayoutForm partner={partner} name={name} />
+        </>
+      )}
       {opened.length > 0 && (
         <div className="panel partner-panel">
           <h2>Notitas de {name} para ti</h2>

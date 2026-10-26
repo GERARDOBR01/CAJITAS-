@@ -363,7 +363,7 @@ export default function App() {
               </button>
             </div>
           )}
-          {tab === "goals" && partner.pair && (
+          {tab === "goals" && partner.pair && partner.extras && (
             <DepositInbox
               partner={partner}
               name={partner.partnerName || "Tu pareja"}

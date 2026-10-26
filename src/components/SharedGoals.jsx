@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cents, dateText, money, today } from "../domain.js";
+import { cleanAmount } from "../amount.js";
 import { contributions, myPart, myPlan } from "../cloud/shared.js";
 import Modal from "./Modal.jsx";
 
@@ -81,7 +82,7 @@ function SharedGoalCard({
           disabled={!mine}
           onClick={() => onMove(goal, true)}
         >
-          Registrar retiro
+          Usé parte
         </button>
       </div>
       <p className="small-text muted">
@@ -141,7 +142,7 @@ function GoalForm({ goal, partnerName, onSave, onClose }) {
             await onSave({
               id: goal?.id,
               name: String(form.get("name")).trim(),
-              targetCents: cents(String(form.get("amount"))),
+              targetCents: cents(cleanAmount(String(form.get("amount")))),
               unlockDate: String(form.get("date") || ""),
               myPercent: Number(form.get("percent")),
               archived: false,
@@ -169,9 +170,9 @@ function GoalForm({ goal, partnerName, onSave, onClose }) {
           ¿Cuánto quieren juntar? (MXN)
           <input
             name="amount"
-            type="number"
-            min="0.01"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
             defaultValue={goal ? goal.targetCents / 100 : ""}
             required
           />
@@ -228,7 +229,9 @@ function EntryForm({ goal, withdraw, onSave, onClose }) {
   const [busy, setBusy] = useState(false);
   return (
     <Modal
-      title={withdraw ? `Retiro de ${goal.name}` : `Tu aporte a ${goal.name}`}
+      title={
+        withdraw ? `Usé parte de ${goal.name}` : `Tu aporte a ${goal.name}`
+      }
       onClose={onClose}
     >
       <form
@@ -237,7 +240,7 @@ function EntryForm({ goal, withdraw, onSave, onClose }) {
           const form = new FormData(e.currentTarget);
           setBusy(true);
           try {
-            const value = cents(String(form.get("amount")));
+            const value = cents(cleanAmount(String(form.get("amount"))));
             const day = String(form.get("date"));
             const at =
               day === today()
@@ -261,9 +264,9 @@ function EntryForm({ goal, withdraw, onSave, onClose }) {
           Monto (MXN)
           <input
             name="amount"
-            type="number"
-            min="0.01"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
             required
             autoFocus
           />
@@ -284,11 +287,11 @@ function EntryForm({ goal, withdraw, onSave, onClose }) {
         </label>
         <p className="notice">
           {withdraw
-            ? "Usar el ahorro también es cumplir su propósito."
-            : "Registra lo que ya apartaste en tu banco. Guardadito no mueve tu dinero."}
+            ? "Usarlo cuando lo necesitas también es cumplir su propósito."
+            : "Anota lo que ya apartaste en tu banco."}
         </p>
         <button className="primary full" disabled={busy}>
-          {withdraw ? "Registrar retiro" : "Registrar mi aporte"}
+          {withdraw ? "Registrar" : "Registrar mi aporte"}
         </button>
       </form>
     </Modal>
