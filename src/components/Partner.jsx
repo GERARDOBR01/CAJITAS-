@@ -182,7 +182,7 @@ function PetGift({ partner, name }) {
         />
       </label>
       <label>
-        Su frase en Mi mascota (opcional)
+        Su frase (opcional)
         <input
           name="motto"
           maxLength={80}

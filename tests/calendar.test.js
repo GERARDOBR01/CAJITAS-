@@ -63,7 +63,8 @@ describe("un solo calendario para el plan y los avisos", () => {
             ),
           ).toBe(periods);
           expect(plan(goal(unlockDate), days, now.getTime(), weekday)).toBe(
-            Math.ceil(120000 / periods),
+            // Rounded up to $10.
+            Math.ceil(120000 / periods / 1000) * 1000,
           );
         }
   });

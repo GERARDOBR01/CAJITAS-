@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   balance,
   plan,
-  streak,
+  savedWeeks,
   initialData,
   validateBackup,
   cents,
-  countdown,
+  dateText,
   estimate,
   activityCSV,
   goalSummary,
@@ -67,20 +67,26 @@ describe("registro de ahorro y recuperación", () => {
     expect(plan(goal, 7, new Date("2026-10-18T00:00:00").getTime())).toBe(
       50000,
     );
-    expect(
-      countdown("2026-11-01", new Date("2026-11-01T00:00:00").getTime()),
-    ).toBe("¡Compromiso cumplido!");
+    const day = (d) => new Date(`${d}T09:00:00`).getTime();
+    expect(dateText("2026-11-01", day("2026-11-01"))).toBe("Hoy es el día");
+    expect(dateText("2026-11-01", day("2026-10-31"))).toBe("Mañana es el día");
+    expect(dateText("2026-11-01", day("2026-10-20"))).toBe("Faltan 12 días");
+    expect(dateText("2026-11-01", day("2026-11-03"))).toBe("Su fecha ya pasó");
+    // Nothing that ticks by the second.
+    expect(dateText("2026-11-01", day("2026-10-20"))).not.toMatch(/\d:\d\d/);
     expect(estimate(100000, 10, 365)).toBe(10000);
   });
-  it("cuenta racha por días locales únicos y permite el día actual sin depósito", () => {
+  it("cuenta semanas con ahorro, y una semana sin ahorrar no quita nada", () => {
     const entries = [
-      "2026-10-12T12:00:00",
-      "2026-10-13T12:00:00",
-      "2026-10-13T15:00:00",
+      "2026-10-05T12:00:00", // lunes
+      "2026-10-11T20:00:00", // domingo de la misma semana
+      "2026-10-26T12:00:00", // dos semanas después
     ].map((at, i) => ({ id: String(i), at, cents: 100 }));
-    expect(
-      streak([{ ...goal, entries }], new Date("2026-10-14T12:00:00")),
-    ).toBe(2);
+    expect(savedWeeks([{ ...goal, entries }])).toBe(2);
+    const withdrawal = { id: "w", at: "2026-10-14T12:00:00", cents: -50 };
+    expect(savedWeeks([{ ...goal, entries: [...entries, withdrawal] }])).toBe(
+      2,
+    );
   });
 });
 
@@ -114,7 +120,7 @@ describe("metas sin fecha objetivo", () => {
   it("sin fecha no hay plan, cuenta regresiva ni fecha vencida", () => {
     const now = new Date("2030-01-01T00:00:00").getTime();
     expect(plan(open, 7, now)).toBeNull();
-    expect(countdown(null, now)).toBe("Sin fecha objetivo");
+    expect(dateText(null, now)).toBe("Sin prisa");
     expect(goalSummary(open, now)).toMatchObject({
       pastDue: false,
       remaining: 100000,

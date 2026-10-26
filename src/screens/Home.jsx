@@ -1,26 +1,61 @@
 import { useEffect, useRef, useState } from "react";
 import Mascot from "../components/Mascot.jsx";
 import { GoalCard } from "../components/Goals.jsx";
-import NextStep from "../components/NextStep.jsx";
 import Money from "../components/Money.jsx";
-import { ShieldCheck } from "../components/icons.jsx";
-import { balance, isComplete, nextGoal } from "../domain.js";
-import { petWords } from "../pet/catalog.js";
+import { AddCircle } from "../components/icons.jsx";
 import {
-  STAGE_NAMES,
-  daysAway,
-  growthStage,
-  overallProgress,
-  petMood,
-} from "../pet/state.js";
+  balance,
+  goalSummary,
+  isComplete,
+  moneyShort as money,
+  nextGoal,
+  plan,
+} from "../domain.js";
+import { rhythmLabel } from "../calendar.js";
+import { petWords } from "../pet/catalog.js";
+import { growthStage, overallProgress, petMood } from "../pet/state.js";
 
 const TAP_LINES = [
   "¡Jiji, me haces cosquillas!",
   "Aquí ando, cuidando tus sueños 🌱",
-  "¿Sabías que cada pasito cuenta? ✦",
+  "Cada pasito cuenta ✦",
   "¡Otra vez, otra vez!",
   "Me gusta cuando vienes ♡",
 ];
+
+/** What the pet says, from the moment: a celebration, a check-in, or the
+ * next small step. */
+function speech({
+  pet,
+  empty,
+  celebrating,
+  cheering,
+  checkIn,
+  returning,
+  late,
+  next,
+}) {
+  if (celebrating) return ["¡Lo lograste!", "Una meta cumplida. ¡Chócalas!"];
+  if (cheering) return ["¡Eso!", "Un pasito más. Así se hace."];
+  if (checkIn) return ["¡Llegó tu ratito!", checkIn.message.body];
+  if (empty)
+    return [`¡Hola, soy ${pet.petName}!`, "¿Para qué quieres ahorrar?"];
+  // Back after a while: glad, never "te extrañé".
+  if (returning)
+    return ["¡Qué gusto verte!", "Cualquier monto cuenta, aunque sea poquito."];
+  // A date that passed is a plan to adjust, not a failure.
+  if (late)
+    return [
+      "¿Le damos más tiempo?",
+      `La fecha de ${late.name} ya pasó. Tu sueño sigue aquí.`,
+    ];
+  if (next?.step)
+    return [
+      "¡Vamos por ese sueño!",
+      `Tu pasito: ${money(next.step)} ${rhythmLabel(next.goal.frequency)} para ${next.goal.name}.`,
+    ];
+  return ["¡Vamos por ese sueño!", `${pet.petName} te echa porras.`];
+}
 
 export default function Home({
   data,
@@ -35,7 +70,7 @@ export default function Home({
   checkIn,
   onCheckIn,
   onLater,
-  onTutorial,
+  returning = false,
 }) {
   const [line, setLine] = useState("");
   const lineTimer = useRef(),
@@ -50,207 +85,198 @@ export default function Home({
   const pet = data.preferences,
     words = petWords(pet),
     total = data.goals.reduce((sum, goal) => sum + balance(goal), 0),
-    target = data.goals.reduce((sum, goal) => sum + goal.targetCents, 0),
-    visibleGoals = data.goals.filter((goal) =>
-      filter === "archived"
-        ? goal.archived
-        : !goal.archived && (filter === "completed" ? isComplete(goal) : true),
-    ),
+    active = data.goals.filter((g) => !g.archived && !isComplete(g)),
+    completed = data.goals.filter((g) => !g.archived && isComplete(g)),
+    archived = data.goals.filter((g) => g.archived),
     empty = data.goals.length === 0,
     progress = overallProgress(data),
-    stage = growthStage(progress),
-    away = daysAway(data, new Date(now)),
-    waiting = Boolean(checkIn),
+    // Opening the app counts as company, so the pet is awake to greet.
     mood = petMood({
       celebrating,
       excited: cheering,
-      waiting,
-      daysAway: away,
+      waiting: Boolean(checkIn),
+      happy: returning && !checkIn,
     });
-  const greeting = useRef();
+  const late = active.find((g) => goalSummary(g, now).pastDue),
+    goal = nextGoal(data),
+    next = goal && {
+      goal,
+      // After its date there is no step: all that is left is not "a step".
+      step: goalSummary(goal, now).pastDue
+        ? null
+        : plan(goal, goal.frequency, now, pet.reminder.day),
+    };
+  const [title, body] = speech({
+    pet,
+    empty,
+    celebrating,
+    cheering,
+    checkIn,
+    returning,
+    late,
+    next,
+  });
+  const list =
+    filter === "completed"
+      ? completed
+      : filter === "archived"
+        ? archived
+        : active;
+  const hero = useRef();
   useEffect(() => {
     if (cheering || celebrating)
-      greeting.current?.scrollIntoView({ block: "start", behavior: "instant" });
+      hero.current?.scrollIntoView({ block: "start", behavior: "instant" });
   }, [cheering, celebrating]);
   return (
     <section className="home" aria-label="Inicio">
       <header
-        ref={greeting}
-        className={`home-greeting mood-${mood} ${empty ? "is-empty" : ""} ${celebrating || cheering ? "is-cheering" : ""}`}
+        ref={hero}
+        className={`hero mood-${mood} ${celebrating || cheering ? "is-cheering" : ""}`}
       >
-        <div className="home-speech">
-          <p className="eyebrow">Tu equipo de ahorro</p>
-          <h1>
-            {celebrating
-              ? "¡Lo lograste!"
-              : cheering
-                ? "¡Ese ahorro se aplaude!"
-                : waiting
-                  ? "¡Llegó tu ratito de ahorro!"
-                  : empty
-                    ? `¡Hola, soy ${pet.petName}!`
-                    : mood === "sleepy"
-                      ? `${pet.petName} toma una siesta`
-                      : "¡Vamos por ese sueño!"}
-          </h1>
-          <p aria-live="polite">
-            {line ||
-              (celebrating
-                ? "Una meta cumplida. ¡Chócalas!"
-                : cheering
-                  ? "Tu cajita ya tiene un pasito más."
-                  : waiting
-                    ? checkIn.message.body
-                    : empty
-                      ? "Hagamos espacio para lo que quieres."
-                      : mood === "sleepy"
-                        ? "Tócame para despertar. Te extrañaba 💤"
-                        : `${pet.petName} te echa porras.`)}
+        <div className="hero-pet">
+          <Mascot
+            pet={pet.pet}
+            name={pet.petName}
+            accessory={pet.accessory}
+            progress={progress}
+            stage={growthStage(progress)}
+            mood={mood}
+            motion={pet.animations}
+            // Empty home keeps one action: create the first cajita.
+            interactive={!empty || pet.pet === "cat"}
+            lines={words.lines}
+            loveText={words.loveText}
+            onPet={(kind) => {
+              onPet?.();
+              if (Date.now() < trickUntil.current) return;
+              if (kind === "love")
+                say(`${pet.petName} te dice: ${words.loveText} 💖`);
+              else if (kind === "cuddle") say("Un abrazo para ti ♡");
+              else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
+            }}
+            onTrick={() => {
+              trickUntil.current = Date.now() + 2500;
+              say("¡Ta-dá! Mi truco secreto ✦");
+            }}
+          />
+        </div>
+        <div className="hero-speech">
+          <h1>{title}</h1>
+          <p aria-live="polite">{line || body}</p>
+        </div>
+        {total > 0 && (
+          <p className="hero-total">
+            <span>Llevas guardado</span>
+            <strong>
+              <Money cents={total} />
+            </strong>
           </p>
-        </div>
-        <div className="home-hero">
-          <div className="home-mascot">
-            <span className="home-doodle doodle-star" aria-hidden="true">
-              ✦
-            </span>
-            <span className="home-doodle doodle-heart" aria-hidden="true">
-              ♡
-            </span>
-            <Mascot
-              pet={pet.pet}
-              name={pet.petName}
-              accessory={pet.accessory}
-              progress={progress}
-              stage={stage}
-              mood={mood}
-              motion={pet.animations}
-              interactive={!empty || pet.pet === "cat"}
-              lines={words.lines}
-              loveText={words.loveText}
-              onPet={(kind) => {
-                onPet?.();
-                if (Date.now() < trickUntil.current) return;
-                if (kind === "love")
-                  say(`${pet.petName} te dice: ${words.loveText} 💖`);
-                else if (kind === "cuddle")
-                  say("Un abrazo para ti. Gracias por venir ♡");
-                else say(TAP_LINES[taps.current++ % TAP_LINES.length]);
-              }}
-              onTrick={() => {
-                trickUntil.current = Date.now() + 2500;
-                say("¡Ta-dá! Mi truco secreto ✦");
-              }}
-            />
-            {!empty && (
-              <span className="sprout-stage">🌱 {STAGE_NAMES[stage]}</span>
-            )}
-          </div>
-          {total > 0 && (
-            <p className="home-total">
-              <span>Llevas guardado</span>
-              <strong>
-                <Money cents={total} /> <small>MXN</small>
-              </strong>
-            </p>
-          )}
-        </div>
-        {waiting && (
-          <div className="checkin-actions">
-            <button className="primary" onClick={() => onCheckIn(checkIn.goal)}>
-              Registrar lo que aparté
-            </button>
-            <button className="secondary" onClick={onLater}>
-              Ahora no
-            </button>
-          </div>
         )}
-        <NextStep
-          goal={nextGoal(data)}
-          actions={actions}
-          weekday={data.preferences.reminder.day}
-        />
       </header>
-      <section className="home-goals" aria-labelledby="home-goals-title">
-        <div className="goals-title">
-          <h2 id="home-goals-title">
-            {empty ? "¿Qué te hace ilusión?" : "Mis cajitas"}
-          </h2>
-          {!empty && (
-            <span>
-              {data.goals.length} {data.goals.length === 1 ? "sueño" : "sueños"}
-            </span>
-          )}
-        </div>
-        {!empty && (
-          <div
-            className="goal-filters"
-            role="group"
-            aria-label="Filtrar cajitas"
+
+      {checkIn ? (
+        <div className="hero-actions">
+          <button
+            className="primary big"
+            onClick={() => onCheckIn(checkIn.goal)}
           >
-            {[
-              ["active", "Activas"],
-              ["completed", "Cumplidas"],
-              ["archived", "Archivadas"],
-            ].map(([key, label]) => (
-              <button
-                key={key}
-                className={filter === key ? "active" : ""}
-                aria-pressed={filter === key}
-                onClick={() => onFilter(key)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-        {visibleGoals.length ? (
-          <div className="goals-grid">
-            {visibleGoals.map((goal) => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                now={now}
-                onOpen={onOpen}
-                actions={actions}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <p>
-              {empty
-                ? "Tu primer sueño empieza con una cajita."
+            <AddCircle /> Guardar dinero
+          </button>
+          <button className="text-button" onClick={onLater}>
+            Ahora no
+          </button>
+        </div>
+      ) : active.length ? (
+        <button
+          className="primary big full"
+          onClick={() =>
+            actions.move(goal ?? active[0], {
+              initialCents: next?.step || undefined,
+            })
+          }
+        >
+          <AddCircle /> Guardar dinero
+        </button>
+      ) : (
+        <button className="primary big full" onClick={() => actions.create()}>
+          <AddCircle />{" "}
+          {empty ? "Crear mi primera cajita" : "Crear una cajita nueva"}
+        </button>
+      )}
+      {late && !checkIn && !celebrating && !cheering && (
+        <button
+          className="secondary full more-time"
+          onClick={() => actions.giveMoreTime(late)}
+        >
+          Darle 3 meses más a {late.name}
+        </button>
+      )}
+
+      {!empty && (
+        <section className="home-goals" aria-labelledby="home-goals-title">
+          <div className="home-goals-head">
+            <h2 id="home-goals-title">
+              {filter === "completed"
+                ? "Cumplidas"
                 : filter === "archived"
-                  ? "Tus cajitas archivadas aparecerán aquí con su historial."
-                  : filter === "completed"
-                    ? "Cada meta llega a su tiempo. Aquí celebraremos la tuya."
-                    : "Aquí cabe tu siguiente sueño."}
-            </p>
-            {empty && onTutorial && (
-              // A quiet link, so creating the first cajita stays the one action.
-              <a
+                  ? "Archivadas"
+                  : "Mis cajitas"}
+            </h2>
+            {filter !== "active" && (
+              <button
                 className="text-button"
-                href="?tutorial=1"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onTutorial();
-                }}
+                onClick={() => onFilter("active")}
               >
-                ¿Primera vez? Da un paseíto de práctica
-              </a>
+                Ver mis cajitas
+              </button>
             )}
           </div>
-        )}
-        <button className="primary new-goal" onClick={actions.create}>
-          + Nueva cajita
-        </button>
-        {!empty && (
-          <p className="home-assurance">
-            <ShieldCheck />
-            Guardadito no mueve tu dinero, solo lo registra.
-          </p>
-        )}
-      </section>
+          {list.length ? (
+            <div className="cajitas">
+              {list.map((g) => (
+                <GoalCard
+                  key={g.id}
+                  goal={g}
+                  now={now}
+                  onOpen={onOpen}
+                  actions={actions}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="muted home-empty">
+              {filter === "active"
+                ? "Todas tus cajitas están cumplidas o archivadas. ¿Un sueño nuevo?"
+                : "Aquí no hay nada todavía."}
+            </p>
+          )}
+          {filter === "active" && active.length > 0 && (
+            <button className="secondary full" onClick={() => actions.create()}>
+              + Nueva cajita
+            </button>
+          )}
+          {filter === "active" && (completed.length || archived.length) > 0 && (
+            <p className="home-more">
+              {completed.length > 0 && (
+                <button
+                  className="text-button"
+                  onClick={() => onFilter("completed")}
+                >
+                  Cumplidas ({completed.length})
+                </button>
+              )}
+              {archived.length > 0 && (
+                <button
+                  className="text-button"
+                  onClick={() => onFilter("archived")}
+                >
+                  Archivadas ({archived.length})
+                </button>
+              )}
+            </p>
+          )}
+        </section>
+      )}
     </section>
   );
 }

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-const shots = "docs/screenshots/v10";
 const day = (n) => new Date(Date.now() - n * 86400000).toISOString();
 function seed() {
   return {
@@ -61,7 +60,7 @@ test("sin regalo, Pipo es la mascota de inicio y Cookie no aparece", async ({
 }) => {
   const home = await open(page);
   await expect(home.locator(".mascot.pet-pig")).toHaveCount(1);
-  await page.getByRole("button", { name: "Mi mascota", exact: true }).click();
+  await page.getByRole("button", { name: /^Mi mascota/ }).click();
   await expect(page.locator(".pet-options")).not.toContainText("Gatito");
 });
 
@@ -74,7 +73,6 @@ test("con el regalo dice las frases de su pareja, una y otra", async ({
   await page.clock.runFor(3600);
   await expect(bubble).toHaveText("¡Muack!");
   await expect(home.locator(".mascot")).toHaveAttribute("data-face", "kiss");
-  await page.screenshot({ path: `${shots}/frase.png` });
   await page.clock.runFor(2500);
   await expect(bubble).toHaveCount(0);
   // The next one arrives 9–16 s later; step the clock until it shows up.
@@ -94,9 +92,7 @@ test("al tocarla dice el mensaje de su pareja con lluvia de corazones", async ({
   await expect(page.locator(".love-banner")).toContainText("¡Te quiero, Ana!");
   await expect(page.locator(".love-rain span")).toHaveCount(26);
   await expect(home.locator(".mascot")).toHaveAttribute("data-face", "love");
-  await expect(home.locator(".home-speech")).toContainText("¡Te quiero, Ana!");
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: `${shots}/mensaje.png` });
+  await expect(home.locator(".hero-speech")).toContainText("¡Te quiero, Ana!");
   await expect(page.locator(".love-banner")).toHaveCount(0, { timeout: 5000 });
   await expect(home.locator(".mascot")).not.toHaveAttribute(
     "data-face",
@@ -126,9 +122,8 @@ test("con movimiento reducido el mensaje sigue, sin animaciones", async ({
 
 test("Mi mascota: con el regalo, Cookie va primero", async ({ page }) => {
   await open(page, seed());
-  await page.getByRole("button", { name: "Mi mascota", exact: true }).click();
+  await page.getByRole("button", { name: /^Mi mascota/ }).click();
   const options = page.locator(".pet-options button");
   await expect(options.first()).toContainText("Gatito");
   await expect(options.first()).toHaveAttribute("aria-pressed", "true");
-  await page.screenshot({ path: `${shots}/mi-mascota.png`, fullPage: true });
 });

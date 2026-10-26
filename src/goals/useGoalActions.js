@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   correctManualEntry,
+  localDate,
   recordEntry,
   removeManualEntry,
 } from "../domain.js";
@@ -77,6 +78,19 @@ export function useGoalActions({
       if (record(data, next, "Tu plan se ajustó. Seguimos a tu ritmo."))
         close();
     },
+    /** A date that already passed, moved three months ahead in one tap. */
+    giveMoreTime(goal) {
+      const date = new Date();
+      date.setMonth(date.getMonth() + 3);
+      const next = {
+        ...data,
+        goals: data.goals.map((g) =>
+          g.id === goal.id ? { ...g, unlockDate: localDate(date) } : g,
+        ),
+      };
+      if (save(next))
+        notify(`Listo: 3 meses más para ${goal.name}. Sin prisa ♡`);
+    },
     toggleArchive(goal) {
       const next = {
         ...data,
@@ -105,7 +119,7 @@ export function useGoalActions({
       if (save(removeManualEntry(data, goalId, entryId))) {
         close();
         notify(
-          "Registro eliminado. Si fue un error, lo recuperas en Actividad → Papelera.",
+          "Registro eliminado. Si fue un error, lo recuperas en Ajustes → Historial → Papelera.",
         );
       }
     },

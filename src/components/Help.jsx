@@ -12,19 +12,27 @@ import { isNative, openExternal, platform } from "../platform.js";
 const QUESTIONS = [
   [
     "¿Guardadito guarda mi dinero?",
-    "No. Tu dinero se queda donde ya lo tienes: tu banco, Nu, Mercado Pago o en efectivo. Guardadito lleva la cuenta de lo que apartas, te propone un ritmo y te acompaña.",
+    "No. Tu dinero se queda donde ya lo tienes: tu banco, tu app o en efectivo. Guardadito lleva la cuenta de lo que apartas, te propone un ritmo y te acompaña.",
+  ],
+  [
+    "¿Y si esta semana no pude ahorrar?",
+    "No pasa nada. Aquí no hay rachas que se rompan ni regaños. Cuando puedas, guarda lo que sea: $20 también cuentan. Si la fecha ya no alcanza, dale más tiempo a tu cajita.",
+  ],
+  [
+    "¿Cuánto debería apartar?",
+    "Lo que no te duela. Empieza poquito y constante; cuando te acomode, sube. Guardadito te propone un pasito según tu fecha, pero tú decides.",
   ],
   [
     "¿Qué pasa si cambio o pierdo mi teléfono?",
-    "Si creaste una cuenta en Más → Mi cuenta, entra con el mismo correo en el teléfono nuevo y tus cajitas regresan. Sin cuenta, todo vive solo en este teléfono: descarga un respaldo en Más → Respaldo.",
+    "Si creaste una cuenta en Ajustes → Mi cuenta, entra con el mismo correo en el teléfono nuevo y tus cajitas regresan. Sin cuenta, todo vive solo en este teléfono: descarga un respaldo en Ajustes → Respaldo.",
   ],
   [
     "¿Cómo ahorro con mi pareja?",
-    "Los dos necesitan cuenta. En Más → Mi pareja uno crea un código y el otro lo escribe. Después pueden tener cajitas de los dos y mandarse sorpresas.",
+    "Los dos necesitan cuenta. En Ajustes → Ahorrar en pareja uno crea un código y el otro lo escribe. Después pueden tener cajitas de los dos.",
   ],
   [
     "Olvidé mi contraseña",
-    "En Más → Mi cuenta toca «Olvidé mi contraseña» y te llega un correo para cambiarla. Revisa también la carpeta de spam.",
+    "En Ajustes → Mi cuenta toca «Olvidé mi contraseña» y te llega un correo para cambiarla. Revisa también la carpeta de spam.",
   ],
   [
     "¿Quién ve mis datos?",

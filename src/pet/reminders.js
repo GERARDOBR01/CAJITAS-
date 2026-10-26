@@ -1,12 +1,8 @@
 // Reminder schedule and the pet's message bank. Pure functions: the platform
 // layer turns the result into native notifications or an in-app check-in.
-import { byTargetDate, isComplete, plan, money } from "../domain.js";
+import { byTargetDate, isComplete } from "../domain.js";
 import { isScheduleDay, previousScheduleDays } from "../calendar.js";
-import {
-  FREQUENCIES,
-  FREQUENCY_DAYS,
-  FREQUENCY_LABEL,
-} from "./reminderSettings.js";
+import { FREQUENCIES, FREQUENCY_LABEL } from "./reminderSettings.js";
 
 const PERIOD = {
   weekly: { now: "esta semana", plural: "semanas", together: "seguidas" },
@@ -14,7 +10,8 @@ const PERIOD = {
   monthly: { now: "este mes", plural: "meses", together: "seguidos" },
 };
 
-/** Banco de mensajes en voz de la mascota. Nunca culpa, vergüenza ni urgencia. */
+/** Banco de mensajes en voz de la mascota. Nunca culpa, vergüenza, urgencia
+ * ni «ahorra más»: lo que la persona aparta ya está bien. */
 export const MESSAGES = {
   checkin: [
     ["c1", "¡Hola! ¿Cuánto apartaste {periodo} para {cajita}?"],
@@ -36,41 +33,13 @@ export const MESSAGES = {
       "a3",
       "{cajita} va en serio: {n} {periodos} {seguidas}. ¿Cuánto apartaste ahora?",
     ],
-    ["a4", "Racha de {n} {periodos} 🎉 Cuéntame cómo te fue esta vez."],
+    ["a4", "Ya van {n} {periodos} 🎉 Cuéntame cómo te fue esta vez."],
     ["a5", "Me encanta este ritmo: {n} {periodos} {seguidas}. ¿Seguimos?"],
     ["a6", "¡Mira nada más! {n} {periodos} ahorrando para {cajita}."],
     ["a7", "Pasito a pasito ya son {n} {periodos}. ¿Registramos el de hoy?"],
     [
       "a8",
       "{n} {periodos} {seguidas} 🌱 Vengo por la actualización de {cajita}.",
-    ],
-  ],
-  nudge: [
-    [
-      "n1",
-      "Vas súper con {cajita}. ¿Y si esta vez probamos {monto} más? Solo si te late.",
-    ],
-    [
-      "n2",
-      "Tu plan va al día ✦ ¿Te animas a sumar {monto} extra? Si no, todo bien.",
-    ],
-    ["n3", "¿Un retito? {monto} más para {cajita}. Tú decides."],
-    [
-      "n4",
-      "Estás cumpliendo tu plan 🌱 Si te sobra, {monto} más acercan tu meta.",
-    ],
-    [
-      "n5",
-      "Idea chiquita: {monto} extra esta vez. Y si no se puede, seguimos igual.",
-    ],
-    ["n6", "Llevas buen ritmo. ¿Probamos {monto} más? Sin presión."],
-    [
-      "n7",
-      "{cajita} crece bonito. Si hoy se puede, {monto} extra le vienen bien.",
-    ],
-    [
-      "n8",
-      "¿Le damos un empujoncito a {cajita}? {monto} más, solo si te acomoda.",
     ],
   ],
 };
@@ -164,26 +133,7 @@ export function goalRhythm(goal, frequency, when, weekday) {
   return { periods, inRow };
 }
 
-/** Suggest a bigger step only when the last 3 periods met the plan and had no
- * withdrawals. Never more than +10 % of the plan, rounded down to $10. */
-export function suggestedExtra(goal, frequency, when, weekday) {
-  const step = plan(
-    goal,
-    FREQUENCY_DAYS[frequency],
-    new Date(when).getTime(),
-    weekday,
-  );
-  // No target date (null) or nothing left: never suggest saving more.
-  if (!(step > 0)) return 0;
-  const { periods } = goalRhythm(goal, frequency, when, weekday);
-  const kept = periods.slice(0, 3).every((p) => !p.withdrew && p.saved >= step);
-  if (!kept) return 0;
-  return Math.floor((step * 0.1) / 1000) * 1000;
-}
-
 export function messageKind(goal, frequency, when, weekday) {
-  const extra = suggestedExtra(goal, frequency, when, weekday);
-  if (extra > 0) return { kind: "nudge", extra };
   const { inRow } = goalRhythm(goal, frequency, when, weekday);
   if (inRow >= 2) return { kind: "cheer", n: inRow };
   return { kind: "checkin" };
@@ -216,9 +166,7 @@ export function composeMessage(data, goal, when, avoid = []) {
       periodos: context.n === 1 ? period.plural.slice(0, -1) : period.plural,
       seguidas: period.together,
       n: context.n,
-      monto: context.extra ? money(context.extra) : "",
     }),
-    extra: context.extra ?? 0,
   };
 }
 

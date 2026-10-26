@@ -9,8 +9,11 @@ vi.mock("../src/platform.js", () => ({
   },
   haptic: vi.fn(),
   openExternal: vi.fn(),
+  saveFile: vi.fn(),
 }));
-import More from "../src/screens/More.jsx";
+// As the public sees it: the owner's tools are off.
+vi.mock("../src/features.js", () => ({ ownerTools: false }));
+import Settings from "../src/screens/Settings.jsx";
 import Home from "../src/screens/Home.jsx";
 import { initialData } from "../src/domain.js";
 
@@ -26,107 +29,95 @@ const goal = {
   entries: [],
 };
 const withGoal = { ...initialData(), goals: [goal] };
-
-describe("descarga en Más según la plataforma", () => {
-  for (const native of [false, true]) {
-    it(
-      native
-        ? "la app nativa conserva las herramientas y omite el banner Android"
-        : "la web ofrece la descarga Android dentro de Más",
-      () => {
-        state.native = native;
-        const onSave = vi.fn();
-        const html = renderToStaticMarkup(
-          createElement(More, {
-            data: initialData(),
-            onSave,
-            notify: vi.fn(),
-            onNavigate: vi.fn(),
-          }),
-        );
-        expect(html.includes('aria-label="Descargar Guardadito"')).toBe(
-          !native,
-        );
-        expect(html).toContain("Tutorial interactivo");
-        expect(html).toContain("Un ratito para ti y tus sueños");
-        expect(html).not.toContain("Tu siguiente pasito");
-        expect(onSave).not.toHaveBeenCalled();
-      },
-    );
-  }
-});
-
 const actions = () => ({
   create: vi.fn(),
   move: vi.fn(),
   edit: vi.fn(),
   guardianFor: () => null,
 });
+const home = (data, extra = {}) =>
+  renderToStaticMarkup(
+    createElement(Home, {
+      data,
+      filter: "active",
+      onFilter: vi.fn(),
+      now: Date.parse("2026-10-16T12:00:00"),
+      actions: actions(),
+      ...extra,
+    }),
+  );
+const settings = (cloud) =>
+  renderToStaticMarkup(
+    createElement(Settings, {
+      cloud,
+      data: initialData(),
+      onNavigate: vi.fn(),
+    }),
+  );
 
-describe("el siguiente aporte vive en Inicio", () => {
-  const home = (data) =>
-    renderToStaticMarkup(
-      createElement(Home, {
-        data,
-        filter: "active",
-        onFilter: vi.fn(),
-        now: Date.parse("2026-10-16T12:00:00"),
-        actions: actions(),
-        onFrequency: vi.fn(),
-      }),
-    );
-  it("aparece junto a la mascota, antes de las cajitas", () => {
+describe("Inicio: una sola acción principal", () => {
+  it("con cajitas, el botón grande es Guardar dinero y el pasito lo dice la mascota", () => {
     const html = home(withGoal);
-    const greeting = html.indexOf("home-greeting"),
-      mascot = html.indexOf("home-mascot"),
-      step = html.indexOf('aria-label="Tu siguiente pasito"'),
-      goals = html.indexOf("home-goals");
-    expect(step).toBeGreaterThan(mascot);
-    expect(mascot).toBeGreaterThan(greeting);
-    expect(goals).toBeGreaterThan(step);
-    expect(html).toContain("Registrar mi pasito");
+    expect(html).toContain("Guardar dinero");
+    expect(html).toContain("Tu pasito:");
+    expect(html).toContain("Mi escapadita");
+    // Nothing that ticks by the second, no lock, no bank.
+    expect(html).not.toMatch(/\d\d:\d\d:\d\d/);
+    expect(html).not.toContain("candado");
+    expect(html).not.toContain("Nu<");
   });
-  it("no aparece sin metas por cumplir", () => {
-    expect(home(initialData())).not.toContain("Tu siguiente pasito");
+  it("sin cajitas invita a crear la primera", () => {
+    const html = home(initialData());
+    expect(html).toContain("Crear mi primera cajita");
+    expect(html).not.toContain("Guardar dinero");
+  });
+  it("una meta sin fecha va sin prisa y sin montos raros", () => {
+    const html = home({ ...withGoal, goals: [{ ...goal, unlockDate: null }] });
+    expect(html).toContain("Sin prisa");
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("Infinity");
+  });
+  it("las cumplidas y archivadas esperan detrás de un enlace", () => {
     const done = {
-      ...withGoal,
-      goals: [
-        {
-          ...goal,
-          entries: [{ id: "e", cents: 100000, at: "2026-10-01T12:00:00" }],
-        },
-      ],
+      ...goal,
+      id: "d",
+      name: "Cumplida",
+      entries: [{ id: "e", cents: 100000, at: "2026-10-01T12:00:00" }],
     };
-    expect(home(done)).not.toContain("Tu siguiente pasito");
-  });
-  it("Más ya no lo muestra aunque haya metas", () => {
-    const html = renderToStaticMarkup(
-      createElement(More, {
-        data: withGoal,
-        onSave: vi.fn(),
-        notify: vi.fn(),
-        onNavigate: vi.fn(),
-      }),
-    );
-    expect(html).not.toContain("Tu siguiente pasito");
+    const html = home({ ...withGoal, goals: [goal, done] });
+    expect(html).toContain("Cumplidas (1)");
+    expect(html).not.toContain("Ver detalle de Cumplida");
   });
 });
 
-describe("una meta sin fecha en Inicio", () => {
-  it("muestra Sin fecha objetivo y un pasito sin monto", () => {
-    const html = renderToStaticMarkup(
-      createElement(Home, {
-        data: { ...withGoal, goals: [{ ...goal, unlockDate: null }] },
-        filter: "active",
-        onFilter: vi.fn(),
-        now: Date.parse("2026-10-16T12:00:00"),
-        actions: actions(),
-        onFrequency: vi.fn(),
-      }),
+describe("Ajustes", () => {
+  for (const native of [false, true]) {
+    it(
+      native ? "la app de Play no ofrece instalar" : "la web ofrece instalar",
+      () => {
+        state.native = native;
+        const html = settings({ configured: true, user: null });
+        expect(html.includes("Instalar")).toBe(!native);
+        for (const item of [
+          "Mi mascota",
+          "Recordatorio",
+          "Historial",
+          "Ahorrar en pareja",
+          "Mi cuenta",
+          "Respaldo",
+          "Ayuda",
+        ])
+          expect(html).toContain(item);
+        // The owner's tools stay out of the public build.
+        expect(html).not.toContain("Conexiones");
+        expect(html).not.toContain("APK");
+      },
     );
-    expect(html).toContain("Sin fecha objetivo");
-    expect(html).toContain("A tu ritmo");
-    expect(html).not.toContain("NaN");
-    expect(html).not.toContain("Infinity");
+  }
+  it("sin nube no ofrece cuenta ni pareja", () => {
+    state.native = false;
+    const html = settings({ configured: false });
+    expect(html).not.toContain("Mi cuenta");
+    expect(html).not.toContain("Ahorrar en pareja");
   });
 });

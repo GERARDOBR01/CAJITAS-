@@ -1,35 +1,16 @@
 import Money from "../components/Money.jsx";
-import {
-  GoalComplete,
-  GoalNotices,
-  GoalProgress,
-} from "../components/GoalProgress.jsx";
-import {
-  GuardianActions,
-  dateLabel,
-  destinations,
-  symbols,
-} from "../components/Goals.jsx";
-import {
-  AddCircle,
-  ArrowDown,
-  ArrowLeft,
-  ArrowUp,
-  Calendar,
-  MinusCircle,
-  Pen,
-} from "../components/icons.jsx";
-import {
-  SOURCE_LABEL,
-  countdown,
-  goalSummary,
-  money,
-  plan,
-  projection,
-} from "../domain.js";
-import { RHYTHM_LABEL, rhythmLabel } from "../calendar.js";
-import { isNative, openExternal } from "../platform.js";
+import { GoalComplete, GoalNotices } from "../components/GoalProgress.jsx";
+import { GuardianActions } from "../components/Goals.jsx";
+import GoalIcon from "../goals/GoalIcon.jsx";
+import { AddCircle, Pen } from "../components/icons.jsx";
+import { dateText, goalSummary, moneyShort as money, plan } from "../domain.js";
+import { rhythmLabel } from "../calendar.js";
 
+const RHYTHMS = [
+  [7, "Semana"],
+  [15, "Quincena"],
+  [30, "Mes"],
+];
 const longDate = (date) => {
   const when = new Date(`${date}T12:00:00`),
     sameYear = when.getFullYear() === new Date().getFullYear();
@@ -39,45 +20,14 @@ const longDate = (date) => {
     ...(sameYear ? {} : { year: "numeric" }),
   });
 };
-
-function Estimate({ goal, now }) {
-  const guess = projection(goal, now);
-  if (guess.kind === "done") return null;
-  return (
-    <div className="detail-estimate">
-      <p className="eyebrow">Proyección estimada</p>
-      {guess.kind === "pace" ? (
-        <>
-          <p>
-            <strong>
-              Llegarías a tu meta alrededor del {longDate(guess.date)}
-            </strong>
-          </p>
-          <p className="small-text">
-            Es un cálculo con tu ritmo de los últimos días, no una promesa.
-            Cambia si ahorras más o menos.
-          </p>
-        </>
-      ) : (
-        <>
-          <p>
-            <strong>Aún no hay una estimación</strong>
-          </p>
-          <p className="small-text">
-            Cuando registres tu ahorro unos días, aquí verás una fecha estimada.
-          </p>
-        </>
-      )}
-    </div>
-  );
-}
+const dayLabel = (at) =>
+  new Date(at).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 
 export default function GoalDetail({
   goal,
   now,
   weekday,
   actions,
-  onBack,
   onFrequency,
   onActivity,
 }) {
@@ -85,162 +35,149 @@ export default function GoalDetail({
     { saved } = summary,
     guardian = actions.guardianFor(goal.id),
     step = goal.unlockDate ? plan(goal, goal.frequency, now, weekday) : null,
-    entries = goal.entries.slice().reverse().slice(0, 12);
+    entries = goal.entries.slice().reverse();
+  const shown = entries.slice(0, 8);
   return (
     <section className="goal-detail" aria-label={`Detalle de ${goal.name}`}>
-      <header className="detail-bar">
+      <header className="detail-head">
+        <GoalIcon icon={goal.icon} size="lg" />
+        <h1>{goal.name}</h1>
         <button
-          className="round-button"
-          aria-label="Volver a mis cajitas"
-          onClick={onBack}
-        >
-          <ArrowLeft />
-        </button>
-        <button
-          className="round-button"
+          className="icon-button"
           aria-label={`Editar ${goal.name}`}
           onClick={() => actions.edit(goal)}
         >
           <Pen />
         </button>
       </header>
-      <div className={`detail-title ${goal.icon}`}>
-        <span className="goal-symbol">{symbols[goal.icon]}</span>
-        <div>
-          <p>Cajita</p>
-          <h1>{goal.name}</h1>
-        </div>
-      </div>
       <section className="detail-card">
-        <p className="detail-label">Llevas ahorrado</p>
-        <p className="detail-amount saved">
+        <p className="detail-amount">
           <Money cents={saved} />
         </p>
         <p className="detail-sub">
-          de tu meta de {money(goal.targetCents)}
+          de {money(goal.targetCents)}
           {goal.unlockDate && ` · ${longDate(goal.unlockDate)}`}
         </p>
-        <GoalProgress goal={goal} summary={summary} thick>
-          {summary.complete
-            ? "Ahorro registrado"
-            : `Faltan ${money(summary.remaining)}`}
-        </GoalProgress>
+        <div
+          className="progress thick"
+          role="progressbar"
+          aria-label={`Progreso de ${goal.name}`}
+          aria-valuenow={summary.percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <span style={{ width: `${summary.progress * 100}%` }} />
+        </div>
+        <p className="progress-caption">
+          <strong>{summary.percent} %</strong>
+          <span>
+            {summary.complete
+              ? "¡Cumplida!"
+              : `Faltan ${money(summary.remaining)}`}
+          </span>
+        </p>
       </section>
       <GoalComplete summary={summary} />
-      {!summary.complete && (
-        <section className="detail-plan">
-          <h2>
-            <Calendar /> Tu plan
-          </h2>
+      {!summary.complete && !summary.pastDue && !goal.archived && (
+        <section className="detail-plan" aria-label="Tu plan">
           <p>
             {step === null ? (
-              "Sin fecha objetivo: aporta lo que te acomode."
+              "Sin prisa: guarda lo que puedas, cuando puedas."
             ) : (
               <>
-                Planeas apartar <strong>{money(step)}</strong>{" "}
-                {rhythmLabel(goal.frequency)}.
+                Tu pasito: <strong>{money(step)}</strong>{" "}
+                {rhythmLabel(goal.frequency)}.{" "}
+                <span className="muted">{dateText(goal.unlockDate, now)}.</span>
               </>
             )}
           </p>
-          <label className="plan-select">
-            <span>Cada cuánto</span>
-            <select
+          {step !== null && (
+            <div
+              className="chips"
+              role="group"
               aria-label={`Frecuencia de ${goal.name}`}
-              value={goal.frequency}
-              onChange={(e) => onFrequency(goal.id, Number(e.target.value))}
             >
-              <option value={7}>{RHYTHM_LABEL.weekly}</option>
-              <option value={15}>{RHYTHM_LABEL.biweekly}</option>
-              <option value={30}>{RHYTHM_LABEL.monthly}</option>
-            </select>
-          </label>
-          <Estimate goal={goal} now={now} />
+              {RHYTHMS.map(([days, label]) => (
+                <button
+                  key={days}
+                  aria-pressed={goal.frequency === days}
+                  onClick={() => onFrequency(goal.id, days)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       )}
-      <p className="goal-lock">
-        <span aria-hidden="true">{summary.locked ? "♧" : "✓"}</span>
-        {goal.unlockDate
-          ? `${countdown(goal.unlockDate, now)} · ${dateLabel(goal.unlockDate)}`
-          : "A tu ritmo, sin prisa"}
-      </p>
-      <GoalNotices goal={goal} summary={summary} guardian={guardian} />
-      <GuardianActions goal={goal} guardian={guardian} saved={saved} />
-      {!goal.archived &&
-        (destinations[goal.provider] ? (
-          <a
-            className="external"
-            href={destinations[goal.provider]}
-            onClick={
-              isNative
-                ? (e) => {
-                    e.preventDefault();
-                    openExternal(destinations[goal.provider]);
-                  }
-                : undefined
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Ir a apartar a {goal.provider} ↗
-          </a>
-        ) : (
-          <span className="muted small-text">Aparta en tu app</span>
-        ))}
-      <div className="detail-section-head">
-        <h2>Movimientos</h2>
-        <button className="link-button" onClick={onActivity}>
-          Ver en Actividad
+      <GoalNotices summary={summary} guardian={guardian} />
+      {summary.pastDue && !goal.archived && (
+        <button
+          className="secondary full more-time"
+          onClick={() => actions.giveMoreTime(goal)}
+        >
+          Darle 3 meses más
         </button>
-      </div>
-      {entries.length ? (
-        <ul className="detail-movements">
-          {entries.map((e) => (
-            <li key={e.id}>
-              <span className={`move-icon ${e.cents > 0 ? "in" : "out"}`}>
-                {e.cents > 0 ? <ArrowDown /> : <ArrowUp />}
-              </span>
-              <div>
-                <strong>{e.cents > 0 ? "Depósito" : "Retiro"}</strong>
-                <span>
-                  {new Date(e.at).toLocaleDateString("es-MX", {
-                    day: "numeric",
-                    month: "short",
-                  })}{" "}
-                  · {SOURCE_LABEL[e.source] ?? "Manual"}
-                </span>
-              </div>
-              <p className="saved">
-                {e.cents > 0 ? "+" : ""}
-                <Money cents={e.cents} />
-              </p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="empty-state">
-          Aún no hay movimientos. Cuando registres lo que apartaste, aparecerá
-          aquí.
-        </p>
       )}
+      <GuardianActions goal={goal} guardian={guardian} saved={saved} />
       {goal.archived ? (
-        <div className="detail-actions">
-          <button className="secondary full" onClick={() => actions.edit(goal)}>
-            Recuperar cajita
-          </button>
-        </div>
+        <button
+          className="secondary full"
+          onClick={() => actions.toggleArchive(goal)}
+        >
+          Recuperar cajita
+        </button>
       ) : (
-        <div className="detail-actions">
-          <button className="primary" onClick={() => actions.move(goal)}>
-            <AddCircle /> Depositar
+        !summary.complete && (
+          <button className="primary full" onClick={() => actions.move(goal)}>
+            <AddCircle /> Guardar dinero
           </button>
-          <button
-            className="secondary"
-            disabled={!saved}
-            onClick={() => actions.move(goal, { withdraw: true })}
-          >
-            <MinusCircle /> Retirar
+        )
+      )}
+      <section aria-labelledby="moves-title">
+        <h2 id="moves-title" className="detail-section-title">
+          Movimientos
+        </h2>
+        {shown.length ? (
+          <ul className="movement-list">
+            {shown.map((e) => (
+              <li key={e.id}>
+                <span>
+                  <strong>{e.cents > 0 ? "Guardaste" : "Usaste"}</strong>
+                  <small>{dayLabel(e.at)}</small>
+                </span>
+                <strong className={e.cents > 0 ? "plus" : "minus"}>
+                  {e.cents > 0 ? "+" : ""}
+                  <Money cents={e.cents} />
+                </strong>
+                {e.source === "manual" && (
+                  <button
+                    className="edit-entry"
+                    aria-label={`Corregir registro del ${new Date(e.at).toLocaleDateString("es-MX")}`}
+                    onClick={() => actions.correct({ ...e, goalId: goal.id })}
+                  >
+                    <Pen />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">Aquí aparecerá cada pasito.</p>
+        )}
+        {entries.length > shown.length && (
+          <button className="text-button" onClick={onActivity}>
+            Ver todo el historial
           </button>
-        </div>
+        )}
+      </section>
+      {!goal.archived && saved > 0 && (
+        <button
+          className="text-button full"
+          onClick={() => actions.move(goal, { withdraw: true })}
+        >
+          Usé parte de este ahorro
+        </button>
       )}
     </section>
   );

@@ -1,107 +1,47 @@
-import { ClockCircle, MenuDots, SmileCircle, Wallet } from "./icons.jsx";
+import { ArrowLeft, Tune } from "./icons.jsx";
+import Mascot from "./Mascot.jsx";
 
-const navigation = [
-  ["goals", <Wallet />, "Mis cajitas"],
-  ["pet", <SmileCircle />, "Mi mascota"],
-  ["activity", <ClockCircle />, "Actividad"],
-  ["more", <MenuDots />, "Más"],
-];
-const tools = [
-  "simulator",
-  "connections",
-  "backup",
-  "install",
-  "tutorial",
-  "account",
-  "partner",
-];
-export default function AppShell({
-  tab,
-  onNavigate,
-  goalCount,
-  pet,
-  children,
-}) {
-  function nav(className, label) {
-    return (
-      <nav className={className} aria-label={label}>
-        {navigation.map(([key, icon, title]) => {
-          const selected =
-            tab === key ||
-            (key === "goals" && tab === "goal") ||
-            (key === "more" && tools.includes(tab));
-          return (
-            <button
-              key={key}
-              aria-current={selected ? "page" : undefined}
-              className={selected ? "active" : ""}
-              onClick={() => onNavigate(key)}
-            >
-              <span aria-hidden="true">{icon}</span>
-              <span>{title}</span>
-              {key === "goals" && goalCount > 0 && (
-                <small aria-hidden="true">{goalCount}</small>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-    );
-  }
+/**
+ * One screen at a time, no tab bar: home has the brand, the pet and
+ * Ajustes; every other screen has a way back.
+ */
+export default function AppShell({ tab, back, onNavigate, pet, children }) {
+  const home = tab === "goals";
   return (
-    <>
-      <aside className="sidebar">
-        <a
-          className="brand"
-          href={import.meta.env.BASE_URL}
-          aria-label="Guardadito inicio"
-        >
-          <span className="brand-icon" aria-hidden="true">
-            ▣
-          </span>
-          guardadito
-          <span className="brand-dot" aria-hidden="true">
-            ✦
-          </span>
-        </a>
-        <p className="brand-caption">Tu equipo de ahorro.</p>
-        {nav("desktop-nav", "Navegación principal")}
-        {nav("mobile-nav", "Navegación de la app")}
-        <p className="local-badge">✦ Guardado en tu dispositivo</p>
-      </aside>
-      <div className="workspace">
-        <header className="topbar">
-          <span>Tu ahorro, a tu ritmo.</span>
+    <div className="shell">
+      <header className="shell-bar">
+        {home ? (
+          <span className="shell-brand">guardadito</span>
+        ) : (
           <button
-            className="avatar avatar-pet"
-            aria-label="Personalizar mi mascota"
-            onClick={() => onNavigate("pet")}
+            className="shell-back"
+            onClick={() => onNavigate(back)}
+            aria-label={back === "goals" ? "Volver al inicio" : "Volver"}
           >
-            <span aria-hidden="true">
-              {pet.pet === "cat"
-                ? "🐱"
-                : pet.pet === "pig"
-                  ? "🐷"
-                  : pet.pet === "cow"
-                    ? "🐮"
-                    : pet.pet === "bunny"
-                      ? "🐰"
-                      : pet.pet === "dog"
-                        ? "🐶"
-                        : pet.pet === "otter"
-                          ? "🦦"
-                          : "🌱"}
-            </span>
+            <ArrowLeft />
+            <span>{back === "goals" ? "Inicio" : "Ajustes"}</span>
           </button>
-        </header>
-        <main>
-          {children}
-          <footer>
-            <span>guardadito ✦</span>
-            <p>Cuida tus sueños. Ahorra a tu ritmo.</p>
-          </footer>
-        </main>
-      </div>
-    </>
+        )}
+        {home && (
+          <span className="shell-actions">
+            <button
+              className="shell-icon shell-pet"
+              aria-label={`Mi mascota, ${pet.petName}`}
+              onClick={() => onNavigate("pet")}
+            >
+              <Mascot pet={pet.pet} small accessory={pet.accessory} />
+            </button>
+            <button
+              className="shell-icon"
+              aria-label="Ajustes"
+              onClick={() => onNavigate("settings")}
+            >
+              <Tune />
+            </button>
+          </span>
+        )}
+      </header>
+      <main className="shell-main">{children}</main>
+    </div>
   );
 }

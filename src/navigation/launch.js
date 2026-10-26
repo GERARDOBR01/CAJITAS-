@@ -2,31 +2,44 @@
 // follows the screen afterwards. Pure, so it can be tested without a browser.
 
 // Asked once by a link; removed from the address after the app reads them.
-const ONE_SHOT = ["pareja", "gmail", "tab"];
+// `tutorial` is from versions that had a practice tour.
+const ONE_SHOT = ["pareja", "gmail", "tab", "tutorial"];
+
+/** Where "back" leads from each screen. Home is the only top level. */
+export const PARENT = {
+  goal: "goals",
+  settings: "goals",
+  pet: "settings",
+  reminder: "settings",
+  history: "settings",
+  partner: "settings",
+  account: "settings",
+  backup: "settings",
+  install: "settings",
+  help: "settings",
+  simulator: "settings",
+  connections: "settings",
+};
 
 /**
  * `tab` is the screen to open first. `inviteCode` is a partner's code from
  * `?pareja=`; `gmail` is how the Gmail connection ended (`connected` or
- * `cancelled`), from `?gmail=`.
+ * `cancelled`), from `?gmail=`, and only matters with the owner's tools.
  */
-export function readLaunch(search, { cloudConfigured }) {
+export function readLaunch(search, { cloudConfigured, ownerTools = false }) {
   const params = new URLSearchParams(search);
   const inviteCode = params.get("pareja") ?? "",
-    gmail = params.get("gmail") ?? "";
+    gmail = ownerTools ? (params.get("gmail") ?? "") : "";
   let tab = "goals";
-  if (params.get("tutorial") === "1") tab = "tutorial";
-  else if (params.get("tab") === "account" && cloudConfigured) tab = "account";
+  if (params.get("tab") === "account" && cloudConfigured) tab = "account";
   if (inviteCode) tab = "partner";
   if (gmail) tab = "connections";
   return { tab, inviteCode, gmail };
 }
 
-/** The address for a screen: the tutorial is the only one kept in it, and
- * what a link asked for once is dropped. */
-export function addressFor(href, tab) {
+/** The address for a screen: what a link asked for once is dropped. */
+export function addressFor(href) {
   const url = new URL(href);
-  if (tab === "tutorial") url.searchParams.set("tutorial", "1");
-  else url.searchParams.delete("tutorial");
   for (const key of ONE_SHOT) url.searchParams.delete(key);
   return `${url.pathname}${url.search}${url.hash}`;
 }

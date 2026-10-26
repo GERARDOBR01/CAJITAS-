@@ -11,7 +11,6 @@ import {
   easeReminders,
   nextOccurrences,
   occurrences,
-  suggestedExtra,
   upcomingNotifications,
 } from "../src/pet/reminders.js";
 import { allowedTime, normalizeReminder } from "../src/pet/reminderSettings.js";
@@ -216,7 +215,7 @@ describe("mensajes de la mascota", () => {
     for (const bank of Object.values(MESSAGES))
       expect(bank.length).toBeGreaterThanOrEqual(8);
   });
-  it("solo sugiere más si cumplió el plan 3 periodos, y como máximo +10 % redondeado a $10", () => {
+  it("con buen ritmo celebra, y nunca pide ahorrar más", () => {
     const when = local("2026-10-31T09:00:00");
     const kept = [5, 20, 35].map((d, i) => ({
       id: `e${i}`,
@@ -224,38 +223,11 @@ describe("mensajes de la mascota", () => {
       at: new Date(when.getTime() - d * 86400000).toISOString(),
       source: "manual",
     }));
-    const goal = dataWith({ frequency: "biweekly" }, kept).goals[0];
-    const extra = suggestedExtra(goal, "biweekly", when);
-    expect(extra).toBeGreaterThan(0);
-    expect(extra % 1000).toBe(0);
-    // The plan counts the same quincenas (15 and end of month) the reminders
-    // use: Oct 31 (today) through Jun 15, 2027 → 16 periods.
-    const step = Math.ceil((goal.targetCents - 600000) / 16);
-    expect(plan(goal, 15, when.getTime())).toBe(step);
-    expect(extra).toBeLessThanOrEqual(step * 0.1);
-    // A withdrawal or a missed period means no suggestion.
-    const withdrew = [
-      ...kept,
-      {
-        id: "w",
-        cents: -1000,
-        at: new Date(when.getTime() - 3 * 86400000).toISOString(),
-        source: "manual",
-      },
-    ];
-    expect(
-      suggestedExtra(dataWith({}, withdrew).goals[0], "biweekly", when),
-    ).toBe(0);
-    expect(
-      suggestedExtra(dataWith({}, kept.slice(0, 2)).goals[0], "biweekly", when),
-    ).toBe(0);
-    const message = composeMessage(
-      dataWith({ frequency: "biweekly" }, kept),
-      goal,
-      when,
-    );
-    expect(message.kind).toBe("nudge");
-    expect(message.body).toMatch(/\$\d/);
+    const data = dataWith({ frequency: "biweekly" }, kept),
+      message = composeMessage(data, data.goals[0], when);
+    expect(message.kind).toBe("cheer");
+    expect(message.body).not.toMatch(/\$\d|extra|probamos/);
+    expect(Object.keys(MESSAGES)).toEqual(["checkin", "cheer"]);
   });
 });
 
@@ -395,10 +367,8 @@ describe("avisos con metas sin fecha", () => {
     }));
     const base = dataWith({ enabled: true, frequency: "biweekly" }, kept);
     const open = { ...base.goals[0], id: "g0", unlockDate: null };
-    expect(suggestedExtra(open, "biweekly", when)).toBe(0);
     const message = composeMessage(base, open, when);
-    expect(message.kind).not.toBe("nudge");
-    expect(message.extra).toBe(0);
+    expect(message.body).not.toMatch(/\$\d/);
     const { items } = upcomingNotifications(
       { ...base, goals: [open, base.goals[0]] },
       local("2026-10-15T12:00:00"),

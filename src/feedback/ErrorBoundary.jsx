@@ -37,7 +37,7 @@ export default class ErrorBoundary extends Component {
         <p>
           Tus cajitas siguen guardadas en este teléfono. Recarga la app para
           seguir; si vuelve a pasar, descarga tu respaldo y escríbenos desde
-          Más → Ayuda y comentarios.
+          Ajustes → Ayuda.
         </p>
         <button className="primary full" onClick={() => location.reload()}>
           Recargar Guardadito

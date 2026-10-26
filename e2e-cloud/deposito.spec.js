@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { home, more, pair, signUp } from "./helpers.js";
+import { createGoal, home, more, pair, signUp } from "./helpers.js";
 
 const contexts = [];
 test.afterEach(async () => {
@@ -26,12 +26,7 @@ test("depositar a través del guardián: cuenta cuando él confirma", async ({
 
   // Ana tiene una cajita; Beto guardará su dinero.
   await ana.goto("/");
-  await ana
-    .getByRole("button", { name: "+ Nueva cajita", exact: true })
-    .click();
-  await ana.getByLabel("Nombre de tu meta").fill("Viaje");
-  await ana.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("1000");
-  await ana.getByRole("button", { name: "Crear cajita", exact: true }).click();
+  await createGoal(ana, "Viaje", 1000);
   await signUp(ana, "Ana", `ana-d-${stamp}@guardadito.test`);
   await ana
     .getByRole("dialog", { name: "¿Subimos tus cajitas?" })
@@ -53,9 +48,10 @@ test("depositar a través del guardián: cuenta cuando él confirma", async ({
     beto.getByRole("heading", { name: "Guardas el ahorro de Ana" }),
   ).toBeVisible();
 
-  // Ana deposita por transferencia y ve los datos para copiar.
+  // Ana deposita por transferencia desde su cajita y ve los datos para copiar.
   await home(ana);
-  const card = ana.locator(".goal-card", { hasText: "Viaje" }).first();
+  await ana.getByRole("button", { name: "Ver detalle de Viaje" }).click();
+  const card = ana.getByRole("region", { name: "Detalle de Viaje" });
   await card
     .getByRole("button", { name: "Depositar con Beto" })
     .click({ timeout: 30000 });
@@ -69,13 +65,10 @@ test("depositar a través del guardián: cuenta cuando él confirma", async ({
     expect(await ana.evaluate(() => navigator.clipboard.readText())).toBe(
       "002010077777777771",
     );
-    await ana.screenshot({ path: "docs/screenshots/v12/depositar.png" });
   }
   await transfer.getByRole("button", { name: "Ya lo mandé" }).click();
   await expect(card).toContainText("En camino: $200.00");
-  if (info.project.name === "android-chrome")
-    await card.screenshot({ path: "docs/screenshots/v12/en-camino.png" });
-  await expect(card).toContainText("$0.00");
+  await expect(card.locator(".detail-amount")).toContainText("$0");
 
   // A Beto le llega el aviso en su inicio; primero dice «Aún no».
   await home(beto);
@@ -83,11 +76,6 @@ test("depositar a través del guardián: cuenta cuando él confirma", async ({
   await expect(inbox).toContainText("Ana te mandó $200.00", {
     timeout: 30000,
   });
-  if (info.project.name === "android-chrome")
-    await beto.screenshot({
-      path: "docs/screenshots/v12/confirmar.png",
-      animations: "disabled",
-    });
   await inbox.getByRole("button", { name: "Aún no" }).click();
   await expect(ana.locator(".toast")).toContainText("todavía no ve", {
     timeout: 30000,
@@ -107,10 +95,10 @@ test("depositar a través del guardián: cuenta cuando él confirma", async ({
     "Beto confirmó tu depósito: +$150.00",
     { timeout: 30000 },
   );
-  await expect(card).toContainText("$150.00");
+  await expect(card.locator(".detail-amount")).toContainText("$150");
   await expect(card).not.toContainText("En camino");
   // Beto ve el avance de Ana.
-  await more(beto, "Mi pareja");
+  await more(beto, "Ahorrar en pareja");
   await expect(
     beto.getByRole("list", { name: "Cajitas de Ana" }),
   ).toContainText("15 %", { timeout: 30000 });
@@ -132,19 +120,17 @@ test("depositar a través del guardián: cuenta cuando él confirma", async ({
     .click();
   await expect(card).toContainText("Pediste $50.00 a Beto");
   const betoInbox = beto.getByRole("list", { name: "Por confirmar" });
+  await home(beto);
   await expect(betoInbox).toContainText("Ana te pide $50.00", {
     timeout: 30000,
   });
   await betoInbox.getByRole("button", { name: "Ya se lo mandé" }).click();
-  await expect(card).toContainText("$100.00", { timeout: 30000 });
+  await expect(card.locator(".detail-amount")).toContainText("$100", {
+    timeout: 30000,
+  });
   await expect(card).not.toContainText("Pediste");
 
-  // En su actividad queda como confirmado por su guardián.
-  await ana
-    .getByRole("button", { name: "Actividad", exact: true })
-    .first()
-    .click();
-  await expect(
-    ana.getByText("Confirmado por tu guardián").first(),
-  ).toBeVisible();
+  // En su historial queda como confirmado por su guardián.
+  await more(ana, "Historial");
+  await expect(ana.getByText("con tu guardián").first()).toBeVisible();
 });

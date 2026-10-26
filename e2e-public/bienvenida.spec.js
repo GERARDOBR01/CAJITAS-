@@ -21,13 +21,19 @@ test("la bienvenida elige compañero y lleva a la primera cajita", async ({
   await page.getByRole("button", { name: "Empezar con Bolita" }).click();
   await expect(page.getByText("Paso 2 de 2")).toBeVisible();
   await page.getByRole("button", { name: /Un viaje/ }).click();
-  const form = page.getByRole("dialog", { name: "Un nuevo sueño" });
-  await expect(form.getByLabel("Nombre de tu meta")).toHaveValue("Un viaje");
-  await form.getByLabel("¿Cuánto quieres ahorrar? (MXN)").fill("8000");
-  await form.getByLabel("Sin fecha").check();
+  const form = page.getByRole("dialog", { name: "Nueva cajita" });
+  await expect(form.getByLabel("¿Para qué es?")).toHaveValue("Un viaje");
+  // The idea also picked the icon.
+  await expect(
+    form.getByRole("button", { name: "Viaje", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await form.getByLabel("¿Cuánto quieres juntar?").fill("8000");
+  await form.getByRole("button", { name: "Sin prisa" }).click();
   await form.getByRole("button", { name: "Crear cajita" }).click();
-  await expect(page.locator(".goal-card")).toContainText("Un viaje");
-  await expect(page.locator(".home")).toContainText("Bolita");
+  await expect(page.locator(".cajita")).toContainText("Un viaje");
+  await expect(page.locator(".shell-pet")).toHaveAccessibleName(
+    "Mi mascota, Bolita",
+  );
   // Once is enough. (A test browser only sees it when the address asks.)
   const welcomed = await page.evaluate(() =>
     localStorage.getItem("guardadito:welcomed"),
@@ -45,7 +51,7 @@ test("«Lo hago después» deja el inicio vacío y «Ya tengo cuenta» abre Mi c
   await page.getByRole("button", { name: /Empezar con/ }).click();
   await page.getByRole("button", { name: "Lo hago después" }).click();
   await expect(
-    page.getByRole("heading", { name: "¿Qué te hace ilusión?" }),
+    page.getByRole("button", { name: "Crear mi primera cajita" }),
   ).toBeVisible();
   await page.goto("/?bienvenida=1");
   await page.evaluate(() => localStorage.removeItem("guardadito:welcomed"));

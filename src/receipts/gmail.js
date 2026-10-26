@@ -1,4 +1,4 @@
-import { validateBackup } from "../domain.js";
+import { acceptsProvider, validateBackup } from "../domain.js";
 import {
   PROVIDERS,
   findMatches,
@@ -73,7 +73,10 @@ export function addReceipt(
     return data;
   validateReceipt(receipt);
   const goal = data.goals.find((item) => item.id === goalId);
-  if (goal.archived || (receipt.provider && goal.provider !== receipt.provider))
+  if (
+    goal.archived ||
+    (receipt.provider && !acceptsProvider(goal, receipt.provider))
+  )
     throw new Error("Elige una cajita activa de la misma app del comprobante.");
   if (!allowPossibleDuplicate && possibleReceiptMatches(data, receipt).length)
     throw new Error(

@@ -17,6 +17,24 @@ export const PROVIDERS = [
   "Efectivo",
   "Otra",
 ];
+/** A cajita's icon. The first ones are offered when creating one; cloud and
+ * flower come from earlier versions and still show. */
+export const GOAL_ICONS = [
+  "star",
+  "plane",
+  "home",
+  "gift",
+  "shield",
+  "school",
+  "phone",
+  "car",
+  "cloud",
+  "flower",
+];
+/** Whether a receipt from `provider` may go into this cajita: its own bank,
+ * or any bank for a cajita that does not say (new ones do not ask). */
+export const acceptsProvider = (goal, provider) =>
+  goal.provider === provider || goal.provider === "Otra";
 /** How the place where the money is reads inside a sentence. */
 export function moneyPlace(provider) {
   if (provider === "Efectivo") return "tu efectivo o alcancía";
@@ -39,6 +57,8 @@ export const money = (cents) =>
     currency: "MXN",
     maximumFractionDigits: 2,
   }).format(cents / 100);
+/** The same, without ".00" on whole pesos: for screens, not messages. */
+export const moneyShort = (cents) => money(cents).replace(/\.00$/, "");
 export const today = () => localDate(new Date());
 /** Where a movement came from, as the app names it. */
 export const SOURCE_LABEL = {
@@ -108,14 +128,20 @@ export function byTargetDate(a, b) {
     tb = unlockTime(b.unlockDate);
   return ta === tb ? 0 : ta < tb ? -1 : 1;
 }
-export function countdown(date, now = Date.now()) {
-  if (!date) return "Sin fecha objetivo";
-  const seconds = Math.max(0, Math.ceil((unlockTime(date) - now) / 1000));
-  if (!seconds) return "¡Compromiso cumplido!";
-  const days = Math.floor(seconds / 86400),
-    hours = Math.floor((seconds % 86400) / 3600),
-    mins = Math.floor((seconds % 3600) / 60);
-  return `${days} días · ${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+/** Whole days until a target date (0 on the day itself, negative after),
+ * or null without one. */
+export function daysLeft(date, now = Date.now()) {
+  if (!date) return null;
+  return Math.ceil((unlockTime(date) - now) / 86400000);
+}
+/** A calm line about a target date: no seconds, no countdown pressure. */
+export function dateText(date, now = Date.now()) {
+  const days = daysLeft(date, now);
+  if (days === null) return "Sin prisa";
+  if (days > 1) return `Faltan ${days} días`;
+  if (days === 1) return "Mañana es el día";
+  if (days === 0) return "Hoy es el día";
+  return "Su fecha ya pasó";
 }
 /** Suggested amount per period, or null for a goal without a target date:
  * there are no periods to split the rest into. Periods are the same calendar
@@ -132,7 +158,9 @@ export function plan(
     1,
     countScheduleDays(frequency, now, unlockTime(goal.unlockDate), weekday),
   );
-  return Math.ceil(Math.max(0, goal.targetCents - balance(goal)) / periods);
+  // Rounded up to $10: "$320 a la semana" is easier to set aside than $318.19.
+  const exact = Math.max(0, goal.targetCents - balance(goal)) / periods;
+  return Math.ceil(exact / 1000) * 1000;
 }
 /** An estimate of when a goal would be reached at the pace of its recent
  * recorded savings (last 60 days, at least 14). Never a promise: with no
@@ -152,22 +180,21 @@ export function projection(goal, now = Date.now()) {
   if (days > 3650) return { kind: "none" };
   return { kind: "pace", days, date: localDate(new Date(now + days * DAY)) };
 }
-export function streak(goals, now = new Date()) {
-  const days = new Set(
+/** How many different weeks (Monday to Sunday) had at least one saving.
+ * Unlike a streak, a quiet week never takes anything away. */
+export function savedWeeks(goals) {
+  const weeks = new Set(
     goals.flatMap((g) =>
       g.entries
         .filter((e) => e.cents > 0)
-        .map((e) => localDate(new Date(e.at))),
+        .map((e) => {
+          const day = new Date(e.at);
+          day.setDate(day.getDate() - ((day.getDay() + 6) % 7));
+          return localDate(day);
+        }),
     ),
   );
-  const cursor = new Date(now);
-  let count = 0;
-  if (!days.has(localDate(cursor))) cursor.setDate(cursor.getDate() - 1);
-  while (days.has(localDate(cursor))) {
-    count++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return count;
+  return weeks.size;
 }
 export function initialData() {
   return {
@@ -420,7 +447,7 @@ export function validateBackup(data) {
       !PROVIDERS.includes(g.provider) ||
       !Array.isArray(g.entries) ||
       g.entries.length > 10000 ||
-      !["star", "flower", "cloud"].includes(g.icon) ||
+      !GOAL_ICONS.includes(g.icon) ||
       (g.frequency !== undefined && ![7, 15, 30].includes(g.frequency)) ||
       (g.archived !== undefined && typeof g.archived !== "boolean")
     )

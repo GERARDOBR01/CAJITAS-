@@ -68,7 +68,9 @@ export default function Install({ notify, signedIn }) {
             ? "Tu app, tus sueños."
             : "Una casita en tu pantalla de inicio."}
         </h2>
-        <p>Tus metas, mascota e historial funcionan aunque no tengas internet.</p>
+        <p>
+          Tus metas, mascota e historial funcionan aunque no tengas internet.
+        </p>
         {prompt && !installed && (
           <button className="primary" onClick={install}>
             Instalar Guardadito
@@ -77,8 +79,8 @@ export default function Install({ notify, signedIn }) {
         {isNative ? (
           <p className="notice">
             Estás usando la app para {platform === "ios" ? "iPhone" : "Android"}
-            . Para tener tus cajitas en otro teléfono, entra con tu cuenta en Más
-            → Mi cuenta.
+            . Para tener tus cajitas en otro teléfono, entra con tu cuenta en
+            Ajustes → Mi cuenta.
           </p>
         ) : (
           !installed && (
@@ -115,8 +117,8 @@ export default function Install({ notify, signedIn }) {
                       </li>
                       {!signedIn && (
                         <li>
-                          Entra con tu cuenta en Más → Mi cuenta para traer tus
-                          cajitas.
+                          Entra con tu cuenta en Ajustes → Mi cuenta para traer
+                          tus cajitas.
                         </li>
                       )}
                     </>
@@ -150,12 +152,12 @@ export default function Install({ notify, signedIn }) {
         <div className="install-benefits">
           <span>♡ Mascota a tu estilo</span>
           <span>☁ Funciona sin internet</span>
-          <span>♧ No mueve tu dinero</span>
+          <span>✦ Sin anuncios</span>
         </div>
         <p className="small-text muted">
           {signedIn
             ? "Tus cajitas se guardan en tu cuenta: entra con el mismo correo en cualquier teléfono."
-            : "Sin cuenta, tus cajitas viven solo en este navegador. Crea una en Más → Mi cuenta o descarga un respaldo para no perderlas."}
+            : "Sin cuenta, tus cajitas viven solo en este navegador. Crea una en Ajustes → Mi cuenta o descarga un respaldo para no perderlas."}
         </p>
       </div>
     </section>
