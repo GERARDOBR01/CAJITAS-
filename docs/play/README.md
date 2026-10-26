@@ -5,7 +5,7 @@ Todo lo que pide Play Console, listo para copiar. Paquete: `mx.guardadito.ahorro
 ## 1. Lo que solo puedes hacer tú
 
 1. **Cuenta de desarrollador**: [play.google.com/console](https://play.google.com/console), pago único de 25 USD y verificación de identidad con INE. Elige cuenta **personal**.
-2. **Prueba cerrada obligatoria**: las cuentas personales nuevas necesitan **12 testers con Android durante 14 días seguidos** antes de publicar en producción. Jade usa iPhone, así que no cuenta. Sirven amigos y familia con una cuenta de Google cada uno.
+2. **Prueba cerrada obligatoria**: las cuentas personales nuevas necesitan **12 testers con Android durante 14 días seguidos** antes de publicar en producción. Quien usa iPhone no cuenta. Sirven amigos y familia con una cuenta de Google cada uno.
 3. Responder los formularios de las secciones 4 a 6 (ya están contestados abajo).
 
 ## 2. El paquete firmado (.aab)
@@ -15,38 +15,39 @@ Todo lo que pide Play Console, listo para copiar. Paquete: `mx.guardadito.ahorro
 - **Llave de subida**: `C:\Users\gerar\Documents\Guardadito-Play\upload-key.jks`, con su contraseña en `LEEME-llave.txt`. **Haz una copia de esa carpeta en una USB o en tu nube privada.** En GitHub vive como secreto del repositorio y nunca entra al código.
   - SHA-256 del certificado de subida: `38:31:31:55:4A:E5:3D:58:8F:8B:FF:26:6A:D6:BC:0A:19:87:A1:8E:90:D7:2E:76:96:CC:E1:A7:D6:91:CC:23`
 - Activa **Play App Signing** (viene por defecto): Google guarda la llave final y tú solo usas la de subida. Si la pierdes, Play permite reiniciarla.
-- Cada versión nueva necesita un `versionCode` mayor en `android/app/build.gradle`. Hoy es 18 (0.18.0).
+- Cada versión nueva necesita un `versionCode` mayor en `android/app/build.gradle`. Hoy es 23 (0.23.0).
 - La app de la tienda es la versión pública: sin Gmail, Bitso, Banxico ni el APK de prueba (`VITE_OWNER_TOOLS` apagado en el modo `native`).
 
 ## 3. Ficha de la tienda
 
-**Nombre** (30 caracteres): `Guardadito: ahorro en pareja`
+**Nombre** (30 caracteres): `Guardadito: metas de ahorro`
 
-**Descripción breve** (80): `Metas de ahorro solas o en pareja, con tu mascota. Con cualquier banco.`
+**Descripción breve** (80): `Ahorra poquito a poquito, sin culpa, con una mascota que te echa porras.`
 
 **Descripción completa**:
 
 ```
-Guardadito te acompaña a ahorrar poquito a poquito, sola o en pareja.
+¿Te cuesta ahorrar? A casi todos. Guardadito está hecho para eso: para empezar con poquito y no rendirte.
 
-Crea cajitas para lo que sueñas (un viaje, unos tenis o tu colchoncito) y registra cada pasito. Tu dinero se queda donde ya lo tienes: Nu, Mercado Pago, tu banco o en efectivo. Guardadito no es un banco y nunca mueve tu dinero: lleva la cuenta clara y te echa porras.
+ASÍ DE FÁCIL
+• Crea una cajita para lo que sueñas: un viaje, unos tenis o tu colchoncito.
+• Cuando apartes algo, toca «Guardar dinero». Son 3 toques.
+• Tu mascota te dice cuál es tu pasito de la semana, redondeado para que sea fácil.
 
-AHORREN JUNTOS
-• Vincula tu cuenta con la de tu pareja con un código.
-• Cajitas en pareja: definen la meta y la parte de cada quien (mitad y mitad, 60/40…). Cada quien aparta desde su banco y la barra muestra cómo va cada uno, sin comparaciones.
-• Mándale sorpresas: notitas, premios que se abren al llegar al 25, 50 o 100 % y una mascota con tus propias palabras.
-• Avisos cuando tu pareja aparta para la meta de los dos.
+SIN CULPA Y SIN PRISA
+• $20 también cuentan. Cada pasito se celebra.
+• Nada de rachas que se rompen: contamos las semanas en que guardaste, y solo suben.
+• ¿Se te pasó la fecha? Le das más tiempo con un toque.
+• Un recordatorio amable a la semana, si tú quieres. Nunca de noche.
 
-¿NO TIENES CUENTA DE BANCO?
-Una persona de confianza puede ser tu guardián: le mandas tu ahorro por transferencia o en efectivo, confirma cuando le llega y los dos ven la misma cuenta.
+TU DINERO SE QUEDA DONDE YA LO TIENES
+Guardadito no es un banco y nunca mueve tu dinero. Apartas en tu banco, tu app o en efectivo, y aquí llevas la cuenta clara.
 
-TU PLAN, A TU RITMO
-• Tu siguiente pasito por semana, quincena o mes según tu fecha objetivo.
-• Una mascota que crece con tu constancia y nunca te regaña.
-• Recordatorios amables, actividad con gráfica, exportar a CSV y papelera para recuperar lo que borraste.
+TAMBIÉN EN PAREJA
+Vincula tu cuenta con un código y creen cajitas de los dos: cada quien pone su parte desde su banco.
 
 PRIVADA DESDE EL INICIO
-Sin cuenta, todo se queda en tu teléfono. Con cuenta, solo tú y tu pareja vinculada ven sus datos. Sin anuncios y sin vender datos.
+Sin cuenta, todo se queda en tu teléfono. Con cuenta gratis, tus cajitas viajan contigo a otro teléfono. Sin anuncios y sin vender datos.
 ```
 
 **Categoría**: Finanzas · **Etiquetas**: ahorro, presupuesto · **Correo de contacto**: el correo nuevo de Guardadito (el mismo que va en `CONTACT_EMAIL`, `src/support.js`) · **Sitio web**: https://gerardobr01.github.io/CAJITAS-/
@@ -54,13 +55,13 @@ Sin cuenta, todo se queda en tu teléfono. Con cuenta, solo tú y tu pareja vinc
 **Gráficos** (en `docs/play/assets/`, se regeneran con `node scripts/play-assets.mjs`, que compila la versión pública y toma las capturas):
 - Ícono 512×512: `public/icon-512.png`
 - Gráfico destacado 1024×500: `grafico-destacado.png`
-- Capturas de teléfono 1080×1920: `1-inicio.png` a `5-mas.png`
+- Capturas de teléfono 1080×1920: `1-bienvenida.png`, `2-inicio.png`, `3-guardar.png`, `4-cajita.png` y `5-mascota.png`
 
 ## 4. Política de privacidad y borrado de cuenta
 
 - Política de privacidad: https://gerardobr01.github.io/CAJITAS-/privacidad.html
 - Borrar cuenta (URL que pide Play): https://gerardobr01.github.io/CAJITAS-/borrar-cuenta.html
-- Dentro de la app: Más → Mi cuenta → «Borrar mi cuenta».
+- Dentro de la app: Ajustes → Mi cuenta → «Borrar mi cuenta».
 
 ## 5. Seguridad de los datos (formulario)
 
@@ -82,7 +83,7 @@ No recopila ubicación, contactos, historial de navegación, datos de salud ni d
 ## 6. Otros formularios de la consola
 
 - **Anuncios**: no contiene anuncios.
-- **Acceso a la app**: todo funciona sin cuenta. Para revisar «Mi pareja», crea dos cuentas de prueba, o deja en la consola una cuenta de prueba con su contraseña.
+- **Acceso a la app**: todo funciona sin cuenta. Para revisar «Ahorrar en pareja», deja en la consola la cuenta de revisión (`revision.play@guardadito.test`, contraseña en `Documents\Guardadito-Play\cuenta-revisor.txt`).
 - **Clasificación de contenido** (IARC): app de utilidad o productividad, sin violencia, sin contenido sexual, sin apuestas. Usuarios que interactúan: **sí**, solo con su pareja vinculada por código, sin chat público. Resultado esperado: «Apto para todos» o PEGI 3.
 - **Público objetivo**: 18 años o más. Con 13 a 17 tendrías que cumplir la política de Familias; mejor no marcarlo por ahora.
 - **Apps financieras**: declara que **no** ofrece préstamos, inversión, banca ni pagos. Es una herramienta para registrar ahorro y nunca mueve dinero.

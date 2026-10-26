@@ -41,8 +41,8 @@ const sample = {
       name: "Viaje a la playa",
       targetCents: 800000,
       unlockDate: date(75),
-      provider: "Mercado Pago",
-      icon: "cloud",
+      provider: "Otra",
+      icon: "plane",
       frequency: 15,
       archived: false,
       entries: entries([
@@ -57,8 +57,8 @@ const sample = {
       name: "Mi colchoncito",
       targetCents: 500000,
       unlockDate: null,
-      provider: "BBVA",
-      icon: "star",
+      provider: "Otra",
+      icon: "shield",
       frequency: 7,
       archived: false,
       entries: entries([
@@ -72,8 +72,8 @@ const sample = {
       name: "Unos tenis",
       targetCents: 220000,
       unlockDate: date(20),
-      provider: "Nu",
-      icon: "flower",
+      provider: "Otra",
+      icon: "star",
       frequency: 7,
       archived: false,
       entries: entries([
@@ -115,7 +115,7 @@ try {
     }
   }
   await mkdir(out, { recursive: true });
-  const context = await browser.newContext({
+  const phone = {
     viewport: { width: 360, height: 640 },
     deviceScaleFactor: 3,
     isMobile: true,
@@ -124,38 +124,47 @@ try {
     timezoneId: "America/Mexico_City",
     reducedMotion: "reduce",
     serviceWorkers: "block",
-  });
+  };
+  // The first time someone opens it.
+  const first = await browser.newPage(phone);
+  await first.goto(`${base}/?bienvenida=1`);
+  await first.waitForTimeout(400);
+  await first.screenshot({ path: join(out, "1-bienvenida.png") });
+  await first.close();
+
+  const context = await browser.newContext(phone);
   await context.addInitScript((seed) => {
     localStorage.setItem("guardadito:v1", JSON.stringify(seed));
-    // The listing shows the app, not the gentle nudge to make an account.
+    localStorage.setItem("guardadito:welcomed", "1");
+    // The listing shows the app, not the gentle suggestions.
     localStorage.setItem("guardadito:account-nudge", "1");
+    localStorage.setItem("guardadito:reminder-offer", "1");
   }, sample);
   const page = await context.newPage();
   const shot = async (name) => {
     await page.waitForTimeout(400);
     await page.screenshot({ path: join(out, `${name}.png`) });
   };
-  const tab = (name) =>
-    page.getByRole("button", { name, exact: true }).first().click();
 
   await page.goto(base);
-  await shot("1-inicio");
+  await shot("2-inicio");
   // The companion as the app draws it, for the feature graphic.
   const pet = (
     await page
-      .locator(".home-mascot")
+      .locator(".hero-pet")
       .first()
       .screenshot({ omitBackground: true })
   ).toString("base64");
-  await page.locator(".goal-card").first().scrollIntoViewIfNeeded();
-  await page.evaluate(() => scrollBy(0, -90));
-  await shot("2-cajita");
-  await tab("Mi mascota");
-  await shot("3-mascota");
-  await tab("Actividad");
-  await shot("4-actividad");
-  await tab("Más");
-  await shot("5-mas");
+  await page.getByRole("button", { name: "Guardar dinero" }).click();
+  await shot("3-guardar");
+  await page.keyboard.press("Escape");
+  await page
+    .getByRole("button", { name: "Ver detalle de Viaje a la playa" })
+    .click();
+  await shot("4-cajita");
+  await page.getByRole("button", { name: "Volver al inicio" }).click();
+  await page.getByRole("button", { name: /^Mi mascota/ }).click();
+  await shot("5-mascota");
 
   // Feature graphic, in the colors of the app.
   const banner = await browser.newPage({
@@ -170,8 +179,8 @@ try {
         <img src="data:image/png;base64,${pet}" style="max-width:290px;max-height:290px"></div>
       <div>
         <div style="font-size:80px;font-weight:900;letter-spacing:-2px;color:#4b2a7b">guardadito</div>
-        <div style="font-size:38px;font-weight:850;margin-top:6px">Ahorra en pareja,<br>poquito a poquito</div>
-        <div style="font-size:24px;font-weight:700;margin-top:18px;color:#655a6d">Metas compartidas · sorpresas · con cualquier banco</div>
+        <div style="font-size:38px;font-weight:850;margin-top:6px">Ahorra pasito a pasito,<br>sin culpa y sin prisa</div>
+        <div style="font-size:24px;font-weight:700;margin-top:18px;color:#655a6d">Una mascota que te echa porras · con cualquier banco</div>
       </div></div></body></html>`);
   await banner.screenshot({ path: join(out, "grafico-destacado.png") });
   console.log(`Listo: ${out}`);
